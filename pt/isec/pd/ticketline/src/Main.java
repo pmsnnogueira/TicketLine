@@ -1,7 +1,6 @@
 package pt.isec.pd.ticketline.src;
 
 import pt.isec.pd.ticketline.src.model.ModelManager;
-import pt.isec.pd.ticketline.src.model.data.Data;
 import pt.isec.pd.ticketline.src.ui.UI;
 
 import java.sql.SQLException;
