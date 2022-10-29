@@ -1,16 +1,16 @@
 package pt.isec.pd.ticketline.src.ui;
 
-import pt.isec.pd.ticketline.src.model.Data;
+import pt.isec.pd.ticketline.src.model.ModelManager;
+import pt.isec.pd.ticketline.src.model.data.Data;
 
 public class UI {
-    private Data data;
+    private ModelManager data;
 
-    public UI(Data data){
+    public UI(ModelManager data){
         this.data = data;
     }
 
-    @Override
-    public String toString() {
-        return this.data.getString();
+    public void start(){
+        
     }
 }

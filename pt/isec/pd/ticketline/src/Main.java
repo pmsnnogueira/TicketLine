@@ -1,13 +1,20 @@
 package pt.isec.pd.ticketline.src;
 
-import pt.isec.pd.ticketline.src.model.Data;
+import pt.isec.pd.ticketline.src.model.ModelManager;
+import pt.isec.pd.ticketline.src.model.data.Data;
 import pt.isec.pd.ticketline.src.ui.UI;
+
+import java.sql.SQLException;
 
 public class Main {
     public static void main(String[] args){
-        Data data = new Data();
-        UI ui = new UI(data);
-
-        System.out.println(ui);
+        ModelManager modelManager;
+        try{
+            modelManager = new ModelManager();
+        }catch (SQLException e){
+            return;
+        }
+        UI ui = new UI(modelManager);
+        ui.start();
     }
 }
