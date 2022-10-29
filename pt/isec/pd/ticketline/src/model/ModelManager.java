@@ -27,4 +27,8 @@ public class ModelManager {
     public String listSeats(Integer seatID) throws SQLException{
         return this.data.listSeats(seatID);
     }
+
+    public void closeDB() throws SQLException{
+        this.data.closeDB();
+    }
 }

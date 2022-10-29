@@ -6,7 +6,7 @@ public class DBManager {
     private final Connection dbConn;
 
     public DBManager() throws SQLException {
-        this.dbConn = DriverManager.getConnection("jdbc:sqlite:pt/isec/pd/ticketline/src/resources/db");
+        this.dbConn = DriverManager.getConnection("jdbc:sqlite:pt/isec/pd/ticketline/src/resources/db/PD-2022-23-TP.db");
     }
 
     public void close() throws SQLException

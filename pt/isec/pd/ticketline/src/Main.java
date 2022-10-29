@@ -12,6 +12,7 @@ public class Main {
         try{
             modelManager = new ModelManager();
         }catch (SQLException e){
+            e.printStackTrace();
             return;
         }
         UI ui = new UI(modelManager);

@@ -26,4 +26,8 @@ public class ResourcesManager {
     public String listSeats(Integer seatID) throws SQLException{
         return this.dbManager.listSeats(seatID);
     }
+
+    public void closeDB() throws SQLException {
+        this.dbManager.close();
+    }
 }

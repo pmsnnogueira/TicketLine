@@ -5,11 +5,9 @@ import pt.isec.pd.ticketline.src.resources.ResourcesManager;
 import java.sql.SQLException;
 
 public class Data {
-    private String string;
     private ResourcesManager resourcesManager;
 
     public Data() throws SQLException {
-        this.string = "Hello World!";
         this.resourcesManager = new ResourcesManager();
     }
 
@@ -29,7 +27,7 @@ public class Data {
         return this.resourcesManager.listSeats(seatID);
     }
 
-    public String getString() {
-        return string;
+    public void closeDB() throws SQLException{
+        this.resourcesManager.closeDB();
     }
 }
