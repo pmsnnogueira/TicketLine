@@ -8,16 +8,15 @@ import java.util.List;
 
 public class FileOpener
 {
-    public static List<List<String>> openFile(String filePath)
+    public static List<String> openFile(String filePath)
     {
-            List<List<String>> fileTokens = new ArrayList<>();
+            List<String> fileTokens = new ArrayList<>();
     
             try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
                 String line;
     
                 while ((line = br.readLine()) != null) {
-                    String[] values = line.split(",");
-                    fileTokens.add(Arrays.asList(values));
+                    fileTokens.add(line);
                 }
             }
             catch (Exception e) {
