@@ -3,6 +3,7 @@ package pt.isec.pd.ticketline.src.model;
 import pt.isec.pd.ticketline.src.model.data.Data;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 
 public class ModelManager {
     private Data data;
@@ -25,6 +26,22 @@ public class ModelManager {
 
     public String listSeats(Integer seatID) throws SQLException{
         return this.data.listSeats(seatID);
+    }
+
+    public boolean insertShow(ArrayList<String> parameters){
+        return this.data.insertShow(parameters);
+    }
+
+    public boolean insertSeat(ArrayList<String> parameters){
+        return this.data.insertSeat(parameters);
+    }
+
+    public boolean insertReservation(ArrayList<String> parameters){
+        return this.data.insertReservation(parameters);
+    }
+
+    public boolean insertUser(ArrayList<String> parameters){
+        return this.data.insertUser(parameters);
     }
 
     public void closeDB() throws SQLException{

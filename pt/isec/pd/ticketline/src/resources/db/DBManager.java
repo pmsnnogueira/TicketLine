@@ -1,6 +1,7 @@
 package pt.isec.pd.ticketline.src.resources.db;
 
 import java.sql.*;
+import java.util.ArrayList;
 
 public class DBManager {
     private final Connection dbConn;
@@ -137,4 +138,98 @@ public class DBManager {
 
         return str.toString();
     }
+
+    public boolean insertShow(ArrayList<String> parameters){
+        Statement statement;
+        try{
+            statement = dbConn.createStatement();
+        }catch (SQLException e){
+            return false;
+        }
+
+        int i = 0;
+        String sqlQuery = "INSERT INTO espetaculo VALUES (NULL, '" + parameters.get(i++) + "' , '" +
+                            parameters.get(i++) + "' , '" + parameters.get(i++) + "' , '" +
+                            parameters.get(i++) + "' , '" + parameters.get(i++) + "' , '" +
+                            parameters.get(i++) + "' , '" + parameters.get(i++) + "' , '" +
+                            parameters.get(i++) + "' , '" + parameters.get(i) + "')";
+
+        try{
+            statement.executeUpdate(sqlQuery);
+            statement.close();
+        }catch (SQLException e){
+            return false;
+        }
+
+        return true;
+    }
+
+    public boolean insertSeat(ArrayList<String> parameters){
+        Statement statement;
+        try{
+            statement = dbConn.createStatement();
+        }catch (SQLException e){
+            return false;
+        }
+
+        int i = 0;
+        String sqlQuery = "INSERT INTO espetaculo VALUES (NULL, '" + parameters.get(i++) + "' , '" +
+                parameters.get(i++) + "' , '" + parameters.get(i++) + "' , '" +
+                parameters.get(i) + "')";
+
+        try{
+            statement.executeUpdate(sqlQuery);
+            statement.close();
+        }catch (SQLException e){
+            return false;
+        }
+
+        return true;
+    }
+
+    public boolean insertReservation(ArrayList<String> parameters){
+        Statement statement;
+        try{
+            statement = dbConn.createStatement();
+        }catch (SQLException e){
+            return false;
+        }
+
+        int i = 0;
+        String sqlQuery = "INSERT INTO espetaculo VALUES (NULL, '" + parameters.get(i++) + "' , '" +
+                parameters.get(i++) + "' , '" + parameters.get(i++) + "' , '" +
+                parameters.get(i) + "')";
+
+        try{
+            statement.executeUpdate(sqlQuery);
+            statement.close();
+        }catch (SQLException e){
+            return false;
+        }
+
+        return true;
+    }
+    public boolean insertUser(ArrayList<String> parameters){
+        Statement statement;
+        try{
+            statement = dbConn.createStatement();
+        }catch (SQLException e){
+            return false;
+        }
+
+        int i = 0;
+        String sqlQuery = "INSERT INTO espetaculo VALUES (NULL, '" + parameters.get(i++) + "' , '" +
+                parameters.get(i++) + "' , '" + parameters.get(i++) + "' , '" +
+                parameters.get(i++) + "' , '" + parameters.get(i++) + "')";
+
+        try{
+            statement.executeUpdate(sqlQuery);
+            statement.close();
+        }catch (SQLException e){
+            return false;
+        }
+
+        return true;
+    }
+
 }
