@@ -152,7 +152,7 @@ public class DBManager {
                             parameters.get(i++) + "' , '" + parameters.get(i++) + "' , '" +
                             parameters.get(i++) + "' , '" + parameters.get(i++) + "' , '" +
                             parameters.get(i++) + "' , '" + parameters.get(i++) + "' , '" +
-                            parameters.get(i++) + "' , '" + parameters.get(i) + "')";
+                            parameters.get(i++) + "' , '" + "0" + "')";
 
         try{
             statement.executeUpdate(sqlQuery);

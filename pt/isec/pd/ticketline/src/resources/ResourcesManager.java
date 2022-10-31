@@ -2,7 +2,6 @@ package pt.isec.pd.ticketline.src.resources;
 
 import pt.isec.pd.ticketline.src.resources.db.DBManager;
 
-import java.sql.Array;
 import java.sql.SQLException;
 import java.util.ArrayList;
 

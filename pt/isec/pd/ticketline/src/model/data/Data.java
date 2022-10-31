@@ -58,6 +58,7 @@ public class Data {
     {
         List<String> information = FileOpener.openFile("pt/isec/pd/ticketline/src/resources/files/teste.txt");
         ArrayList<String> parameters = new ArrayList<>();
+        String dateHour = "";
 
         for(String string : information)
         {
@@ -80,15 +81,14 @@ public class Data {
                 String day = splitted[1];
                 String month = splitted[2];
                 String year = splitted[3];
-                String date = day + ":" + month + ":" + year;
-                parameters.add(date);
+                dateHour = day + ":" + month + ":" + year + "-";
             }
             else if(newString.contains("Hora"))
             {
                 String hour = splitted[1];
                 String minutes = splitted[2];
-                String hours = hour + ":" + minutes;
-                parameters.add(hours);
+                dateHour += hour + ":" + minutes;
+                parameters.add(dateHour);
             }
             else if(newString.contains("Duração"))
             {

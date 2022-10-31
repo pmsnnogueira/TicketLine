@@ -1,8 +1,6 @@
 package pt.isec.pd.ticketline.src.model;
 
 import pt.isec.pd.ticketline.src.model.data.Data;
-
-import java.lang.foreign.Addressable;
 import java.sql.SQLException;
 import java.util.ArrayList;
 

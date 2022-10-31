@@ -3,7 +3,6 @@ package pt.isec.pd.ticketline.src.resources.files;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class FileOpener
