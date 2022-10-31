@@ -3,7 +3,7 @@ package pt.isec.pd.ticketline.src.model.data;
 import java.util.ArrayList;
 
 public class Show {
-    private int id;
+    private final int id;
     private String title;
     private String genre;
     private String date;
@@ -15,10 +15,11 @@ public class Show {
     private int age;
     private ArrayList<Seat> seats;
 
-    public Show(String title, String genre, String date,
+    public Show(int id, String title, String genre, String date,
                 String hour, int duration, String place,
                 String local, String country, int age)
                 {
+                    this.id= id;
                     this.title = title;
                     this.genre = genre;
                     this.date = date;
@@ -66,4 +67,6 @@ public class Show {
     public void setAge(int age){this.age = age;}
 
     public int getAge(){return this.age;}
+
+    public int getId(){return this.id;}
 }

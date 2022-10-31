@@ -57,7 +57,7 @@ public class UI {
     }
 
     public void insertData(){
-        int input = InputProtection.chooseOption(null, "Insert a seat", "Insert a reservation", "Insert an user");
+        int input = InputProtection.chooseOption(null, "Insert a seat", "Insert a reservation", "Insert an user", "Insert Show");
 
         switch (input){
             case 1 ->{
@@ -110,6 +110,9 @@ public class UI {
                     System.out.println("Could not insert data");
                 }
             }
+            case 4 ->{
+                data.insertShow();
+            }
         }
     }
 
@@ -121,7 +124,7 @@ public class UI {
 
             switch (input){
                 case 1 -> listInformation();
-                case 2 -> System.out.println("To be developed");
+                case 2 -> insertData();
                 case 3 -> {
                     System.out.println("HASTA LA VISTA BABY!");
                     return;

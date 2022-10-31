@@ -5,8 +5,9 @@ import pt.isec.pd.ticketline.src.resources.files.FileOpener;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
+
+import javax.swing.text.DefaultEditorKit.PasteAction;
 
 public class Data {
     private ResourcesManager resourcesManager;
@@ -53,7 +54,75 @@ public class Data {
         this.resourcesManager.closeDB();
     }
 
-    public void addShow(ArrayList<String> information)
+    public void addShow()
     {
+        List<String> information = FileOpener.openFile("pt/isec/pd/ticketline/src/resources/files/teste.txt");
+        ArrayList<String> parameters = new ArrayList<>();
+
+        for(String string : information)
+        {
+            String newString = string.replaceAll("\"", "");
+            String[] splitted = newString.split(";");
+
+            if(newString.contains("Designação"))
+            {
+       
+                String designation = splitted[1];
+                parameters.add(designation);
+            }
+            else if(newString.contains("Tipo"))
+            {
+                String type = splitted[1];
+                parameters.add(type);
+            }
+            else if(newString.contains("Data"))
+            {
+                String day = splitted[1];
+                String month = splitted[2];
+                String year = splitted[3];
+                String date = day + ":" + month + ":" + year;
+                parameters.add(date);
+            }
+            else if(newString.contains("Hora"))
+            {
+                String hour = splitted[1];
+                String minutes = splitted[2];
+                String hours = hour + ":" + minutes;
+                parameters.add(hours);
+            }
+            else if(newString.contains("Duração"))
+            {
+                String duration = splitted[1];
+                parameters.add(duration); 
+            }
+            else if(newString.contains("Local"))
+            {
+                String place = splitted[1];
+                parameters.add(place);
+            }
+            else if(newString.contains("Localidade"))
+            {
+                String local = splitted[1];
+                parameters.add(local);
+            }
+            else if(newString.contains("País"))
+            {
+                String country = splitted[1];
+                parameters.add(country);
+            }
+            else if(newString.contains("Classificação etária"))
+            {
+                String age = splitted[1];
+                parameters.add(age);
+            }
+            else if(newString.contains(":"))
+            {
+                String row = splitted.toString();
+                parameters.add(row);
+            }
+            else
+                continue;
+        }
+        insertShow(parameters);
     }
 }
