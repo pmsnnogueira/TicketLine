@@ -90,7 +90,7 @@ public class UI {
                 parameters.add(Integer.toString(administrador));
                 parameters.add(Integer.toString(autenticado));
 
-                if (!this.data.insertReservation(parameters)) {
+                if (!this.data.insertUser(parameters)) {
                     System.out.println("Could not insert data");
                 }
             }

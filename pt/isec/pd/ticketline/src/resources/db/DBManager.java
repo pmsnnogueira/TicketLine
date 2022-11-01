@@ -126,7 +126,7 @@ public class DBManager {
         try{
             Statement statement = dbConn.createStatement();
 
-            String sqlQuery = "SELECT id, username, nome, administrador, autenticado FROM utilizador";
+            String sqlQuery = "SELECT * FROM utilizador";
 
             if (userID != null)
                 sqlQuery += " WHERE id like '%" + userID + "%'";
@@ -224,6 +224,7 @@ public class DBManager {
 
         return true;
     }
+   
     public boolean insertUser(ArrayList<String> parameters){
         Statement statement;
         try{
@@ -236,7 +237,7 @@ public class DBManager {
         String sqlQuery = "INSERT INTO utilizador VALUES (NULL, '" + parameters.get(i++) + "' , '" +
                 parameters.get(i++) + "' , '" + parameters.get(i++) + "' , '" +
                 parameters.get(i++) + "' , '" + parameters.get(i++) + "')";
-
+            
         try{
             statement.executeUpdate(sqlQuery);
             statement.close();
