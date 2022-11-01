@@ -18,19 +18,19 @@ public class Data {
         this.shows = new ArrayList<>();
     }
 
-    public String listUsers(Integer userID) throws SQLException{
+    public String listUsers(Integer userID){
         return this.resourcesManager.listUsers(userID);
     }
 
-    public String listShows(Integer showID) throws SQLException{
+    public String listShows(Integer showID){
         return this.resourcesManager.listShows(showID);
     }
 
-    public String listReservations(Integer reservationID) throws SQLException{
+    public String listReservations(Integer reservationID){
         return this.resourcesManager.listReservations(reservationID);
     }
 
-    public String listSeats(Integer seatID) throws SQLException{
+    public String listSeats(Integer seatID){
         return this.resourcesManager.listSeats(seatID);
     }
 

@@ -19,35 +19,19 @@ public class UI {
         switch (input){
             case 1 -> {
                 int id = InputProtection.readInt("Show ID (-1 for all shows): ");
-                try{
-                    System.out.println(this.data.listShows(id == -1 ? null : id));
-                }catch (SQLException e){
-                    System.out.println("SQLException detected!");
-                }
+                System.out.println(this.data.listShows(id == -1 ? null : id));
             }
             case 2 ->{
                 int id = InputProtection.readInt("Reservation ID (-1 for all reservations): ");
-                try{
-                    System.out.println(this.data.listReservations(id == -1 ? null : id));
-                }catch (SQLException e){
-                    System.out.println("SQLException detected!");
-                }
+                System.out.println(this.data.listReservations(id == -1 ? null : id));
             }
             case 3 ->{
                 int id = InputProtection.readInt("Seats ID (-1 for all seats): ");
-                try{
-                    System.out.println(this.data.listSeats(id == -1 ? null : id));
-                }catch (SQLException e){
-                    System.out.println("SQLException detected!");
-                }
+                System.out.println(this.data.listSeats(id == -1 ? null : id));
             }
             case 4 ->{
                 int id = InputProtection.readInt("User ID (-1 for all users): ");
-                try{
-                    System.out.println(this.data.listUsers(id == -1 ? null : id));
-                }catch (SQLException e){
-                    System.out.println("SQLException detected!");
-                }
+                System.out.println(this.data.listUsers(id == -1 ? null : id));
             }
             default -> {
                 System.out.println("Not a valid option! Try again!");
@@ -113,6 +97,10 @@ public class UI {
             case 4 ->{
                 data.insertShow();
             }
+            default -> {
+                System.out.println("Not a valid option!");
+                insertData();
+            }
         }
     }
 
@@ -143,6 +131,10 @@ public class UI {
                 if (!this.data.deleteUsers(id)){
                     System.out.println("Could not delete user");
                 }
+            }
+            default -> {
+                System.out.println("Not a valid option");
+                deleteData();
             }
         }
     }

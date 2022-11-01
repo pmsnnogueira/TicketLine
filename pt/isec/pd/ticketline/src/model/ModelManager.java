@@ -11,19 +11,19 @@ public class ModelManager {
         this.data = new Data();
     }
 
-    public String listUsers(Integer userID) throws SQLException {
+    public String listUsers(Integer userID){
         return this.data.listUsers(userID);
     }
 
-    public String listShows(Integer showID) throws SQLException{
+    public String listShows(Integer showID){
         return this.data.listShows(showID);
     }
 
-    public String listReservations(Integer reservationID) throws SQLException{
+    public String listReservations(Integer reservationID){
         return this.data.listReservations(reservationID);
     }
 
-    public String listSeats(Integer seatID) throws SQLException{
+    public String listSeats(Integer seatID){
         return this.data.listSeats(seatID);
     }
 
