@@ -125,4 +125,12 @@ public class Data {
         }
         insertShow(parameters);
     }
+
+    public boolean deleteShow(int id){return this.resourcesManager.deleteShow(id);}
+
+    public boolean deleteReservations(int id){return this.resourcesManager.deleteReservations(id);}
+
+    public boolean deleteSeat(int id){return this.resourcesManager.deleteSeat(id);}
+
+    public boolean deleteUsers(int id){return this.resourcesManager.deleteUsers(id);}
 }

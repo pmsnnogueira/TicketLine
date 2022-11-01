@@ -116,16 +116,48 @@ public class UI {
         }
     }
 
+    private void deleteData() {
+        int input = InputProtection.chooseOption(null, "Delete show", "Delete seat", "Delete reservation", "Delete user");
+
+        switch (input){
+            case 1 -> {
+                int id = InputProtection.readInt("Show ID: ");
+                if (!this.data.deleteShow(id)){
+                    System.out.println("Could not delete show");
+                }
+            }
+            case 2 -> {
+                int id = InputProtection.readInt("Seat ID: ");
+                if (!this.data.deleteSeat(id)){
+                    System.out.println("Could not delete seat");
+                }
+            }
+            case 3 -> {
+                int id = InputProtection.readInt("Reservation ID: ");
+                if (!this.data.deleteReservations(id)){
+                    System.out.println("Could not delete reservation");
+                }
+            }
+            case 4 -> {
+                int id = InputProtection.readInt("User ID: ");
+                if (!this.data.deleteUsers(id)){
+                    System.out.println("Could not delete user");
+                }
+            }
+        }
+    }
+
     public void start(){
         while (true){
             int input = InputProtection.chooseOption("Choose an action:", "List information",
                                                      "Insert data",
-                                                     "To be developed", "Exit");
+                                                     "Delete data", "Exit");
 
             switch (input){
                 case 1 -> listInformation();
                 case 2 -> insertData();
-                case 3 -> {
+                case 3 -> deleteData();
+                case 4 -> {
                     System.out.println("HASTA LA VISTA BABY!");
                     return;
                 }

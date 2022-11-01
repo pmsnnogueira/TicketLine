@@ -43,6 +43,14 @@ public class ModelManager {
         return this.data.insertUser(parameters);
     }
 
+    public boolean deleteShow(int id){return this.data.deleteShow(id);}
+
+    public boolean deleteReservations(int id){return this.data.deleteReservations(id);}
+
+    public boolean deleteSeat(int id){return this.data.deleteSeat(id);}
+
+    public boolean deleteUsers(int id){return this.data.deleteUsers(id);}
+
     public void closeDB() throws SQLException{
         this.data.closeDB();
     }

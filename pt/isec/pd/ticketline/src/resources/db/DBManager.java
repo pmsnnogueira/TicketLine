@@ -173,7 +173,7 @@ public class DBManager {
         }
 
         int i = 0;
-        String sqlQuery = "INSERT INTO espetaculo VALUES (NULL, '" + parameters.get(i++) + "' , '" +
+        String sqlQuery = "INSERT INTO lugar VALUES (NULL, '" + parameters.get(i++) + "' , '" +
                 parameters.get(i++) + "' , '" + parameters.get(i++) + "' , '" +
                 parameters.get(i) + "')";
 
@@ -196,7 +196,7 @@ public class DBManager {
         }
 
         int i = 0;
-        String sqlQuery = "INSERT INTO espetaculo VALUES (NULL, '" + parameters.get(i++) + "' , '" +
+        String sqlQuery = "INSERT INTO reserva VALUES (NULL, '" + parameters.get(i++) + "' , '" +
                 parameters.get(i++) + "' , '" + parameters.get(i++) + "' , '" +
                 parameters.get(i) + "')";
 
@@ -218,7 +218,7 @@ public class DBManager {
         }
 
         int i = 0;
-        String sqlQuery = "INSERT INTO espetaculo VALUES (NULL, '" + parameters.get(i++) + "' , '" +
+        String sqlQuery = "INSERT INTO utilizador VALUES (NULL, '" + parameters.get(i++) + "' , '" +
                 parameters.get(i++) + "' , '" + parameters.get(i++) + "' , '" +
                 parameters.get(i++) + "' , '" + parameters.get(i++) + "')";
 
@@ -232,4 +232,59 @@ public class DBManager {
         return true;
     }
 
+    public boolean deleteShow(int id)
+    {
+        try{
+            Statement statement = dbConn.createStatement();
+
+            String sqlQuery = "DELETE FROM espetaculo WHERE id=" + id;
+            statement.executeUpdate(sqlQuery);
+            statement.close();
+        }catch(SQLException e){
+            return false;
+        }
+        return true;
+    }
+
+    public boolean deleteSeat(int id)
+    {
+        try{
+            Statement statement = dbConn.createStatement();
+
+            String sqlQuery = "DELETE FROM lugar WHERE id=" + id;
+            statement.executeUpdate(sqlQuery);
+            statement.close();
+        }catch(SQLException e){
+            return false;
+        }
+        return true;
+    }
+
+    public boolean deleteReservations(int id)
+    {
+        try{
+            Statement statement = dbConn.createStatement();
+
+            String sqlQuery = "DELETE FROM reserva WHERE id=" + id;
+            statement.executeUpdate(sqlQuery);
+            statement.close();
+        }catch(SQLException e){
+            return false;
+        }
+        return true;
+    }
+
+    public boolean deleteUsers(int id)
+    {
+        try{
+            Statement statement = dbConn.createStatement();
+
+            String sqlQuery = "DELETE FROM utilizador WHERE id=" + id;
+            statement.executeUpdate(sqlQuery);
+            statement.close();
+        }catch(SQLException e){
+            return false;
+        }
+        return true;
+    }
 }

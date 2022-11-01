@@ -44,6 +44,14 @@ public class ResourcesManager {
         return this.dbManager.insertUser(parameters);
     }
 
+    public boolean deleteShow(int id){return this.dbManager.deleteShow(id);}
+
+    public boolean deleteReservations(int id){return this.dbManager.deleteReservations(id);}
+
+    public boolean deleteSeat(int id){return this.dbManager.deleteSeat(id);}
+
+    public boolean deleteUsers(int id){return this.dbManager.deleteUsers(id);}
+
     public void closeDB() throws SQLException {
         this.dbManager.close();
     }
