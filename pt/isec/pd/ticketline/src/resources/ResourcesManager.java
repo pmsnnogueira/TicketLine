@@ -4,6 +4,7 @@ import pt.isec.pd.ticketline.src.resources.db.DBManager;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class ResourcesManager {
     private final DBManager dbManager;
@@ -51,6 +52,19 @@ public class ResourcesManager {
     public boolean deleteSeat(int id){return this.dbManager.deleteSeat(id);}
 
     public boolean deleteUsers(int id){return this.dbManager.deleteUsers(id);}
+
+    public boolean updateShows(int id, HashMap<String, String> newData){
+        return this.dbManager.updateShows(id, newData);
+    }
+    public boolean updateSeats(int id, HashMap<String, String> newData){
+        return this.dbManager.updateSeats(id, newData);
+    }
+    public boolean updateReservation(int id, HashMap<String, String> newData){
+        return this.dbManager.updateReservation(id, newData);
+    }
+    public boolean updateUser(int id, HashMap<String, String> newData){
+        return this.dbManager.updateUser(id, newData);
+    }
 
     public void closeDB() throws SQLException {
         this.dbManager.close();

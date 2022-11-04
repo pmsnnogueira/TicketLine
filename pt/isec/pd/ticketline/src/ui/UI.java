@@ -5,6 +5,7 @@ import pt.isec.pd.ticketline.src.ui.util.InputProtection;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class UI {
     private final ModelManager data;
@@ -139,17 +140,91 @@ public class UI {
         }
     }
 
+
+    private void updateData() {
+        int input =InputProtection.chooseOption(null, "Update show", "Update seat", "Update reservation", "Update user");
+
+        switch (input){
+            case 1->{
+                int id = InputProtection.readInt("Show ID: ");
+                HashMap<String, String> newData = new HashMap<>();
+                while(true){
+                    String parameter = InputProtection.readString("Choose one (end to stop):\ndescricao/tipo/data_hora/" +
+                                                                  "duracao/local/localidade/pais/" +
+                                                                  "classificacao_etaria/visivel: ", true);
+                    if (parameter.equals("end")){
+                        break;
+                    }
+                    String newValue = InputProtection.readString("New data: ", false);
+                    newData.put(parameter, newValue);
+                }
+
+                this.data.updateShows(id, newData);
+            }
+            case 2->{
+                int id = InputProtection.readInt("Seat ID: ");
+                HashMap<String, String> newData = new HashMap<>();
+                while(true){
+                    String parameter = InputProtection.readString("Choose one (end to stop):\nfila/" +
+                                                                   "assento/preco/espetaculo_id: ", true);
+                    if (parameter.equals("end")){
+                        break;
+                    }
+                    String newValue = InputProtection.readString("New data: ", false);
+                    newData.put(parameter, newValue);
+                }
+
+                this.data.updateSeats(id, newData);
+            }
+            case 3->{
+                int id = InputProtection.readInt("Reservation ID: ");
+                HashMap<String, String> newData = new HashMap<>();
+                while(true){
+                    String parameter = InputProtection.readString("Choose one (end to stop):\ndata_hora/" +
+                            "pago/id_utilizador/id_espetaculo: ", true);
+                    if (parameter.equals("end")){
+                        break;
+                    }
+                    String newValue = InputProtection.readString("New data: ", false);
+                    newData.put(parameter, newValue);
+                }
+
+                this.data.updateReservation(id, newData);
+            }
+            case 4->{
+                int id = InputProtection.readInt("User ID: ");
+                HashMap<String, String> newData = new HashMap<>();
+                while(true){
+                    String parameter = InputProtection.readString("Choose one (end to stop):\nusername/" +
+                            "nome/password/administrador/autenticado: ", true);
+                    if (parameter.equals("end")){
+                        break;
+                    }
+                    String newValue = InputProtection.readString("New data: ", false);
+                    newData.put(parameter, newValue);
+                }
+
+                this.data.updateUser(id, newData);
+            }
+            default -> {
+                System.out.println("Not a valid option");
+                updateData();
+            }
+        }
+    }
+
     public void start(){
         while (true){
             int input = InputProtection.chooseOption("Choose an action:", "List information",
-                                                     "Insert data",
-                                                     "Delete data", "Exit");
+                                                     "Insert data","Delete data",
+                                                     "Update data","Exit");
 
             switch (input){
                 case 1 -> listInformation();
                 case 2 -> insertData();
                 case 3 -> deleteData();
-                case 4 -> {
+                case 4 -> updateData();
+                case 5 -> {
                     System.out.println("HASTA LA VISTA BABY!");
                     return;
                 }

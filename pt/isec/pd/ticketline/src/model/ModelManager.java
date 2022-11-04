@@ -3,6 +3,7 @@ package pt.isec.pd.ticketline.src.model;
 import pt.isec.pd.ticketline.src.model.data.Data;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class ModelManager {
     private Data data;
@@ -50,6 +51,19 @@ public class ModelManager {
     public boolean deleteSeat(int id){return this.data.deleteSeat(id);}
 
     public boolean deleteUsers(int id){return this.data.deleteUsers(id);}
+
+    public boolean updateShows(int id, HashMap<String, String> newData){
+        return this.data.updateShows(id, newData);
+    }
+    public boolean updateSeats(int id, HashMap<String, String> newData){
+        return this.data.updateSeats(id, newData);
+    }
+    public boolean updateReservation(int id, HashMap<String, String> newData){
+        return this.data.updateReservation(id, newData);
+    }
+    public boolean updateUser(int id, HashMap<String, String> newData){
+        return this.data.updateUser(id, newData);
+    }
 
     public void closeDB() throws SQLException{
         this.data.closeDB();

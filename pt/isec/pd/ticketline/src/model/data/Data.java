@@ -5,6 +5,7 @@ import pt.isec.pd.ticketline.src.resources.files.FileOpener;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import javax.swing.text.DefaultEditorKit.PasteAction;
@@ -133,4 +134,17 @@ public class Data {
     public boolean deleteSeat(int id){return this.resourcesManager.deleteSeat(id);}
 
     public boolean deleteUsers(int id){return this.resourcesManager.deleteUsers(id);}
+
+    public boolean updateShows(int id, HashMap<String, String> newData){
+        return this.resourcesManager.updateShows(id, newData);
+    }
+    public boolean updateSeats(int id, HashMap<String, String> newData){
+        return this.resourcesManager.updateSeats(id, newData);
+    }
+    public boolean updateReservation(int id, HashMap<String, String> newData){
+        return this.resourcesManager.updateReservation(id, newData);
+    }
+    public boolean updateUser(int id, HashMap<String, String> newData){
+        return this.resourcesManager.updateUser(id, newData);
+    }
 }

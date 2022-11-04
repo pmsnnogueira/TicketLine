@@ -2,6 +2,8 @@ package pt.isec.pd.ticketline.src.resources.db;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class DBManager {
     private final Connection dbConn;
@@ -297,6 +299,141 @@ public class DBManager {
 
             String sqlQuery = "DELETE FROM utilizador WHERE id=" + id;
             statement.executeUpdate(sqlQuery);
+            statement.close();
+        }catch(SQLException e){
+            return false;
+        }
+        return true;
+    }
+
+    public boolean updateShows(int id, HashMap<String, String> newData){
+        try{
+            Statement statement = dbConn.createStatement();
+            String sqlQuery = new String();
+
+            for(Map.Entry<String, String> entry : newData.entrySet()){
+                switch (entry.getKey()){
+                    case "descricao" ->{
+                        sqlQuery = "UPDATE espetaculo SET descricao='" + entry.getValue() + "' WHERE id=" + id;
+                    }
+                    case "tipo" ->{
+                        sqlQuery = "UPDATE espetaculo SET tipo='" + entry.getValue() + "' WHERE id=" + id;
+                    }
+                    case "data_hora" ->{
+                        sqlQuery = "UPDATE espetaculo SET data_hora='" + entry.getValue() + "' WHERE id=" + id;
+                    }
+                    case "local" ->{
+                        sqlQuery = "UPDATE espetaculo SET local='" + entry.getValue() + "' WHERE id=" + id;
+                    }
+                    case "localidade" ->{
+                        sqlQuery = "UPDATE espetaculo SET localidade='" + entry.getValue() + "' WHERE id=" + id;
+                    }
+                    case "pais" ->{
+                        sqlQuery = "UPDATE espetaculo SET pais='" + entry.getValue() + "' WHERE id=" + id;
+                    }
+                    case "classificacao_etaria" ->{
+                        sqlQuery = "UPDATE espetaculo SET classificacao_etaria='" + entry.getValue() + "' WHERE id=" + id;
+                    }
+                    case "visivel" ->{
+                        sqlQuery = "UPDATE espetaculo SET visivel='" + entry.getValue() + "' WHERE id=" + id;
+                    }
+                }
+                statement.executeUpdate(sqlQuery);
+            }
+
+            statement.close();
+        }catch(SQLException e){
+            return false;
+        }
+        return true;
+    }
+
+    public boolean updateSeats(int id, HashMap<String, String> newData){
+        try{
+            Statement statement = dbConn.createStatement();
+            String sqlQuery = new String();
+
+            for(Map.Entry<String, String> entry : newData.entrySet()){
+                switch (entry.getKey()){
+                    case "fila" ->{
+                        sqlQuery = "UPDATE lugar SET fila='" + entry.getValue() + "' WHERE id=" + id;
+                    }
+                    case "assento" ->{
+                        sqlQuery = "UPDATE lugar SET assento='" + entry.getValue() + "' WHERE id=" + id;
+                    }
+                    case "preco" ->{
+                        sqlQuery = "UPDATE lugar SET preco='" + entry.getValue() + "' WHERE id=" + id;
+                    }
+                    case "espetaculo_id" -> {
+                        sqlQuery = "UPDATE lugar SET espetaculo_id='" + entry.getValue() + "' WHERE id=" + id;
+                    }
+                }
+                statement.executeUpdate(sqlQuery);
+            }
+
+            statement.close();
+        }catch(SQLException e){
+            return false;
+        }
+        return true;
+    }
+
+    public boolean updateReservation(int id, HashMap<String, String> newData){
+        try{
+            Statement statement = dbConn.createStatement();
+            String sqlQuery = new String();
+
+            for(Map.Entry<String, String> entry : newData.entrySet()){
+                switch (entry.getKey()){
+                    case "data_hora" ->{
+                        sqlQuery = "UPDATE reserva SET data_hora='" + entry.getValue() + "' WHERE id=" + id;
+                    }
+                    case "pago" ->{
+                        sqlQuery = "UPDATE reserva SET pago='" + entry.getValue() + "' WHERE id=" + id;
+                    }
+                    case "id_utilizador" ->{
+                        sqlQuery = "UPDATE reserva SET id_utilizador='" + entry.getValue() + "' WHERE id=" + id;
+                    }
+                    case "id_espetaculo" -> {
+                        sqlQuery = "UPDATE reserva SET id_espetaculo='" + entry.getValue() + "' WHERE id=" + id;
+                    }
+                }
+                statement.executeUpdate(sqlQuery);
+            }
+
+            statement.close();
+        }catch(SQLException e){
+            return false;
+        }
+        return true;
+    }
+
+    public boolean updateUser(int id, HashMap<String, String> newData){
+        try{
+            Statement statement = dbConn.createStatement();
+            String sqlQuery = new String();
+
+            for(Map.Entry<String, String> entry : newData.entrySet()){
+                switch (entry.getKey()){
+                    case "username" ->{
+                        sqlQuery = "UPDATE utilizador SET username='" + entry.getValue() + "' WHERE id=" + id;
+                    }
+                    case "nome" ->{
+                        sqlQuery = "UPDATE utilizador SET nome='" + entry.getValue() + "' WHERE id=" + id;
+                    }
+                    case "password" ->{
+                        sqlQuery = "UPDATE utilizador SET password='" + entry.getValue() + "' WHERE id=" + id;
+                    }
+                    case "administrador" -> {
+                        sqlQuery = "UPDATE utilizador SET administrador='" + entry.getValue() + "' WHERE id=" + id;
+                    }
+                    case "autenticado" -> {
+                        sqlQuery = "UPDATE utilizador SET autenticado='" + entry.getValue() + "' WHERE id=" + id;
+                    }
+                }
+                statement.executeUpdate(sqlQuery);
+            }
+
             statement.close();
         }catch(SQLException e){
             return false;
