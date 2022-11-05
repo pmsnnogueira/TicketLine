@@ -31,7 +31,9 @@ public class DBManager {
             ResultSet resultSet = statement.executeQuery(sqlQuery);
 
             StringBuilder str = new StringBuilder();
-            str.append("ID\tDescricao\tTipo\tData_Hora\tDuracao\tLocal\tLocalidade\tPais\tClass_Etaria\n");
+            str.append("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+            str.append(String.format("|%-4s|%-40s|%-12s|%-17s|%-7s|%-55s|%-11s|%-10s|%-13s|", "ID", "Descricao", "Tipo", "Data_Hora", "Duracao","Local","Localidade","Pais","Classe_Etaria"));
+            str.append("\n-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
 
             while(resultSet.next()){
                 int id = resultSet.getInt("id");
@@ -44,9 +46,8 @@ public class DBManager {
                 String pais = resultSet.getString("pais");
                 String classificacao_etaria = resultSet.getString("classificacao_etaria");
 
-                str.append(id).append("\t").append(descricao).append("\t").append(tipo).append("\t");
-                str.append(data_hora).append("\t").append(duracao).append("\t").append(local);
-                str.append("\t").append(localidade).append("\t").append(pais).append(classificacao_etaria).append("\n");
+                str.append(String.format("|%-4s|%-40s|%-12s|%-17s|%-7s|%-55s|%-11s|%-10s|%-13s|", id , descricao, tipo, data_hora, duracao,local,localidade,pais,classificacao_etaria));
+                str.append("\n-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
             }
 
             resultSet.close();
@@ -70,7 +71,10 @@ public class DBManager {
             ResultSet resultSet = statement.executeQuery(sqlQuery);
 
             StringBuilder str = new StringBuilder();
-            str.append("ID\tFila\tAssento\tPreco\tEspetaculo_ID\n");
+            str.append("---------------------------------------------------------\n");
+            str.append(String.format("|%-4s|%-10s|%-10s|%-13s|%-14s|", "ID", "Fila", "Assento", "Preco", "Espetaculo_ID"));
+            str.append("\n---------------------------------------------------------\n");
+
 
             while(resultSet.next()){
                 int id = resultSet.getInt("id");
@@ -79,8 +83,8 @@ public class DBManager {
                 double preco = resultSet.getDouble("preco");
                 int espetaculo_id = resultSet.getInt("espetaculo_id");
 
-                str.append(id).append("\t").append(fila).append("\t").append(assento);
-                str.append("\t").append(preco).append("\t").append(espetaculo_id).append("\n");
+                str.append(String.format("|%-4s|%-10s|%-10s|%-13s|%-14s|", id , fila, assento, preco, espetaculo_id));
+                str.append("\n---------------------------------------------------------\n");
             }
             resultSet.close();
             statement.close();
@@ -103,7 +107,9 @@ public class DBManager {
             ResultSet resultSet = statement.executeQuery(sqlQuery);
 
             StringBuilder str = new StringBuilder();
-            str.append("ID\tData_Hora\tPago\tID_Utilizador\tID_Espetaculo\n");
+            str.append("-----------------------------------------------------------------\n");
+            str.append(String.format("|%-4s|%-17s|%-10s|%-14s|%-14s|", "ID", "Data_Hora", "Pago", "ID_Utilizador", "ID_Espetaculo"));
+            str.append("\n-----------------------------------------------------------------\n");
 
             while(resultSet.next()){
                 int id = resultSet.getInt("id");
@@ -112,9 +118,9 @@ public class DBManager {
                 int id_utilizador = resultSet.getInt("id_utilizador");
                 int id_espetaculo = resultSet.getInt("id_espetaculo");
 
-                str.append(id).append("\t").append(data_hora).append("\t").append(pago);
-                str.append("\t").append(id_utilizador).append("\t").append(id_espetaculo).append("\n");
-            }
+                str.append(String.format("|%-4s|%-17s|%-10s|%-14s|%-14s|", id , data_hora, pago, id_utilizador, id_espetaculo));
+                str.append("\n-----------------------------------------------------------------\n");
+           }
             resultSet.close();
             statement.close();
 
@@ -135,8 +141,10 @@ public class DBManager {
 
             ResultSet resultSet = statement.executeQuery(sqlQuery);
 
-            StringBuilder str = new StringBuilder();
-            str.append("ID\tUsername\tNome\tAdministrador\tAutenticado\n");
+            StringBuilder str = new StringBuilder();str.append("---------------------------------------------------------------------------------------------\n");
+            str.append(String.format("|%-4s|%-19s|%-30s|%-22s|%-12s|", "ID", "Username", "Nome", "Administrador", "Autenticado"));
+            str.append("\n---------------------------------------------------------------------------------------------\n");
+    
 
             while(resultSet.next()){
                 int id = resultSet.getInt("id");
@@ -145,9 +153,8 @@ public class DBManager {
                 int administrador = resultSet.getInt("administrador");
                 int autenticado = resultSet.getInt("autenticado");
 
-                str.append(id).append("\t").append(username).append("\t").append(nome);
-                str.append("\t").append(administrador).append("\t").append(autenticado).append("\n");
-            }
+                str.append(String.format("|%-4s|%-19s|%-30s|%-22s|%-12s|", id , username, nome, administrador, autenticado));
+                str.append("\n---------------------------------------------------------------------------------------------\n");       }
             resultSet.close();
             statement.close();
             return str.toString();
