@@ -13,11 +13,12 @@ public class Show {
     private String local;
     private String country;
     private int age;
+    private int available;
     private ArrayList<Seat> seats;
 
     public Show(int id, String title, String genre, String date,
                 String hour, int duration, String place,
-                String local, String country, int age)
+                String local, String country, int age, int available)
                 {
                     this.id= id;
                     this.title = title;
@@ -29,6 +30,7 @@ public class Show {
                     this.local = local;
                     this.country = country;
                     this.age = age;
+                    this.available = available;
                     seats = new ArrayList<>();
                 }
 
@@ -69,4 +71,8 @@ public class Show {
     public int getAge(){return this.age;}
 
     public int getId(){return this.id;}
+
+    public void setAvailable(int available){this.available = available;}
+
+    public int getAvailable(){return this.available;}
 }

@@ -2,6 +2,7 @@ package pt.isec.pd.ticketline.src.model.data;
 
 public class Seat {
      private final int id;
+     private int idShow;
      private char row;
      private int seat;
      private float price;
@@ -33,4 +34,8 @@ public class Seat {
      public boolean getAvailable(){return this.available;}
 
      public int getId(){return this.id;}
+
+     public void setIdShow(int idShow){this.idShow = idShow;}
+
+     public int getIdShow(){return this.idShow;}
 }

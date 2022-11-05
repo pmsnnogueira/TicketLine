@@ -8,8 +8,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import javax.swing.text.DefaultEditorKit.PasteAction;
-
 public class Data {
     private ResourcesManager resourcesManager;
     private ArrayList<Show> shows;
