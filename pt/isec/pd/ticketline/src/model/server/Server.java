@@ -14,8 +14,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class Server {
-    // Id Server is used for the create of the new database for each server
-    private static int idServer=0;
     private static final int multicastPort = 4004;
     private static final String ipMulticast = "239.39.39.39";
 
@@ -24,7 +22,6 @@ public class Server {
         boolean available = true;
         int databaseVersion = 1;
         int numberOfConnections = 0;
-        idServer++;
         try
         {
             int portTcp = Integer.parseInt(args[0]);
