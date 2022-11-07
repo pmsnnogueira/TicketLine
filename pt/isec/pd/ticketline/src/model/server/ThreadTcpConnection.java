@@ -1,14 +1,14 @@
-package pt.isec.pd.ticketline.src.model;
+package pt.isec.pd.ticketline.src.model.server;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 
-public class ServerTcp extends Thread
+public class ThreadTcpConnection extends Thread
 {
     private int portUdp;
     private String databaseDirectory;
 
-    public ServerTcp(int portUdp, String databaseDirectory)
+    public ThreadTcpConnection(int portUdp, String databaseDirectory)
     {
         this.portUdp = portUdp;
         this.databaseDirectory = databaseDirectory;
