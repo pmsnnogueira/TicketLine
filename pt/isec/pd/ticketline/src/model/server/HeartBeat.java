@@ -28,9 +28,15 @@ public class HeartBeat implements Serializable{
         this.available = available;
     }
 
-    public int getdatabaseVersion(){return this.databaseVersion;}
+    public int getDatabaseVersion(){return this.databaseVersion;}
 
-    public int getnumberOfConnections(){return this.numberOfConnections;}
+    public int getNumberOfConnections(){return this.numberOfConnections;}
+
+    @Override
+    public String toString() {
+        return "Port:[" + portTcp + "] Available -> [" + available + "] Database version -> [" +
+                databaseVersion + "] Number of connections -> [" + numberOfConnections + "]";
+    }
 
     @Override
     public int hashCode() {

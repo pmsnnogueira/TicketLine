@@ -1,5 +1,7 @@
 package pt.isec.pd.ticketline.src.model.server;
 
+import pt.isec.pd.ticketline.src.model.ModelManager;
+import pt.isec.pd.ticketline.src.ui.UI;
 import pt.isec.pd.ticketline.src.ui.util.InputProtection;
 
 import java.io.ByteArrayInputStream;
@@ -11,6 +13,7 @@ import java.net.InetSocketAddress;
 import java.net.MulticastSocket;
 import java.net.NetworkInterface;
 import java.net.SocketAddress;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -20,13 +23,25 @@ public class Server {
     private static final int multicastPort = 4004;
     private static final String ipMulticast = "239.39.39.39";
 
-    public static void main(String[] args) throws IOException, InterruptedException {
-        int portTcp = Integer.parseInt(args[0]);
-        Server server = new Server();
-        server.startServer(portTcp);
+    private ModelManager modelManager;
+    private UI ui;
+
+    public static void main(String[] args)
+    {
+        try{
+            Server server = new Server(Integer.parseInt(args[0]));
+        }catch (SQLException | IOException | InterruptedException e){
+            e.printStackTrace();
+        }
     }
 
-    public void startServer(int port) throws IOException, InterruptedException, NumberFormatException{
+    public Server(int port) throws SQLException, IOException, InterruptedException {
+        this.modelManager = new ModelManager();
+        this.ui = new UI(modelManager);
+        startServer(port);
+    }
+
+    public void startServer(int port) throws IOException, InterruptedException, NumberFormatException, SQLException {
         boolean available = true;
         int databaseVersion = 1;
         int numberOfConnections = 0;
@@ -50,36 +65,30 @@ public class Server {
         HeartBeatReceiver hbh = new HeartBeatReceiver(mcs);
         hbh.start();
 
-        while(true){
-            int input = InputProtection.chooseOption("SERVER: ", "Exit");
-            if (input == 1) {
-                heartBeat.setAvailable(false);
-                System.out.println("GoodBye");
-                break;
-            }
-            System.out.println("Not a valid option!");
-        }
+        ui.start();
+        heartBeat.setAvailable(false);
 
         hbh.join(10000);
+        modelManager.closeDB();
         scheduler.close();
         mcs.leaveGroup(sa, ni);
         mcs.close();
-
     }
 
     class HeartBeatReceiver extends Thread{
         private MulticastSocket mcs;
-        ArrayList<HeartBeat> svHB;
 
         public HeartBeatReceiver(MulticastSocket mcs){
             this.mcs = mcs;
-            this.svHB = new ArrayList<>();
         }
 
         @Override
         public void run() {
             while(true)
             {
+                if (mcs.isClosed()){
+                    break;
+                }
                 try{
                     DatagramPacket dp = new DatagramPacket(new byte[256], 256);
                     mcs.receive(dp);
@@ -88,28 +97,20 @@ public class Server {
                     try
                     {
                         HeartBeat heartBeat = (HeartBeat)ois.readObject();
-                        System.out.println("\nReceived heartbeat from server -> Port:[" + heartBeat.getPortTcp() +
+
+/*                        System.out.println("\nReceived heartbeat from server -> Port:[" + heartBeat.getPortTcp() +
                                 "] Available -> [" + heartBeat.getAvailable() + "] Database version -> [" + heartBeat.getdatabaseVersion()
-                                + "] Number of connections -> [" + heartBeat.getnumberOfConnections() + "]\n");
+                                + "] Number of connections -> [" + heartBeat.getnumberOfConnections() + "]\n");*/
 
-                        //if we already had a heartbeat from the same port
-                        //we will replace the old one with the new one
-                        svHB.removeIf(beat -> beat.getPortTcp() == heartBeat.getPortTcp());
+                        ui.processANewHeartBeat(heartBeat);
 
-                        svHB.add(heartBeat);
                     }
                     catch(ClassNotFoundException cnfe){
                         cnfe.printStackTrace();
                     }
 
-                    for (HeartBeat beat : svHB){
-                        System.out.println(beat.hashCode() + " " + beat.getAvailable());
-                    }
-
-                    //if there is any hearbeat not available
-                    svHB.removeIf(hb -> !hb.getAvailable());
+                    ui.checkForServerDeath();
                 }catch (IOException e){
-                    System.out.println("Port isnt available");
                     break;
                 }
             }

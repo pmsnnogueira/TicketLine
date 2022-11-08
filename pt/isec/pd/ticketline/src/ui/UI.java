@@ -1,6 +1,7 @@
 package pt.isec.pd.ticketline.src.ui;
 
 import pt.isec.pd.ticketline.src.model.ModelManager;
+import pt.isec.pd.ticketline.src.model.server.HeartBeat;
 import pt.isec.pd.ticketline.src.ui.util.InputProtection;
 
 import java.sql.SQLException;
@@ -159,7 +160,9 @@ public class UI {
                     newData.put(parameter, newValue);
                 }
 
-                this.data.updateShows(id, newData);
+                if (!this.data.updateShows(id, newData)){
+                    System.out.println("Could not update show");
+                }
             }
             case 2->{
                 int id = InputProtection.readInt("Seat ID: ");
@@ -174,7 +177,9 @@ public class UI {
                     newData.put(parameter, newValue);
                 }
 
-                this.data.updateSeats(id, newData);
+                if (!this.data.updateSeats(id, newData)){
+                    System.out.println("Could not update seat");
+                }
             }
             case 3->{
                 int id = InputProtection.readInt("Reservation ID: ");
@@ -189,7 +194,9 @@ public class UI {
                     newData.put(parameter, newValue);
                 }
 
-                this.data.updateReservation(id, newData);
+               if (!this.data.updateReservation(id, newData)){
+                   System.out.println("Could not update reservation");
+               }
             }
             case 4->{
                 int id = InputProtection.readInt("User ID: ");
@@ -204,7 +211,9 @@ public class UI {
                     newData.put(parameter, newValue);
                 }
 
-                this.data.updateUser(id, newData);
+                if(!this.data.updateUser(id, newData)){
+                    System.out.println("Could not update user");
+                }
             }
             default -> {
                 System.out.println("Not a valid option");
@@ -213,22 +222,39 @@ public class UI {
         }
     }
 
+    public void processANewHeartBeat(HeartBeat heartBeat){
+        if (!this.data.processANewHeartBeat(heartBeat)){
+            System.out.println("Could not add new heart beat");
+        }
+    }
+
+    public void checkForServerDeath(){
+        if(this.data.checkFOrServerDeath()){
+            System.out.println("\nA server just died");
+        }
+    }
+
+    private void listAllAvailableServers() {
+        System.out.println(this.data.listAllAvailableServers());
+    }
+
     public void start(){
         while (true){
             int input = InputProtection.chooseOption("Choose an action:", "List information",
                                                      "Insert data","Delete data",
-                                                     "Update data","Exit");
+                                                     "Update data", "List available servers","Exit");
 
             switch (input){
                 case 1 -> listInformation();
                 case 2 -> insertData();
                 case 3 -> deleteData();
                 case 4 -> updateData();
-                case 5 -> {
-                    System.out.println("HASTA LA VISTA BABY!");
+                case 5 -> listAllAvailableServers();
+                case 6 -> {
                     return;
                 }
             }
         }
     }
+
 }

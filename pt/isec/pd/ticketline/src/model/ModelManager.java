@@ -1,6 +1,8 @@
 package pt.isec.pd.ticketline.src.model;
 
 import pt.isec.pd.ticketline.src.model.data.Data;
+import pt.isec.pd.ticketline.src.model.server.HeartBeat;
+
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -63,6 +65,17 @@ public class ModelManager {
     }
     public boolean updateUser(int id, HashMap<String, String> newData){
         return this.data.updateUser(id, newData);
+    }
+
+    public boolean processANewHeartBeat(HeartBeat heartBeat){
+        return this.data.processANewHeartBeat(heartBeat);
+    }
+    public boolean checkFOrServerDeath(){
+        return this.data.checkFOrServerDeath();
+    }
+
+    public String listAllAvailableServers(){
+        return this.data.listAllAvailableServers();
     }
 
     public void closeDB() throws SQLException{

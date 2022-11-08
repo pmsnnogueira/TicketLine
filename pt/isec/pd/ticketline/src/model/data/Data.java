@@ -1,5 +1,6 @@
 package pt.isec.pd.ticketline.src.model.data;
 
+import pt.isec.pd.ticketline.src.model.server.HeartBeat;
 import pt.isec.pd.ticketline.src.resources.ResourcesManager;
 import pt.isec.pd.ticketline.src.resources.files.FileOpener;
 
@@ -11,10 +12,12 @@ import java.util.List;
 public class Data {
     private ResourcesManager resourcesManager;
     private ArrayList<Show> shows;
+    private ArrayList<HeartBeat> heartBeatsReceived;
 
     public Data() throws SQLException {
         this.resourcesManager = new ResourcesManager();
         this.shows = new ArrayList<>();
+        this.heartBeatsReceived = new ArrayList<>();
     }
 
     public String listUsers(Integer userID){
@@ -144,5 +147,28 @@ public class Data {
     }
     public boolean updateUser(int id, HashMap<String, String> newData){
         return this.resourcesManager.updateUser(id, newData);
+    }
+
+    public boolean processANewHeartBeat(HeartBeat heartBeat){
+        //if we already had a heartbeat from the same port
+        //we will replace the old one with the new one
+        heartBeatsReceived.removeIf(beat -> beat.getPortTcp() == heartBeat.getPortTcp());
+
+        return heartBeatsReceived.add(heartBeat);
+    }
+
+    public boolean checkFOrServerDeath(){
+        //if there is any heart beat not available
+        return heartBeatsReceived.removeIf(hb -> !hb.getAvailable());
+    }
+
+    public String listAllAvailableServers(){
+        StringBuilder sb = new StringBuilder();
+
+        for (HeartBeat beat : heartBeatsReceived){
+            sb.append(beat.toString()).append("\n");
+        }
+
+        return sb.toString();
     }
 }
