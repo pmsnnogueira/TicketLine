@@ -1,7 +1,8 @@
-package pt.isec.pd.ticketline.src.model.server;
+package pt.isec.pd.ticketline.src.model.server.heartbeat;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.LocalTime;
 
 public class HeartBeat implements Serializable{
     @Serial
@@ -11,6 +12,7 @@ public class HeartBeat implements Serializable{
     private boolean available;
     private int databaseVersion;
     private int numberOfConnections;
+    private LocalTime timeCreated;
 
     public HeartBeat(int portTcp, boolean available, int databaseVersion, int numberOfConnections)
     {
@@ -18,6 +20,7 @@ public class HeartBeat implements Serializable{
         this.available = available;
         this.databaseVersion = databaseVersion;
         this.numberOfConnections = numberOfConnections;
+        this.timeCreated = LocalTime.now();
     }
 
     public int getPortTcp(){return this.portTcp;}
@@ -32,10 +35,19 @@ public class HeartBeat implements Serializable{
 
     public int getNumberOfConnections(){return this.numberOfConnections;}
 
+    public void setTimeCreated() {
+        this.timeCreated = LocalTime.now();
+    }
+
+    public LocalTime getTimeCreated() {
+        return LocalTime.of(timeCreated.getHour(), timeCreated.getMinute(), timeCreated.getSecond());
+    }
+
     @Override
     public String toString() {
         return "Port:[" + portTcp + "] Available -> [" + available + "] Database version -> [" +
-                databaseVersion + "] Number of connections -> [" + numberOfConnections + "]";
+                databaseVersion + "] Number of connections -> [" + numberOfConnections + "] " +
+                "Created at -> [" + timeCreated + "]";
     }
 
     @Override

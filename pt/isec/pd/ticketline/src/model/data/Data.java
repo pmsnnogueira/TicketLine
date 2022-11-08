@@ -1,10 +1,11 @@
 package pt.isec.pd.ticketline.src.model.data;
 
-import pt.isec.pd.ticketline.src.model.server.HeartBeat;
+import pt.isec.pd.ticketline.src.model.server.heartbeat.HeartBeat;
 import pt.isec.pd.ticketline.src.resources.ResourcesManager;
 import pt.isec.pd.ticketline.src.resources.files.FileOpener;
 
 import java.sql.SQLException;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -157,7 +158,7 @@ public class Data {
         return heartBeatsReceived.add(heartBeat);
     }
 
-    public boolean checkFOrServerDeath(){
+    public boolean checkForServerDeath(){
         //if there is any heart beat not available
         return heartBeatsReceived.removeIf(hb -> !hb.getAvailable());
     }
@@ -170,5 +171,9 @@ public class Data {
         }
 
         return sb.toString();
+    }
+
+    public boolean serverLifeCheck(){
+        return heartBeatsReceived.removeIf(beat -> LocalTime.now().isAfter(beat.getTimeCreated().plusSeconds(35)));
     }
 }

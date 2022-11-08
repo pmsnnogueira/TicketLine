@@ -1,6 +1,9 @@
 package pt.isec.pd.ticketline.src.model.server;
 
 import pt.isec.pd.ticketline.src.model.ModelManager;
+import pt.isec.pd.ticketline.src.model.server.heartbeat.ExecutorSendHeartBeat;
+import pt.isec.pd.ticketline.src.model.server.heartbeat.HeartBeat;
+import pt.isec.pd.ticketline.src.model.server.heartbeat.ServerLifeCheck;
 import pt.isec.pd.ticketline.src.ui.UI;
 
 import java.io.ByteArrayInputStream;
@@ -21,7 +24,6 @@ public class Server {
     private static final int multicastPort = 4004;
     private static final String ipMulticast = "239.39.39.39";
 
-    private ModelManager modelManager;
     private UI ui;
 
     public static void main(String[] args)
@@ -34,8 +36,7 @@ public class Server {
     }
 
     public Server(int port) throws SQLException, IOException, InterruptedException {
-        this.modelManager = new ModelManager(port);
-        this.ui = new UI(modelManager);
+        this.ui = new UI(new ModelManager(port));
         startServer(port);
     }
 
@@ -47,7 +48,7 @@ public class Server {
         //String databaseDirectory = args[1];
         //ThreadTcpConnection serverTcp = new ThreadTcpConnection(portTcp, databaseDirectory);
         //serverTcp.start();
-        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
 
         MulticastSocket mcs = new MulticastSocket(multicastPort);
         InetAddress ipGroup = InetAddress.getByName(ipMulticast);
@@ -57,8 +58,12 @@ public class Server {
 
         HeartBeat heartBeat = new HeartBeat(port, available, databaseVersion, numberOfConnections);
 
-        scheduler.scheduleAtFixedRate(new ExecuterSendHeartBeat(heartBeat, mcs),
+        //Every 10 seconds, the server will send a heart beat through multicast
+        //to every other on-line server
+        scheduler.scheduleAtFixedRate(new ExecutorSendHeartBeat(heartBeat, mcs),
                         0, 10, TimeUnit.SECONDS);
+        //Every 35 seconds, the server will check if there is any server who hasn't
+        scheduler.scheduleAtFixedRate(new ServerLifeCheck(this.ui), 0, 35, TimeUnit.SECONDS);
 
         HeartBeatReceiver hbh = new HeartBeatReceiver(mcs);
         hbh.start();
@@ -67,7 +72,6 @@ public class Server {
         heartBeat.setAvailable(false);
 
         hbh.join(10000);
-        modelManager.closeDB();
         scheduler.close();
         mcs.leaveGroup(sa, ni);
         mcs.close();

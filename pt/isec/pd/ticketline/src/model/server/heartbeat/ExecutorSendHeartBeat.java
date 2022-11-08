@@ -1,4 +1,4 @@
-package pt.isec.pd.ticketline.src.model.server;
+package pt.isec.pd.ticketline.src.model.server.heartbeat;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -7,11 +7,11 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 
-public class ExecuterSendHeartBeat implements Runnable{
+public class ExecutorSendHeartBeat implements Runnable{
     private HeartBeat heartBeat;
     private MulticastSocket ms;
 
-    public ExecuterSendHeartBeat(HeartBeat heartBeat, MulticastSocket ms)
+    public ExecutorSendHeartBeat(HeartBeat heartBeat, MulticastSocket ms)
     {
         this.heartBeat = heartBeat;
         this.ms = ms;
@@ -21,6 +21,7 @@ public class ExecuterSendHeartBeat implements Runnable{
     public void run() {
         try
         {
+            this.heartBeat.setTimeCreated();
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ObjectOutputStream oos = new ObjectOutputStream(baos);
             

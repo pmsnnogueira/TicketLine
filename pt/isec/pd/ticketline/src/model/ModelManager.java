@@ -1,7 +1,7 @@
 package pt.isec.pd.ticketline.src.model;
 
 import pt.isec.pd.ticketline.src.model.data.Data;
-import pt.isec.pd.ticketline.src.model.server.HeartBeat;
+import pt.isec.pd.ticketline.src.model.server.heartbeat.HeartBeat;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -71,11 +71,15 @@ public class ModelManager {
         return this.data.processANewHeartBeat(heartBeat);
     }
     public boolean checkFOrServerDeath(){
-        return this.data.checkFOrServerDeath();
+        return this.data.checkForServerDeath();
     }
 
     public String listAllAvailableServers(){
         return this.data.listAllAvailableServers();
+    }
+
+    public boolean serverLifeCheck(){
+        return this.data.serverLifeCheck();
     }
 
     public void closeDB() throws SQLException{

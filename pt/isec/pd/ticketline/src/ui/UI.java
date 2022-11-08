@@ -1,7 +1,7 @@
 package pt.isec.pd.ticketline.src.ui;
 
 import pt.isec.pd.ticketline.src.model.ModelManager;
-import pt.isec.pd.ticketline.src.model.server.HeartBeat;
+import pt.isec.pd.ticketline.src.model.server.heartbeat.HeartBeat;
 import pt.isec.pd.ticketline.src.ui.util.InputProtection;
 
 import java.sql.SQLException;
@@ -234,6 +234,12 @@ public class UI {
         }
     }
 
+    public void serverLifeCheck(){
+        if (this.data.serverLifeCheck()){
+            System.out.println("There are servers who have been eliminated");
+        }
+    }
+
     private void listAllAvailableServers() {
         System.out.println(this.data.listAllAvailableServers());
     }
@@ -251,6 +257,9 @@ public class UI {
                 case 4 -> updateData();
                 case 5 -> listAllAvailableServers();
                 case 6 -> {
+                    try{
+                        this.data.closeDB();
+                    }catch (SQLException ignored){}
                     return;
                 }
             }
