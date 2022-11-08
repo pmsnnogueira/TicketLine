@@ -5,7 +5,7 @@ import java.io.Serializable;
 
 public class HeartBeat implements Serializable{
     @Serial
-    private static final long seralVersioUID = 2L;
+    private static final long serialVersionUID = 2L;
 
     private int portTcp;
     private boolean available;
@@ -24,7 +24,16 @@ public class HeartBeat implements Serializable{
 
     public boolean getAvailable(){return this.available;}
 
+    public void setAvailable(boolean available) {
+        this.available = available;
+    }
+
     public int getdatabaseVersion(){return this.databaseVersion;}
 
     public int getnumberOfConnections(){return this.numberOfConnections;}
+
+    @Override
+    public int hashCode() {
+        return portTcp;
+    }
 }
