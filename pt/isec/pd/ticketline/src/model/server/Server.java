@@ -2,7 +2,6 @@ package pt.isec.pd.ticketline.src.model.server;
 
 import pt.isec.pd.ticketline.src.model.ModelManager;
 import pt.isec.pd.ticketline.src.ui.UI;
-import pt.isec.pd.ticketline.src.ui.util.InputProtection;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -45,6 +44,10 @@ public class Server {
         boolean available = true;
         int databaseVersion = 1;
         int numberOfConnections = 0;
+
+        if (!modelManager.duplicateDB(""+port)) {
+            System.out.println("Could not duplicate");
+        }
 
         //String databaseDirectory = args[1];
         //ThreadTcpConnection serverTcp = new ThreadTcpConnection(portTcp, databaseDirectory);

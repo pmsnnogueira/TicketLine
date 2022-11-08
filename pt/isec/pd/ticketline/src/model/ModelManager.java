@@ -81,4 +81,8 @@ public class ModelManager {
     public void closeDB() throws SQLException{
         this.data.closeDB();
     }
+
+    public boolean duplicateDB(String identification){
+        return this.data.duplicateDB(identification);
+    }
 }

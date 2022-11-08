@@ -171,4 +171,8 @@ public class Data {
 
         return sb.toString();
     }
+
+    public boolean duplicateDB(String identification){
+        return this.resourcesManager.duplicateDB(identification);
+    }
 }

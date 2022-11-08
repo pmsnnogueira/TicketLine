@@ -66,6 +66,10 @@ public class ResourcesManager {
         return this.dbManager.updateUser(id, newData);
     }
 
+    public boolean duplicateDB(String identification){
+        return this.dbManager.duplicateDB(identification);
+    }
+
     public void closeDB() throws SQLException {
         this.dbManager.close();
     }

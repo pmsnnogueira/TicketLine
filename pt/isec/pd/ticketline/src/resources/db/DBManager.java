@@ -1,5 +1,6 @@
 package pt.isec.pd.ticketline.src.resources.db;
 
+import java.io.*;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,6 +17,40 @@ public class DBManager {
     {
         if (dbConn != null)
             dbConn.close();
+    }
+
+    public boolean duplicateDB(String identification){
+        File file = new File("pt/isec/pd/ticketline/src/resources/db/PD-2022-23-TP.db");
+
+        FileInputStream fis;
+        try{
+             fis = new FileInputStream(file);
+        }catch (FileNotFoundException e){
+            return false;
+        }
+
+        FileOutputStream fos;
+        try{
+            fos = new FileOutputStream("pt/isec/pd/ticketline/src/resources/db/PD-2022-23-TP-" + identification + ".db");
+        }catch (FileNotFoundException e){
+            return false;
+        }
+
+        byte[] buffer = new byte[1024];
+        int bytesRead = 0;
+
+        while(bytesRead >= 0){
+            try{
+                bytesRead = fis.read(buffer);
+                fos.write(buffer);
+                System.out.println("Bytes read: " + bytesRead);
+            }catch (IOException e){
+                return false;
+            }
+        }
+
+
+        return true;
     }
 
     public String listShows(Integer showID){
