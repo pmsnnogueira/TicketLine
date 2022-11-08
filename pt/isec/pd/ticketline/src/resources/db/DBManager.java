@@ -9,8 +9,11 @@ import java.util.Map;
 public class DBManager {
     private final Connection dbConn;
 
-    public DBManager() throws SQLException {
-        this.dbConn = DriverManager.getConnection("jdbc:sqlite:pt/isec/pd/ticketline/src/resources/db/PD-2022-23-TP.db");
+    public DBManager(int port) throws SQLException {
+        if (!duplicateDB(port)){
+            throw new SQLException();
+        }
+        this.dbConn = DriverManager.getConnection("jdbc:sqlite:pt/isec/pd/ticketline/src/resources/db/PD-2022-23-TP-" + port + ".db");
     }
 
     public void close() throws SQLException
@@ -19,7 +22,12 @@ public class DBManager {
             dbConn.close();
     }
 
-    public boolean duplicateDB(String identification){
+    private boolean duplicateDB(int port){
+        //if the database already exists, there is no need to duplicate it
+        if((new File("pt/isec/pd/ticketline/src/resources/db/PD-2022-23-TP-" + port + ".db")).exists()){
+            return true;
+        }
+
         File file = new File("pt/isec/pd/ticketline/src/resources/db/PD-2022-23-TP.db");
 
         FileInputStream fis;
@@ -31,7 +39,7 @@ public class DBManager {
 
         FileOutputStream fos;
         try{
-            fos = new FileOutputStream("pt/isec/pd/ticketline/src/resources/db/PD-2022-23-TP-" + identification + ".db");
+            fos = new FileOutputStream("pt/isec/pd/ticketline/src/resources/db/PD-2022-23-TP-" + port + ".db");
         }catch (FileNotFoundException e){
             return false;
         }

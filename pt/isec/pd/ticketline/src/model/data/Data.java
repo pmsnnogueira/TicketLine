@@ -14,8 +14,8 @@ public class Data {
     private ArrayList<Show> shows;
     private ArrayList<HeartBeat> heartBeatsReceived;
 
-    public Data() throws SQLException {
-        this.resourcesManager = new ResourcesManager();
+    public Data(int port) throws SQLException {
+        this.resourcesManager = new ResourcesManager(port);
         this.shows = new ArrayList<>();
         this.heartBeatsReceived = new ArrayList<>();
     }
@@ -170,9 +170,5 @@ public class Data {
         }
 
         return sb.toString();
-    }
-
-    public boolean duplicateDB(String identification){
-        return this.resourcesManager.duplicateDB(identification);
     }
 }

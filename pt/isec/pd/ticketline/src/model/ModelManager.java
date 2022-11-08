@@ -10,8 +10,8 @@ import java.util.HashMap;
 public class ModelManager {
     private Data data;
 
-    public ModelManager() throws SQLException {
-        this.data = new Data();
+    public ModelManager(int port) throws SQLException {
+        this.data = new Data(port);
     }
 
     public String listUsers(Integer userID){
@@ -80,9 +80,5 @@ public class ModelManager {
 
     public void closeDB() throws SQLException{
         this.data.closeDB();
-    }
-
-    public boolean duplicateDB(String identification){
-        return this.data.duplicateDB(identification);
     }
 }

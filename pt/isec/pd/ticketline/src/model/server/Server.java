@@ -34,7 +34,7 @@ public class Server {
     }
 
     public Server(int port) throws SQLException, IOException, InterruptedException {
-        this.modelManager = new ModelManager();
+        this.modelManager = new ModelManager(port);
         this.ui = new UI(modelManager);
         startServer(port);
     }
@@ -43,10 +43,6 @@ public class Server {
         boolean available = true;
         int databaseVersion = 1;
         int numberOfConnections = 0;
-
-        if (!modelManager.duplicateDB(""+port)) {
-            System.out.println("Could not duplicate");
-        }
 
         //String databaseDirectory = args[1];
         //ThreadTcpConnection serverTcp = new ThreadTcpConnection(portTcp, databaseDirectory);

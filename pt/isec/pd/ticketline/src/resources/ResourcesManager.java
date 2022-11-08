@@ -9,8 +9,8 @@ import java.util.HashMap;
 public class ResourcesManager {
     private final DBManager dbManager;
 
-    public ResourcesManager() throws SQLException {
-        this.dbManager = new DBManager();
+    public ResourcesManager(int port) throws SQLException {
+        this.dbManager = new DBManager(port);
     }
 
     public String listUsers(Integer userID){
@@ -64,10 +64,6 @@ public class ResourcesManager {
     }
     public boolean updateUser(int id, HashMap<String, String> newData){
         return this.dbManager.updateUser(id, newData);
-    }
-
-    public boolean duplicateDB(String identification){
-        return this.dbManager.duplicateDB(identification);
     }
 
     public void closeDB() throws SQLException {
