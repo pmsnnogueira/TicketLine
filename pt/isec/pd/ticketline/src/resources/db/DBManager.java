@@ -43,7 +43,6 @@ public class DBManager {
             try{
                 bytesRead = fis.read(buffer);
                 fos.write(buffer);
-                System.out.println("Bytes read: " + bytesRead);
             }catch (IOException e){
                 return false;
             }
