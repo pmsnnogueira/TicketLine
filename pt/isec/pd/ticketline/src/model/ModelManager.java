@@ -34,8 +34,8 @@ public class ModelManager {
         this.data.addShow();
     }
 
-    public boolean insertSeat(ArrayList<String> parameters){
-        return this.data.insertSeat(parameters);
+    public boolean insertSeat(ArrayList<ArrayList<String>> parameters , int numShow){
+        return this.data.insertSeat(parameters , numShow);
     }
 
     public boolean insertReservation(ArrayList<String> parameters){

@@ -29,12 +29,12 @@ public class ResourcesManager {
         return this.dbManager.listSeats(seatID);
     }
 
-    public boolean insertShow(ArrayList<String> parameters) {
+    public int insertShow(ArrayList<String> parameters) {
         return this.dbManager.insertShow(parameters);
     }
 
-    public boolean insertSeat(ArrayList<String> parameters){
-        return this.dbManager.insertSeat(parameters);
+    public boolean insertSeat(ArrayList<ArrayList<String>> parameters , int numShow){
+        return this.dbManager.insertSeat(parameters , numShow);
     }
 
     public boolean insertReservation(ArrayList<String> parameters){

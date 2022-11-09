@@ -205,12 +205,13 @@ public class DBManager {
         }
     }
 
-    public boolean insertShow(ArrayList<String> parameters){
+    //Insert Show   ERROR: Return (-1)   else   return(show)
+    public int insertShow(ArrayList<String> parameters){
         Statement statement;
         try{
             statement = dbConn.createStatement();
         }catch (SQLException e){
-            return false;
+            return (-1);
         }
 
         int i = 0;
@@ -221,30 +222,34 @@ public class DBManager {
                             parameters.get(i++) + "' , '" + "0" + "')";
 
         try{
-            statement.executeUpdate(sqlQuery);
+            statement.executeUpdate(sqlQuery , statement.RETURN_GENERATED_KEYS);
+            ResultSet rs = statement.getGeneratedKeys();
             statement.close();
+            return (rs.getInt(1));
         }catch (SQLException e){
-            return false;
+            return (-1);
         }
-
-        return true;
     }
 
-    public boolean insertSeat(ArrayList<String> parameters){
+    public boolean insertSeat(ArrayList<ArrayList<String>> parameters , int numShow){
         Statement statement;
+        int contador = 0;
         try{
             statement = dbConn.createStatement();
         }catch (SQLException e){
             return false;
         }
 
-        int i = 0;
-        String sqlQuery = "INSERT INTO lugar VALUES (NULL, '" + parameters.get(i++) + "' , '" +
-                parameters.get(i++) + "' , '" + parameters.get(i++) + "' , '" +
-                parameters.get(i) + "')";
-
         try{
-            statement.executeUpdate(sqlQuery);
+            int i = 0;
+            while(i < parameters.size()){
+                String sqlQuery = "INSERT INTO lugar VALUES (NULL, '" + parameters.get(i).get(contador++) + "' , '" +
+                    parameters.get(i).get(contador++) + "' , '" + parameters.get(i).get(contador++) + "' , '" +
+                    numShow + "')";
+                    statement.executeUpdate(sqlQuery);
+                i++;
+                contador = 0;
+            }        
             statement.close();
         }catch (SQLException e){
             return false;

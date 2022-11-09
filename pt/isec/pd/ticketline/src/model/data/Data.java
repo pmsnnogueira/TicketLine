@@ -7,6 +7,7 @@ import pt.isec.pd.ticketline.src.resources.files.FileOpener;
 import java.sql.SQLException;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -37,12 +38,12 @@ public class Data {
         return this.resourcesManager.listSeats(seatID);
     }
 
-    public boolean insertShow(ArrayList<String> parameters){
+    public int insertShow(ArrayList<String> parameters){
         return this.resourcesManager.insertShow(parameters);
     }
 
-    public boolean insertSeat(ArrayList<String> parameters){
-        return this.resourcesManager.insertSeat(parameters);
+    public boolean insertSeat(ArrayList<ArrayList<String>> parameters , int numShow){
+        return this.resourcesManager.insertSeat(parameters , numShow);
     }
 
     public boolean insertReservation(ArrayList<String> parameters){
@@ -61,72 +62,91 @@ public class Data {
     {
         List<String> information = FileOpener.openFile("pt/isec/pd/ticketline/src/resources/files/teste.txt");
         ArrayList<String> parameters = new ArrayList<>();
+        ArrayList<ArrayList<String>> arraySeats = new ArrayList<>();
         String dateHour = "";
+        int numShow = -1;
+        boolean seats = false;
 
         for(String string : information)
         {
             String newString = string.replaceAll("\"", "");
             String[] splitted = newString.split(";");
-
-            if(newString.contains("Designação"))
-            {
-       
-                String designation = splitted[1];
-                parameters.add(designation);
-            }
-            else if(newString.contains("Tipo"))
-            {
-                String type = splitted[1];
-                parameters.add(type);
-            }
-            else if(newString.contains("Data"))
-            {
-                String day = splitted[1];
-                String month = splitted[2];
-                String year = splitted[3];
-                dateHour = day + ":" + month + ":" + year + "-";
-            }
-            else if(newString.contains("Hora"))
-            {
-                String hour = splitted[1];
-                String minutes = splitted[2];
-                dateHour += hour + ":" + minutes;
-                parameters.add(dateHour);
-            }
-            else if(newString.contains("Duração"))
-            {
-                String duration = splitted[1];
-                parameters.add(duration); 
-            }
-            else if(newString.contains("Local"))
-            {
-                String place = splitted[1];
-                parameters.add(place);
-            }
-            else if(newString.contains("Localidade"))
-            {
-                String local = splitted[1];
-                parameters.add(local);
-            }
-            else if(newString.contains("País"))
-            {
-                String country = splitted[1];
-                parameters.add(country);
-            }
-            else if(newString.contains("Classificação etária"))
-            {
-                String age = splitted[1];
-                parameters.add(age);
-            }
-            else if(newString.contains(":"))
-            {
-                String row = splitted.toString();
-                parameters.add(row);
-            }
-            else
+            if(!seats){
+                if(newString.contains("Designação"))
+                {
+        
+                    String designation = splitted[1];
+                    parameters.add(designation);
+                }
+                else if(newString.contains("Tipo"))
+                {
+                    String type = splitted[1];
+                    parameters.add(type);
+                }
+                else if(newString.contains("Data"))
+                {
+                    String day = splitted[1];
+                    String month = splitted[2];
+                    String year = splitted[3];
+                    dateHour = day + ":" + month + ":" + year + "-";
+                }
+                else if(newString.contains("Hora"))
+                {
+                    String hour = splitted[1];
+                    String minutes = splitted[2];
+                    dateHour += hour + ":" + minutes;
+                    parameters.add(dateHour);
+                }
+                else if(newString.contains("Duração"))
+                {
+                    String duration = splitted[1];
+                    parameters.add(duration); 
+                }
+                else if(newString.contains("Local"))
+                {
+                    String place = splitted[1];
+                    parameters.add(place);
+                }
+                else if(newString.contains("Localidade"))
+                {
+                    String local = splitted[1];
+                    parameters.add(local);
+                }
+                else if(newString.contains("País"))
+                {
+                    String country = splitted[1];
+                    parameters.add(country);
+                }
+                else if(newString.contains("Classificação etária"))
+                {
+                    String age = splitted[1];
+                    parameters.add(age);
+                }
+                else if(newString.contains(":"))
+                {
+                    String row = splitted.toString();
+                    parameters.add(row);
+                }
+                else if(newString.contains("Fila"))
+                    seats = true;
+                
                 continue;
+            }
+             //Insert Seats to arraySeats
+            if(seats){
+                String newStringSeats = string.replaceAll("\"", "");
+                newStringSeats = newStringSeats.replaceAll(";", ":").replaceAll("\\s+", "");
+                String[] splittedSeats = newStringSeats.split(":");
+                for(int i = 1 ; i < splittedSeats.length ; i++){
+                    ArrayList<String> enviar = new ArrayList<>();
+                    Collections.addAll(enviar, splittedSeats[0] , splittedSeats[i++] , splittedSeats[i]);
+                    arraySeats.add(enviar);
+                }
+            }
         }
-        insertShow(parameters);
+        numShow = insertShow(parameters);
+        if(numShow > 0)
+            insertSeat(arraySeats , numShow);
     }
 
     public boolean deleteShow(int id){return this.resourcesManager.deleteShow(id);}

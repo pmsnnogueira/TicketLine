@@ -6,6 +6,8 @@ import pt.isec.pd.ticketline.src.ui.util.InputProtection;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 
 public class UI {
@@ -47,18 +49,16 @@ public class UI {
 
         switch (input){
             case 1 ->{
+                ArrayList<ArrayList<String>> parameters = new ArrayList<>();
                 String fila = InputProtection.readString("Row: ", true);
                 String assento = InputProtection.readString("Seat: ", true);
                 double preco = InputProtection.readNumber("Price: ");
                 int espetaculo_id = InputProtection.readInt("Show ID: ");
-
-                ArrayList<String> parameters = new ArrayList<>();
-                parameters.add(fila);
-                parameters.add(assento);
-                parameters.add(Double.toString(preco));
-                parameters.add(Integer.toString(espetaculo_id));
-
-                if (!this.data.insertSeat(parameters)){
+                ArrayList<String> enviar = new ArrayList<>();
+                Collections.addAll(enviar, fila , assento , Double.toString(preco) );
+                parameters.add(enviar);
+                
+                if (!this.data.insertSeat(parameters , espetaculo_id)){
                     System.out.println("Could not insert data");
                 }
             }
