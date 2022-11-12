@@ -23,7 +23,6 @@ import java.util.concurrent.TimeUnit;
 public class Server {
     private static final int multicastPort = 4004;
     private static final String ipMulticast = "239.39.39.39";
-
     private UI ui;
 
     public static void main(String[] args)
@@ -72,7 +71,6 @@ public class Server {
         heartBeat.setAvailable(false);
 
         hbh.join(10000);
-        scheduler.close();
         mcs.leaveGroup(sa, ni);
         mcs.close();
     }
