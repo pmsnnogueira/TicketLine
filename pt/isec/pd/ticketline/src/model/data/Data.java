@@ -15,9 +15,13 @@ public class Data {
     private ResourcesManager resourcesManager;
     private ArrayList<HeartBeat> heartBeatsReceived;
 
-    public Data(int port) throws SQLException {
-        this.resourcesManager = new ResourcesManager(port);
+    public Data() throws SQLException {
+        this.resourcesManager = new ResourcesManager();
         this.heartBeatsReceived = new ArrayList<>();
+    }
+
+    public boolean connectToDB(int port, String DBDirectory){
+        return this.resourcesManager.connectToDB(port, DBDirectory);
     }
 
     public String listUsers(Integer userID){

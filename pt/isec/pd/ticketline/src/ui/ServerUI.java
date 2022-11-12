@@ -1,19 +1,20 @@
 package pt.isec.pd.ticketline.src.ui;
 
 import pt.isec.pd.ticketline.src.model.ModelManager;
+import pt.isec.pd.ticketline.src.model.server.Server;
 import pt.isec.pd.ticketline.src.model.server.heartbeat.HeartBeat;
 import pt.isec.pd.ticketline.src.ui.util.InputProtection;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 
-public class UI {
+public class ServerUI {
     private final ModelManager data;
 
-    public UI(ModelManager data){
+    public ServerUI(ModelManager data){
         this.data = data;
     }
 
@@ -222,24 +223,6 @@ public class UI {
         }
     }
 
-    public void processANewHeartBeat(HeartBeat heartBeat){
-        if (!this.data.processANewHeartBeat(heartBeat)){
-            System.out.println("Could not add new heart beat");
-        }
-    }
-
-    public void checkForServerDeath(){
-        if(this.data.checkFOrServerDeath()){
-            System.out.println("\nA server just died");
-        }
-    }
-
-    public void serverLifeCheck(){
-        if (this.data.serverLifeCheck()){
-            System.out.println("There are servers who have been eliminated");
-        }
-    }
-
     private void listAllAvailableServers() {
         System.out.println(this.data.listAllAvailableServers());
     }
@@ -258,8 +241,9 @@ public class UI {
                 case 5 -> listAllAvailableServers();
                 case 6 -> {
                     try{
+                        this.data.closeServer();
                         this.data.closeDB();
-                    }catch (SQLException ignored){}
+                    }catch (SQLException | IOException | InterruptedException ignored){}
                     return;
                 }
             }

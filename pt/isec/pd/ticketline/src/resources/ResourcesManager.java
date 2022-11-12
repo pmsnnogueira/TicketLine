@@ -9,8 +9,12 @@ import java.util.HashMap;
 public class ResourcesManager {
     private final DBManager dbManager;
 
-    public ResourcesManager(int port) throws SQLException {
-        this.dbManager = new DBManager(port);
+    public ResourcesManager() throws SQLException {
+        this.dbManager = new DBManager();
+    }
+
+    public boolean connectToDB(int port, String DBDirectory){
+        return this.dbManager.connectToDB(port, DBDirectory);
     }
 
     public String listUsers(Integer userID){

@@ -1,10 +1,11 @@
 package pt.isec.pd.ticketline.src.model.server;
 
 import pt.isec.pd.ticketline.src.model.ModelManager;
+import pt.isec.pd.ticketline.src.model.data.Data;
 import pt.isec.pd.ticketline.src.model.server.heartbeat.ExecutorSendHeartBeat;
 import pt.isec.pd.ticketline.src.model.server.heartbeat.HeartBeat;
 import pt.isec.pd.ticketline.src.model.server.heartbeat.ServerLifeCheck;
-import pt.isec.pd.ticketline.src.ui.UI;
+import pt.isec.pd.ticketline.src.ui.ServerUI;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -23,53 +24,68 @@ import java.util.concurrent.TimeUnit;
 public class Server {
     private static final int multicastPort = 4004;
     private static final String ipMulticast = "239.39.39.39";
-    private UI ui;
+    private Data data;
+    private volatile boolean available;
+    private int databaseVersion;
+    private int numberOfConnections;
+    private MulticastSocket mcs;
+    private InetAddress ipGroup;
+    private SocketAddress sa;
+    private NetworkInterface ni;
 
+    private HeartBeatReceiver hbh;
+    private HeartBeat heartBeat;
     public static void main(String[] args)
     {
+        ServerUI serverUI = null;
         try{
-            Server server = new Server(Integer.parseInt(args[0]));
+            ModelManager modelManager = new ModelManager(Integer.parseInt(args[0]), args[1]);
+            serverUI = new ServerUI(modelManager);
         }catch (SQLException | IOException | InterruptedException e){
             e.printStackTrace();
         }
+
+        assert serverUI != null;
+        serverUI.start();
     }
 
-    public Server(int port) throws SQLException, IOException, InterruptedException {
-        this.ui = new UI(new ModelManager(port));
-        startServer(port);
-    }
+    public Server(int port, String DBDirectory, Data data) throws SQLException, IOException, InterruptedException {
+        this.data = data;
+        this.available = true;
+        this.databaseVersion = 1;
+        this.numberOfConnections = 0;
 
-    public void startServer(int port) throws IOException, InterruptedException, NumberFormatException, SQLException {
-        boolean available = true;
-        int databaseVersion = 1;
-        int numberOfConnections = 0;
+        //START SERVER
 
-        //String databaseDirectory = args[1];
-        //ThreadTcpConnection serverTcp = new ThreadTcpConnection(portTcp, databaseDirectory);
-        //serverTcp.start();
+        //Connect to DB
+        if(!this.data.connectToDB(port, DBDirectory)){
+            throw new SQLException();
+        }
+
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
 
-        MulticastSocket mcs = new MulticastSocket(multicastPort);
-        InetAddress ipGroup = InetAddress.getByName(ipMulticast);
-        SocketAddress sa = new InetSocketAddress(ipGroup, multicastPort);
-        NetworkInterface ni = NetworkInterface.getByIndex(0);
+        mcs = new MulticastSocket(multicastPort);
+        ipGroup = InetAddress.getByName(ipMulticast);
+        sa = new InetSocketAddress(ipGroup, multicastPort);
+        ni = NetworkInterface.getByIndex(0);
         mcs.joinGroup(sa, ni);
 
-        HeartBeat heartBeat = new HeartBeat(port, available, databaseVersion, numberOfConnections);
+        heartBeat = new HeartBeat(port, available, databaseVersion, numberOfConnections);
 
         //Every 10 seconds, the server will send a heart beat through multicast
         //to every other on-line server
         scheduler.scheduleAtFixedRate(new ExecutorSendHeartBeat(heartBeat, mcs),
-                        0, 10, TimeUnit.SECONDS);
+                0, 10, TimeUnit.SECONDS);
         //Every 35 seconds, the server will check if there is any server who hasn't
-        scheduler.scheduleAtFixedRate(new ServerLifeCheck(this.ui), 0, 35, TimeUnit.SECONDS);
+        scheduler.scheduleAtFixedRate(new ServerLifeCheck(this.data), 0, 35, TimeUnit.SECONDS);
 
-        HeartBeatReceiver hbh = new HeartBeatReceiver(mcs);
+        //start thread to receive the heartbeats
+        hbh = new HeartBeatReceiver(mcs);
         hbh.start();
+    }
 
-        ui.start();
+    public void closeServer() throws InterruptedException, IOException {
         heartBeat.setAvailable(false);
-
         hbh.join(10000);
         mcs.leaveGroup(sa, ni);
         mcs.close();
@@ -98,18 +114,13 @@ public class Server {
                     {
                         HeartBeat heartBeat = (HeartBeat)ois.readObject();
 
-/*                        System.out.println("\nReceived heartbeat from server -> Port:[" + heartBeat.getPortTcp() +
-                                "] Available -> [" + heartBeat.getAvailable() + "] Database version -> [" + heartBeat.getdatabaseVersion()
-                                + "] Number of connections -> [" + heartBeat.getnumberOfConnections() + "]\n");*/
-
-                        ui.processANewHeartBeat(heartBeat);
-
+                        data.processANewHeartBeat(heartBeat);
                     }
                     catch(ClassNotFoundException cnfe){
                         cnfe.printStackTrace();
                     }
 
-                    ui.checkForServerDeath();
+                    data.checkForServerDeath();
                 }catch (IOException e){
                     break;
                 }

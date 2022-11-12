@@ -7,13 +7,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class DBManager {
-    private final Connection dbConn;
+    private Connection dbConn;
 
-    public DBManager(int port) throws SQLException {
-        if (!duplicateDB(port)){
-            throw new SQLException();
-        }
-        this.dbConn = DriverManager.getConnection("jdbc:sqlite:pt/isec/pd/ticketline/src/resources/db/PD-2022-23-TP-" + port + ".db");
+    public DBManager() throws SQLException {
+        this.dbConn = DriverManager.getConnection("jdbc:sqlite:pt/isec/pd/ticketline/src/resources/db/PD-2022-23-TP.db");
     }
 
     public void close() throws SQLException
@@ -22,9 +19,14 @@ public class DBManager {
             dbConn.close();
     }
 
-    private boolean duplicateDB(int port){
+    public boolean connectToDB(int port, String DBDirectory){
         //if the database already exists, there is no need to duplicate it
-        if((new File("pt/isec/pd/ticketline/src/resources/db/PD-2022-23-TP-" + port + ".db")).exists()){
+        if((new File(DBDirectory + "/PD-2022-23-TP-" + port + ".db")).exists()){
+            try{
+                this.dbConn = DriverManager.getConnection("jdbc:sqlite:" + DBDirectory + "/PD-2022-23-TP-" + port + ".db");
+            }catch (SQLException e){
+                return false;
+            }
             return true;
         }
 
@@ -39,7 +41,7 @@ public class DBManager {
 
         FileOutputStream fos;
         try{
-            fos = new FileOutputStream("pt/isec/pd/ticketline/src/resources/db/PD-2022-23-TP-" + port + ".db");
+            fos = new FileOutputStream(DBDirectory + "/PD-2022-23-TP-" + port + ".db");
         }catch (FileNotFoundException e){
             return false;
         }

@@ -1,19 +1,18 @@
 package pt.isec.pd.ticketline.src.model.server.heartbeat;
 
 import pt.isec.pd.ticketline.src.model.ModelManager;
-import pt.isec.pd.ticketline.src.ui.UI;
-
-import java.util.function.Consumer;
+import pt.isec.pd.ticketline.src.model.data.Data;
+import pt.isec.pd.ticketline.src.ui.ServerUI;
 
 public class ServerLifeCheck implements Runnable{
-    private UI ui;
+    private Data data;
 
-    public ServerLifeCheck(UI ui){
-        this.ui = ui;
+    public ServerLifeCheck(Data data){
+        this.data = data;
     }
 
     @Override
     public void run() {
-        this.ui.serverLifeCheck();
+        this.data.serverLifeCheck();
     }
 }

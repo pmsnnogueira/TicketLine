@@ -1,17 +1,21 @@
 package pt.isec.pd.ticketline.src.model;
 
 import pt.isec.pd.ticketline.src.model.data.Data;
+import pt.isec.pd.ticketline.src.model.server.Server;
 import pt.isec.pd.ticketline.src.model.server.heartbeat.HeartBeat;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 public class ModelManager {
     private Data data;
+    private Server server;
 
-    public ModelManager(int port) throws SQLException {
-        this.data = new Data(port);
+    public ModelManager(int port, String DBDirectory) throws SQLException, IOException, InterruptedException {
+        this.data = new Data();
+        this.server = new Server(port, DBDirectory, this.data);
     }
 
     public String listUsers(Integer userID){
@@ -70,7 +74,7 @@ public class ModelManager {
     public boolean processANewHeartBeat(HeartBeat heartBeat){
         return this.data.processANewHeartBeat(heartBeat);
     }
-    public boolean checkFOrServerDeath(){
+    public boolean checkForServerDeath(){
         return this.data.checkForServerDeath();
     }
 
@@ -84,5 +88,9 @@ public class ModelManager {
 
     public void closeDB() throws SQLException{
         this.data.closeDB();
+    }
+
+    public void closeServer() throws IOException, InterruptedException {
+        this.server.closeServer();
     }
 }
