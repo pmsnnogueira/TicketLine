@@ -10,7 +10,6 @@ public class DBManager {
     private Connection dbConn;
 
     public DBManager() throws SQLException {
-        this.dbConn = DriverManager.getConnection("jdbc:sqlite:pt/isec/pd/ticketline/src/resources/db/PD-2022-23-TP.db");
     }
 
     public void close() throws SQLException
@@ -39,11 +38,24 @@ public class DBManager {
             return false;
         }
 
+        try {
+            fis.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         FileOutputStream fos;
         try{
             fos = new FileOutputStream(DBDirectory + "/PD-2022-23-TP-" + port + ".db");
         }catch (FileNotFoundException e){
             return false;
+        }
+
+        try {
+            fos.close();
+            fis.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
         byte[] buffer = new byte[1024];
@@ -58,9 +70,22 @@ public class DBManager {
             }
         }
 
-
+        try {
+            fos.close();
+            fis.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        
+        try {
+            this.dbConn = DriverManager.getConnection("jdbc:sqlite:" + DBDirectory + "/PD-2022-23-TP-" + port + ".db");
+        } catch (SQLException e) {
+            return false;
+        }
+        insertVersion();
         return true;
     }
+    
 
     public String listShows(Integer showID){
         try{
@@ -227,10 +252,12 @@ public class DBManager {
             statement.executeUpdate(sqlQuery , statement.RETURN_GENERATED_KEYS);
             ResultSet rs = statement.getGeneratedKeys();
             statement.close();
+            updateVersion();
             return (rs.getInt(1));
         }catch (SQLException e){
             return (-1);
         }
+
     }
 
     public boolean insertSeat(ArrayList<ArrayList<String>> parameters , int numShow){
@@ -256,7 +283,7 @@ public class DBManager {
         }catch (SQLException e){
             return false;
         }
-
+        updateVersion();
         return true;
     }
 
@@ -279,7 +306,58 @@ public class DBManager {
         }catch (SQLException e){
             return false;
         }
+        updateVersion();
+        return true;
+    }
 
+    public int getDatabaseVersion(){
+        int versao=0;
+        try
+        {
+            Statement statement = dbConn.createStatement();
+            String sqlQuery = "SELECT versao, FROM configuracoes";
+            ResultSet resultSet = statement.executeQuery(sqlQuery);
+            versao = resultSet.getInt("versao");
+        }catch(SQLException sqle){
+            sqle.printStackTrace();
+        }
+        return versao;
+    }
+
+    public boolean insertVersion(){
+        Statement statement;
+        try
+        {
+            statement = this.dbConn.createStatement();
+        }
+        catch(SQLException sqle){
+            return false;
+        }
+
+        String sqlQuery = "INSERT INTO configuracoes VALUES(NULL, '" + 1 + "')";
+        try{
+            statement.executeUpdate(sqlQuery);
+            statement.close();
+        }
+        catch(SQLException sqle){
+            return false;
+        }
+        return true;
+    }
+
+    public boolean updateVersion()
+    {
+        int version = getDatabaseVersion();
+        try{
+            Statement statement = dbConn.createStatement();
+            String sqlQuery = "UPDATE configuracoes SET versao='" + ++version + "'WHERE id=" + 1;
+
+            statement.executeUpdate(sqlQuery);
+
+            statement.close();
+        }catch(SQLException e){
+            return false;
+        }
         return true;
     }
    
@@ -302,7 +380,7 @@ public class DBManager {
         }catch (SQLException e){
             return false;
         }
-
+        updateVersion();
         return true;
     }
 
@@ -317,6 +395,7 @@ public class DBManager {
         }catch(SQLException e){
             return false;
         }
+        updateVersion();
         return true;
     }
 
@@ -331,6 +410,7 @@ public class DBManager {
         }catch(SQLException e){
             return false;
         }
+        updateVersion();
         return true;
     }
 
@@ -345,6 +425,7 @@ public class DBManager {
         }catch(SQLException e){
             return false;
         }
+        updateVersion();
         return true;
     }
 
@@ -359,6 +440,7 @@ public class DBManager {
         }catch(SQLException e){
             return false;
         }
+        updateVersion();
         return true;
     }
 
@@ -401,6 +483,7 @@ public class DBManager {
         }catch(SQLException e){
             return false;
         }
+        updateVersion();
         return true;
     }
 
@@ -431,6 +514,7 @@ public class DBManager {
         }catch(SQLException e){
             return false;
         }
+        updateVersion();
         return true;
     }
 
@@ -461,6 +545,7 @@ public class DBManager {
         }catch(SQLException e){
             return false;
         }
+        updateVersion();
         return true;
     }
 
@@ -494,6 +579,7 @@ public class DBManager {
         }catch(SQLException e){
             return false;
         }
+        updateVersion();
         return true;
     }
 }

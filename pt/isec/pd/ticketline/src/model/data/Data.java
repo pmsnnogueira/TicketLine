@@ -24,6 +24,18 @@ public class Data {
         return this.resourcesManager.connectToDB(port, DBDirectory);
     }
 
+    public int getDatabaseVersion(){
+        return this.resourcesManager.getDatabaseVersion();
+    }
+
+    public boolean updateVersion(){
+        return this.resourcesManager.updateVersion();
+    }
+
+    public boolean insertVersion(){
+        return this.resourcesManager.insertVersion();
+    }
+
     public String listUsers(Integer userID){
         return this.resourcesManager.listUsers(userID);
     }

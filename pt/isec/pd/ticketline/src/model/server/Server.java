@@ -26,7 +26,6 @@ public class Server {
     private static final String ipMulticast = "239.39.39.39";
     private Data data;
     private volatile boolean available;
-    private int databaseVersion;
     private int numberOfConnections;
     private MulticastSocket mcs;
     private HeartBeat dbCopyHeartBeat;
@@ -53,7 +52,6 @@ public class Server {
     public Server(int port, String DBDirectory, Data data) throws SQLException, IOException, InterruptedException {
         this.data = data;
         this.available = true;
-        this.databaseVersion = 1;
         this.numberOfConnections = 0;
         this.dbCopyHeartBeat = null;
         //START SERVER
@@ -71,7 +69,7 @@ public class Server {
         ni = NetworkInterface.getByIndex(0);
         mcs.joinGroup(sa, ni);
 
-        heartBeat = new HeartBeat(port, available, databaseVersion, numberOfConnections, DBDirectory);
+        heartBeat = new HeartBeat(port, available, data.getDatabaseVersion(), numberOfConnections, DBDirectory);
 
         //Every 10 seconds, the server will send a heart beat through multicast
         //to every other on-line server
@@ -156,6 +154,4 @@ public class Server {
             }
         }
     }
-
-    
 }

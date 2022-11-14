@@ -17,6 +17,18 @@ public class ResourcesManager {
         return this.dbManager.connectToDB(port, DBDirectory);
     }
 
+    public int getDatabaseVersion(){
+        return this.dbManager.getDatabaseVersion();
+    }
+
+    public boolean updateVersion(){
+        return this.dbManager.updateVersion();
+    }
+
+    public boolean insertVersion(){
+        return this.dbManager.insertVersion();
+    }
+
     public String listUsers(Integer userID){
         return this.dbManager.listUsers(userID);
     }
