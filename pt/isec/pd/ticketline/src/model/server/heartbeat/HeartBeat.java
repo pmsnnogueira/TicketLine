@@ -3,6 +3,7 @@ package pt.isec.pd.ticketline.src.model.server.heartbeat;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalTime;
+import java.util.ArrayList;
 
 public class HeartBeat implements Serializable{
     @Serial
@@ -12,15 +13,19 @@ public class HeartBeat implements Serializable{
     private boolean available;
     private int databaseVersion;
     private int numberOfConnections;
+    private ArrayList<String> queries;
+    private String dbPath;
     private LocalTime timeCreated;
 
-    public HeartBeat(int portTcp, boolean available, int databaseVersion, int numberOfConnections)
+    public HeartBeat(int portTcp, boolean available, int databaseVersion, int numberOfConnections, String dbPath)
     {
         this.portTcp = portTcp;
         this.available = available;
         this.databaseVersion = databaseVersion;
         this.numberOfConnections = numberOfConnections;
+        this.queries = new ArrayList<>();
         this.timeCreated = LocalTime.now();
+        this.dbPath = dbPath;
     }
 
     public int getPortTcp(){return this.portTcp;}
@@ -30,6 +35,8 @@ public class HeartBeat implements Serializable{
     public void setAvailable(boolean available) {
         this.available = available;
     }
+
+    public void setDatabaseVersion(int databaseVersion){this.databaseVersion = databaseVersion;}
 
     public int getDatabaseVersion(){return this.databaseVersion;}
 

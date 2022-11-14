@@ -29,6 +29,7 @@ public class Server {
     private int databaseVersion;
     private int numberOfConnections;
     private MulticastSocket mcs;
+    private HeartBeat dbCopyHeartBeat;
     private InetAddress ipGroup;
     private SocketAddress sa;
     private NetworkInterface ni;
@@ -54,7 +55,7 @@ public class Server {
         this.available = true;
         this.databaseVersion = 1;
         this.numberOfConnections = 0;
-
+        this.dbCopyHeartBeat = null;
         //START SERVER
 
         //Connect to DB
@@ -70,7 +71,7 @@ public class Server {
         ni = NetworkInterface.getByIndex(0);
         mcs.joinGroup(sa, ni);
 
-        heartBeat = new HeartBeat(port, available, databaseVersion, numberOfConnections);
+        heartBeat = new HeartBeat(port, available, databaseVersion, numberOfConnections, DBDirectory);
 
         //Every 10 seconds, the server will send a heart beat through multicast
         //to every other on-line server
@@ -80,7 +81,7 @@ public class Server {
         scheduler.scheduleAtFixedRate(new ServerLifeCheck(this.data), 0, 35, TimeUnit.SECONDS);
 
         //start thread to receive the heartbeats
-        hbh = new HeartBeatReceiver(mcs);
+        hbh = new HeartBeatReceiver();
         hbh.start();
     }
 
@@ -92,12 +93,6 @@ public class Server {
     }
 
     class HeartBeatReceiver extends Thread{
-        private MulticastSocket mcs;
-
-        public HeartBeatReceiver(MulticastSocket mcs){
-            this.mcs = mcs;
-        }
-
         @Override
         public void run() {
             while(true)
@@ -127,4 +122,40 @@ public class Server {
             }
         }
     }
+
+    class ServerInit extends Thread{
+        @Override
+        public void run() {
+            HeartBeat heartBeat;
+            while(true)
+            {
+                if (mcs.isClosed()){
+                    break;
+                }
+                try{
+                    DatagramPacket dp = new DatagramPacket(new byte[256], 256);
+                    mcs.receive(dp);
+                    ByteArrayInputStream bais = new ByteArrayInputStream(dp.getData());
+                    ObjectInputStream ois = new ObjectInputStream(bais);
+                    try
+                    {
+                        heartBeat = (HeartBeat)ois.readObject();
+                        if(dbCopyHeartBeat == null){
+                            dbCopyHeartBeat = heartBeat;
+                            continue;
+                        }
+                        if(heartBeat.getDatabaseVersion() > dbCopyHeartBeat.getDatabaseVersion())
+                            dbCopyHeartBeat = heartBeat;
+                    }
+                    catch(ClassNotFoundException cnfe){
+                        cnfe.printStackTrace();
+                    }
+                }catch (IOException e){
+                    break;
+                }
+            }
+        }
+    }
+
+    
 }
