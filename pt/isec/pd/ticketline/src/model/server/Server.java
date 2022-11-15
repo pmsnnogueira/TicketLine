@@ -32,9 +32,10 @@ public class Server {
     private InetAddress ipGroup;
     private SocketAddress sa;
     private NetworkInterface ni;
-
     private HeartBeatReceiver hbh;
     private HeartBeat heartBeat;
+    private ServerInit si;
+    
     public static void main(String[] args)
     {
         ServerUI serverUI = null;
@@ -70,6 +71,11 @@ public class Server {
         mcs.joinGroup(sa, ni);
 
         heartBeat = new HeartBeat(port, available, data.getDatabaseVersion(), numberOfConnections, DBDirectory);
+
+        // server initiaton phase
+        si = new ServerInit();
+        si.start();
+        si.join(30000);
 
         //Every 10 seconds, the server will send a heart beat through multicast
         //to every other on-line server

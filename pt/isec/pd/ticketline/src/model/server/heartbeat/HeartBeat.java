@@ -42,6 +42,8 @@ public class HeartBeat implements Serializable{
 
     public int getNumberOfConnections(){return this.numberOfConnections;}
 
+    public String getDbPath(){return this.dbPath;}
+
     public void setTimeCreated() {
         this.timeCreated = LocalTime.now();
     }
