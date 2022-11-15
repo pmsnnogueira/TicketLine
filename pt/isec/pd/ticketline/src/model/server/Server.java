@@ -114,23 +114,17 @@ public class Server {
 
     public void transferDatabase(HeartBeat dbHeartbeat){
         if((new File(DBDirectory + "/PD-2022-23-TP-" + tcpPort + ".db")).exists()){
-            System.out.println("TRANSFER-DATABASE: FILE EXISTS");
             if (dbHeartbeat == null){
-                System.out.println("TRANSFER-DATABSE: GOT MY DB BUT IM FOREVER ALONE");
                 return;
             }
             if(this.data.testDatabaseVersion(DBDirectory, tcpPort) >= dbHeartbeat.getDatabaseVersion()){
-                System.out.println("TRANSFER-DATABASE: MY DB BIGGER");
                 return;
             }
         }
 
         if(dbHeartbeat == null){
-            System.out.println("TRANSFER-DATABASE: FIRST SERVER");
             return;
         }
-
-        System.out.println("TRANSFER-DATABASE: GOTTA SOWNLOAD");
 
         try {
             Socket socket = new Socket(dbHeartbeat.getIp(), dbHeartbeat.getPortTcp());
@@ -224,17 +218,14 @@ public class Server {
                         heartBeat = (HeartBeat)ois.readObject();
 
                         if(heartBeat.getPortTcp() == tcpPort){
-                            System.out.println("My HEARTBEAT");
                             continue;
                         }
                     
                         if(dbCopyHeartBeat == null){
-                            System.out.println("FIRST HEARTBEAT RECEIVED");
                             dbCopyHeartBeat = heartBeat;
                             continue;
                         }
                         if(heartBeat.getDatabaseVersion() > dbCopyHeartBeat.getDatabaseVersion()){
-                            System.out.println("FOUND BIGGER HEARTBEAT");
                             dbCopyHeartBeat = heartBeat;
                         }
                     }
