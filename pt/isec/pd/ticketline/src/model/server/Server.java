@@ -44,6 +44,9 @@ public class Server {
     private HeartBeat heartBeat;
     private int tcpPort;
     private ServerInit si;
+    private DatabaseProvider dbProv;
+
+    private boolean serverInitContinue;
     
     public static void main(String[] args)
     {
@@ -66,6 +69,7 @@ public class Server {
         this.dbCopyHeartBeat = null;
         this.DBDirectory = DBDirectory;
         this.tcpPort = port;
+        this.serverInitContinue = true;
         //START SERVER
 
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
@@ -83,7 +87,9 @@ public class Server {
          si = new ServerInit();
          si.start();
          si.join(30000);
+         this.serverInitContinue = false;
 
+         transferDatabase(dbCopyHeartBeat);
 
         //Connect to DB
         if(!this.data.connectToDB(port, DBDirectory)){
@@ -100,14 +106,32 @@ public class Server {
         //start thread to receive the heartbeats
         hbh = new HeartBeatReceiver(mcs);
         hbh.start();
+
+        //start database prpovider thread to pro
+        dbProv = new DatabaseProvider();
+        dbProv.start();
     }
 
     public void transferDatabase(HeartBeat dbHeartbeat){
         if((new File(DBDirectory + "/PD-2022-23-TP-" + tcpPort + ".db")).exists()){
+            System.out.println("TRANSFER-DATABASE: FILE EXISTS");
+            if (dbHeartbeat == null){
+                System.out.println("TRANSFER-DATABSE: GOT MY DB BUT IM FOREVER ALONE");
+                return;
+            }
             if(this.data.testDatabaseVersion(DBDirectory, tcpPort) >= dbHeartbeat.getDatabaseVersion()){
+                System.out.println("TRANSFER-DATABASE: MY DB BIGGER");
                 return;
             }
         }
+
+        if(dbHeartbeat == null){
+            System.out.println("TRANSFER-DATABASE: FIRST SERVER");
+            return;
+        }
+
+        System.out.println("TRANSFER-DATABASE: GOTTA SOWNLOAD");
+
         try {
             Socket socket = new Socket(dbHeartbeat.getIp(), dbHeartbeat.getPortTcp());
             File file = new File(DBDirectory + "/PD-2022-23-TP-" + tcpPort + ".db");
@@ -137,6 +161,7 @@ public class Server {
     public void closeServer() throws InterruptedException, IOException {
         heartBeat.setAvailable(false);
         hbh.join(10000);
+        hbh.interrupt();
         mcs.leaveGroup(sa, ni);
         mcs.close();
     }
@@ -183,13 +208,13 @@ public class Server {
         @Override
         public void run() {
             HeartBeat heartBeat;
-            while(true)
+            while(serverInitContinue)
             {
                 if (mcs.isClosed()){
                     break;
                 }
                 try{
-                    DatagramPacket dp = new DatagramPacket(new byte[256], 256);
+                    DatagramPacket dp = new DatagramPacket(new byte[512], 512);
                     mcs.receive(dp);
                     ByteArrayInputStream bais = new ByteArrayInputStream(dp.getData());
                     ObjectInputStream ois = new ObjectInputStream(bais);
@@ -198,15 +223,20 @@ public class Server {
 
                         heartBeat = (HeartBeat)ois.readObject();
 
-                        if(heartBeat.getPortTcp() == tcpPort)
+                        if(heartBeat.getPortTcp() == tcpPort){
+                            System.out.println("My HEARTBEAT");
                             continue;
+                        }
                     
                         if(dbCopyHeartBeat == null){
+                            System.out.println("FIRST HEARTBEAT RECEIVED");
                             dbCopyHeartBeat = heartBeat;
                             continue;
                         }
-                        if(heartBeat.getDatabaseVersion() > dbCopyHeartBeat.getDatabaseVersion())
+                        if(heartBeat.getDatabaseVersion() > dbCopyHeartBeat.getDatabaseVersion()){
+                            System.out.println("FOUND BIGGER HEARTBEAT");
                             dbCopyHeartBeat = heartBeat;
+                        }
                     }
                     catch(ClassNotFoundException cnfe){
                         cnfe.printStackTrace();
