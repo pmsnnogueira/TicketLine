@@ -24,15 +24,15 @@ public class ExecutorSendHeartBeat implements Runnable{
             this.heartBeat.setTimeCreated();
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ObjectOutputStream oos = new ObjectOutputStream(baos);
-            
+
             oos.writeObject(heartBeat);
             byte[] buffer = baos.toByteArray();
-            DatagramPacket dp = new DatagramPacket(buffer, buffer.length, 
-                                    InetAddress.getByName("239.39.39.39"), 4004);
-            ms.send(dp); 
+            DatagramPacket dp = new DatagramPacket(buffer, buffer.length,
+                    InetAddress.getByName("239.39.39.39"), 4004);
+            ms.send(dp);
         }
         catch(IOException ioe){
             ioe.printStackTrace();
         }
-    }  
-}    
+    }
+}

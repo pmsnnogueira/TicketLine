@@ -10,6 +10,7 @@ public class DBManager {
     private Connection dbConn;
 
     public DBManager() throws SQLException {
+        this.dbConn = DriverManager.getConnection("jdbc:sqlite:pt/isec/pd/ticketline/src/resources/db/PD-2022-23-TP.db");
     }
 
     public void close() throws SQLException
@@ -38,24 +39,12 @@ public class DBManager {
             return false;
         }
 
-        try {
-            fis.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
         FileOutputStream fos;
         try{
             fos = new FileOutputStream(DBDirectory + "/PD-2022-23-TP-" + port + ".db");
         }catch (FileNotFoundException e){
             return false;
-        }
-
-        try {
-            fos.close();
-            fis.close();
-        } catch (IOException e) {
-            e.printStackTrace();
         }
 
         byte[] buffer = new byte[1024];
@@ -315,7 +304,7 @@ public class DBManager {
         try
         {
             Statement statement = dbConn.createStatement();
-            String sqlQuery = "SELECT versao, FROM configuracoes";
+            String sqlQuery = "SELECT versao FROM configuracoes";
             ResultSet resultSet = statement.executeQuery(sqlQuery);
             versao = resultSet.getInt("versao");
         }catch(SQLException sqle){

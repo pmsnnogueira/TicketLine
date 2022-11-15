@@ -35,40 +35,126 @@ public class ModelManager {
     }
 
     public void insertShow(){
+        this.server.updateDBVersion();
         this.data.addShow();
     }
 
     public boolean insertSeat(ArrayList<ArrayList<String>> parameters , int numShow){
-        return this.data.insertSeat(parameters , numShow);
+        boolean bool = this.data.insertSeat(parameters, numShow);
+
+        if(bool){
+            this.server.updateDBVersion();
+            return true;
+        }
+
+        return false;
     }
 
     public boolean insertReservation(ArrayList<String> parameters){
-        return this.data.insertReservation(parameters);
+        boolean bool = this.data.insertReservation(parameters);
+
+        if(bool){
+            this.server.updateDBVersion();
+            return true;
+        }
+
+        return false;
     }
 
     public boolean insertUser(ArrayList<String> parameters){
-        return this.data.insertUser(parameters);
+        boolean bool = this.data.insertUser(parameters);
+
+        if(bool){
+            this.server.updateDBVersion();
+            return true;
+        }
+
+        return false;
     }
 
-    public boolean deleteShow(int id){return this.data.deleteShow(id);}
+    public boolean deleteShow(int id){
+        boolean bool = this.data.deleteShow(id);
 
-    public boolean deleteReservations(int id){return this.data.deleteReservations(id);}
+        if(bool){
+            this.server.updateDBVersion();
+            return true;
+        }
 
-    public boolean deleteSeat(int id){return this.data.deleteSeat(id);}
+        return false;
+    }
 
-    public boolean deleteUsers(int id){return this.data.deleteUsers(id);}
+    public boolean deleteReservations(int id){
+        boolean bool = this.data.deleteReservations(id);
+
+        if(bool){
+            this.server.updateDBVersion();
+            return true;
+        }
+
+        return false;
+    }
+
+    public boolean deleteSeat(int id){
+        boolean bool = this.data.deleteSeat(id);
+
+        if(bool){
+            this.server.updateDBVersion();
+            return true;
+        }
+
+        return false;
+    }
+
+    public boolean deleteUsers(int id){
+        boolean bool = this.data.deleteUsers(id);
+
+        if(bool){
+            this.server.updateDBVersion();
+            return true;
+        }
+
+        return false;
+    }
 
     public boolean updateShows(int id, HashMap<String, String> newData){
-        return this.data.updateShows(id, newData);
+        boolean bool = this.data.updateShows(id, newData);
+
+        if(bool){
+            this.server.updateDBVersion();
+            return true;
+        }
+
+        return false;
     }
     public boolean updateSeats(int id, HashMap<String, String> newData){
-        return this.data.updateSeats(id, newData);
+        boolean bool = this.data.updateSeats(id, newData);
+
+        if(bool){
+            this.server.updateDBVersion();
+            return true;
+        }
+
+        return false;
     }
     public boolean updateReservation(int id, HashMap<String, String> newData){
-        return this.data.updateReservation(id, newData);
+        boolean bool = this.data.updateReservation(id, newData);
+
+        if(bool){
+            this.server.updateDBVersion();
+            return true;
+        }
+
+        return false;
     }
     public boolean updateUser(int id, HashMap<String, String> newData){
-        return this.data.updateUser(id, newData);
+        boolean bool = this.data.updateUser(id, newData);
+
+        if(bool){
+            this.server.updateDBVersion();
+            return true;
+        }
+
+        return false;
     }
 
     public boolean processANewHeartBeat(HeartBeat heartBeat){

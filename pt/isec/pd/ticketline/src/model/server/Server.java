@@ -79,8 +79,12 @@ public class Server {
         scheduler.scheduleAtFixedRate(new ServerLifeCheck(this.data), 0, 35, TimeUnit.SECONDS);
 
         //start thread to receive the heartbeats
-        hbh = new HeartBeatReceiver();
+        hbh = new HeartBeatReceiver(mcs);
         hbh.start();
+    }
+
+    public void updateDBVersion(){
+        this.heartBeat.setDatabaseVersion(this.data.getDatabaseVersion());
     }
 
     public void closeServer() throws InterruptedException, IOException {
@@ -91,15 +95,22 @@ public class Server {
     }
 
     class HeartBeatReceiver extends Thread{
+        private MulticastSocket mcs;
+
+        public HeartBeatReceiver(MulticastSocket mcs){
+            this.mcs = mcs;
+        }
+
         @Override
         public void run() {
             while(true)
             {
+
                 if (mcs.isClosed()){
                     break;
                 }
                 try{
-                    DatagramPacket dp = new DatagramPacket(new byte[256], 256);
+                    DatagramPacket dp = new DatagramPacket(new byte[512], 512);
                     mcs.receive(dp);
                     ByteArrayInputStream bais = new ByteArrayInputStream(dp.getData());
                     ObjectInputStream ois = new ObjectInputStream(bais);
