@@ -36,6 +36,10 @@ public class Data {
         return this.resourcesManager.insertVersion();
     }
 
+    public int testDatabaseVersion(String DBDirectory, int tcpPort){
+        return this.resourcesManager.testDatabaseVersion(DBDirectory, tcpPort);
+    }
+
     public String listUsers(Integer userID){
         return this.resourcesManager.listUsers(userID);
     }

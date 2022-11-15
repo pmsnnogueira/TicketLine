@@ -8,13 +8,20 @@ import pt.isec.pd.ticketline.src.model.server.heartbeat.ServerLifeCheck;
 import pt.isec.pd.ticketline.src.ui.ServerUI;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
+import java.io.OutputStream;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.MulticastSocket;
 import java.net.NetworkInterface;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.net.SocketAddress;
 import java.sql.SQLException;
 import java.util.concurrent.Executors;
@@ -25,6 +32,7 @@ public class Server {
     private static final int multicastPort = 4004;
     private static final String ipMulticast = "239.39.39.39";
     private Data data;
+    private String DBDirectory;
     private volatile boolean available;
     private int numberOfConnections;
     private MulticastSocket mcs;
@@ -34,6 +42,7 @@ public class Server {
     private NetworkInterface ni;
     private HeartBeatReceiver hbh;
     private HeartBeat heartBeat;
+    private int tcpPort;
     private ServerInit si;
     
     public static void main(String[] args)
@@ -55,27 +64,31 @@ public class Server {
         this.available = true;
         this.numberOfConnections = 0;
         this.dbCopyHeartBeat = null;
+        this.DBDirectory = DBDirectory;
+        this.tcpPort = port;
         //START SERVER
 
-        //Connect to DB
-        if(!this.data.connectToDB(port, DBDirectory)){
-            throw new SQLException();
-        }
-
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
-
         mcs = new MulticastSocket(multicastPort);
         ipGroup = InetAddress.getByName(ipMulticast);
         sa = new InetSocketAddress(ipGroup, multicastPort);
         ni = NetworkInterface.getByIndex(0);
         mcs.joinGroup(sa, ni);
 
-        heartBeat = new HeartBeat(port, available, data.getDatabaseVersion(), numberOfConnections, DBDirectory);
-
+        heartBeat = new HeartBeat(port, available, data.getDatabaseVersion(),
+                                 numberOfConnections, DBDirectory, "127.0.0.1"
+                                 );
+        
         // server initiaton phase
-        si = new ServerInit();
-        si.start();
-        si.join(30000);
+         si = new ServerInit();
+         si.start();
+         si.join(30000);
+
+
+        //Connect to DB
+        if(!this.data.connectToDB(port, DBDirectory)){
+            throw new SQLException();
+        }
 
         //Every 10 seconds, the server will send a heart beat through multicast
         //to every other on-line server
@@ -87,6 +100,34 @@ public class Server {
         //start thread to receive the heartbeats
         hbh = new HeartBeatReceiver(mcs);
         hbh.start();
+    }
+
+    public void transferDatabase(HeartBeat dbHeartbeat){
+        if((new File(DBDirectory + "/PD-2022-23-TP-" + tcpPort + ".db")).exists()){
+            if(this.data.testDatabaseVersion(DBDirectory, tcpPort) >= dbHeartbeat.getDatabaseVersion()){
+                return;
+            }
+        }
+        try {
+            Socket socket = new Socket(dbHeartbeat.getIp(), dbHeartbeat.getPortTcp());
+            File file = new File(DBDirectory + "/PD-2022-23-TP-" + tcpPort + ".db");
+            FileOutputStream fo = new FileOutputStream(file);
+            byte[] buffer = new byte[512];
+            InputStream is = socket.getInputStream();
+            int readBytes=0;
+
+            do
+            {
+                readBytes = is.read(buffer);
+                if(readBytes > -1)
+                    fo.write(buffer, 0, readBytes);
+            }while(readBytes > 0);
+            socket.close();
+            fo.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }  
     }
 
     public void updateDBVersion(){
@@ -154,7 +195,12 @@ public class Server {
                     ObjectInputStream ois = new ObjectInputStream(bais);
                     try
                     {
+
                         heartBeat = (HeartBeat)ois.readObject();
+
+                        if(heartBeat.getPortTcp() == tcpPort)
+                            continue;
+                    
                         if(dbCopyHeartBeat == null){
                             dbCopyHeartBeat = heartBeat;
                             continue;
@@ -169,6 +215,46 @@ public class Server {
                     break;
                 }
             }
+        }
+    }
+
+    class DatabaseProvider extends Thread{
+        @Override
+        public void run() {
+            ServerSocket serverSocket;
+            Socket socket;
+            FileInputStream fi;
+            while(true)
+            {
+                try {
+                    serverSocket = new ServerSocket(tcpPort);
+                    socket = serverSocket.accept();
+                    OutputStream os = socket.getOutputStream();
+                    byte[] buffer = new byte[512];
+                    int readBytes = 0;
+                    fi = new FileInputStream(DBDirectory + "/PD-2022-23-TP-" + tcpPort + ".db");
+    
+                    do
+                    {
+                        readBytes = fi.read(buffer);
+                        if(readBytes == -1)
+                            break;
+                        os.write(buffer, 0, readBytes);
+                    }while(readBytes > 0);
+    
+                } catch (IOException e) {
+                    return;
+                }
+                try {
+                    serverSocket.close();
+                    socket.close();
+                    fi.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            
+
         }
     }
 }

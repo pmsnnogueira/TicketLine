@@ -17,6 +17,10 @@ public class ResourcesManager {
         return this.dbManager.connectToDB(port, DBDirectory);
     }
 
+    public int testDatabaseVersion(String DBDirectory, int tcpPort){
+        return this.dbManager.testDatabaseVersion(DBDirectory, tcpPort);
+    }
+
     public int getDatabaseVersion(){
         return this.dbManager.getDatabaseVersion();
     }

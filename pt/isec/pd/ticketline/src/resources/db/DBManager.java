@@ -74,6 +74,26 @@ public class DBManager {
         insertVersion();
         return true;
     }
+
+    public int testDatabaseVersion(String DBDirectory, int tcpPort){
+        Connection testConnection;
+        try {
+            testConnection = DriverManager.getConnection("jdbc:sqlite:" + DBDirectory + "/PD-2022-23-TP-" + tcpPort + ".db");
+        } catch (SQLException e) {
+            return -1;
+        }
+        int versao=0;
+        try
+        {
+            Statement statement = testConnection.createStatement();
+            String sqlQuery = "SELECT versao FROM configuracoes";
+            ResultSet resultSet = statement.executeQuery(sqlQuery);
+            versao = resultSet.getInt("versao");
+        }catch(SQLException sqle){
+            sqle.printStackTrace();
+        }
+        return versao;
+    }
     
 
     public String listShows(Integer showID){

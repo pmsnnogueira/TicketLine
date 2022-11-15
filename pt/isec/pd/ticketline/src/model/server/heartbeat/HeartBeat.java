@@ -10,6 +10,7 @@ public class HeartBeat implements Serializable{
     private static final long serialVersionUID = 2L;
 
     private int portTcp;
+    private String ip;
     private boolean available;
     private int databaseVersion;
     private int numberOfConnections;
@@ -17,7 +18,9 @@ public class HeartBeat implements Serializable{
     private String dbPath;
     private LocalTime timeCreated;
 
-    public HeartBeat(int portTcp, boolean available, int databaseVersion, int numberOfConnections, String dbPath)
+    public HeartBeat(int portTcp, boolean available, int databaseVersion,
+                     int numberOfConnections, String dbPath,
+                     String ip)
     {
         this.portTcp = portTcp;
         this.available = available;
@@ -26,6 +29,7 @@ public class HeartBeat implements Serializable{
         this.queries = new ArrayList<>();
         this.timeCreated = LocalTime.now();
         this.dbPath = dbPath;
+        this.ip = ip;
     }
 
     public int getPortTcp(){return this.portTcp;}
@@ -43,6 +47,8 @@ public class HeartBeat implements Serializable{
     public int getNumberOfConnections(){return this.numberOfConnections;}
 
     public String getDbPath(){return this.dbPath;}
+
+    public String getIp(){return this.ip;}
 
     public void setTimeCreated() {
         this.timeCreated = LocalTime.now();
