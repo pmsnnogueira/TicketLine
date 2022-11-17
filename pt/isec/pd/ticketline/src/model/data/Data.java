@@ -4,6 +4,7 @@ import pt.isec.pd.ticketline.src.model.server.heartbeat.HeartBeat;
 import pt.isec.pd.ticketline.src.resources.ResourcesManager;
 import pt.isec.pd.ticketline.src.resources.files.FileOpener;
 
+import java.net.MulticastSocket;
 import java.sql.SQLException;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -14,27 +15,30 @@ import java.util.List;
 public class Data {
     private ResourcesManager resourcesManager;
     private ArrayList<HeartBeat> heartBeatsReceived;
+    private HeartBeat serverHeartBeat;
 
-    public Data() throws SQLException {
-        this.resourcesManager = new ResourcesManager();
+    public Data(MulticastSocket mcs) throws SQLException {
+        this.resourcesManager = new ResourcesManager(mcs);
         this.heartBeatsReceived = new ArrayList<>();
+    }
+
+    public void setServerHeartBeat(HeartBeat serverHeartBeat){
+        this.resourcesManager.setServerHB(serverHeartBeat);
+        this.serverHeartBeat = serverHeartBeat;
     }
 
     public boolean connectToDB(int port, String DBDirectory){
         return this.resourcesManager.connectToDB(port, DBDirectory);
     }
 
+    public void processNewQuerie(String newQuerie){
+        this.resourcesManager.processNewQuerie(newQuerie);
+    }
+
     public int getDatabaseVersion(){
         return this.resourcesManager.getDatabaseVersion();
     }
 
-    public boolean updateVersion(){
-        return this.resourcesManager.updateVersion();
-    }
-
-    public boolean insertVersion(){
-        return this.resourcesManager.insertVersion();
-    }
 
     public int testDatabaseVersion(String DBDirectory, int tcpPort){
         return this.resourcesManager.testDatabaseVersion(DBDirectory, tcpPort);

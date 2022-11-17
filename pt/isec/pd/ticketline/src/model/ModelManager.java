@@ -5,178 +5,82 @@ import pt.isec.pd.ticketline.src.model.server.Server;
 import pt.isec.pd.ticketline.src.model.server.heartbeat.HeartBeat;
 
 import java.io.IOException;
+import java.net.*;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 public class ModelManager {
-    private Data data;
     private Server server;
 
     public ModelManager(int port, String DBDirectory) throws SQLException, IOException, InterruptedException {
-        this.data = new Data();
-        this.server = new Server(port, DBDirectory, this.data);
+        this.server = new Server(port, DBDirectory);
     }
 
     public String listUsers(Integer userID){
-        return this.data.listUsers(userID);
+        return this.server.listUsers(userID);
     }
 
     public String listShows(Integer showID){
-        return this.data.listShows(showID);
+        return this.server.listShows(showID);
     }
 
     public String listReservations(Integer reservationID){
-        return this.data.listReservations(reservationID);
+        return this.server.listReservations(reservationID);
     }
 
     public String listSeats(Integer seatID){
-        return this.data.listSeats(seatID);
+        return this.server.listSeats(seatID);
     }
 
     public void insertShow(){
-        this.server.updateDBVersion();
-        this.data.addShow();
+        this.server.insertShow();
     }
 
     public boolean insertSeat(ArrayList<ArrayList<String>> parameters , int numShow){
-        boolean bool = this.data.insertSeat(parameters, numShow);
-
-        if(bool){
-            this.server.updateDBVersion();
-            return true;
-        }
-
-        return false;
+        return this.server.insertSeat(parameters, numShow);
     }
 
     public boolean insertReservation(ArrayList<String> parameters){
-        boolean bool = this.data.insertReservation(parameters);
-
-        if(bool){
-            this.server.updateDBVersion();
-            return true;
-        }
-
-        return false;
+        return this.server.insertReservation(parameters);
     }
 
     public boolean insertUser(ArrayList<String> parameters){
-        boolean bool = this.data.insertUser(parameters);
-
-        if(bool){
-            this.server.updateDBVersion();
-            return true;
-        }
-
-        return false;
+        return this.server.insertUser(parameters);
     }
 
     public boolean deleteShow(int id){
-        boolean bool = this.data.deleteShow(id);
-
-        if(bool){
-            this.server.updateDBVersion();
-            return true;
-        }
-
-        return false;
+        return this.server.deleteShow(id);
     }
 
     public boolean deleteReservations(int id){
-        boolean bool = this.data.deleteReservations(id);
-
-        if(bool){
-            this.server.updateDBVersion();
-            return true;
-        }
-
-        return false;
+        return this.server.deleteReservations(id);
     }
 
     public boolean deleteSeat(int id){
-        boolean bool = this.data.deleteSeat(id);
-
-        if(bool){
-            this.server.updateDBVersion();
-            return true;
-        }
-
-        return false;
+        return this.server.deleteSeat(id);
     }
 
     public boolean deleteUsers(int id){
-        boolean bool = this.data.deleteUsers(id);
-
-        if(bool){
-            this.server.updateDBVersion();
-            return true;
-        }
-
-        return false;
+        return this.server.deleteUsers(id);
     }
 
     public boolean updateShows(int id, HashMap<String, String> newData){
-        boolean bool = this.data.updateShows(id, newData);
-
-        if(bool){
-            this.server.updateDBVersion();
-            return true;
-        }
-
-        return false;
+        return this.server.updateShows(id, newData);
     }
     public boolean updateSeats(int id, HashMap<String, String> newData){
-        boolean bool = this.data.updateSeats(id, newData);
-
-        if(bool){
-            this.server.updateDBVersion();
-            return true;
-        }
-
-        return false;
+        return this.server.updateSeats(id, newData);
     }
     public boolean updateReservation(int id, HashMap<String, String> newData){
-        boolean bool = this.data.updateReservation(id, newData);
-
-        if(bool){
-            this.server.updateDBVersion();
-            return true;
-        }
-
-        return false;
+        return this.server.updateReservation(id, newData);
     }
     public boolean updateUser(int id, HashMap<String, String> newData){
-        boolean bool = this.data.updateUser(id, newData);
-
-        if(bool){
-            this.server.updateDBVersion();
-            return true;
-        }
-
-        return false;
+        return this.server.updateUser(id, newData);
     }
-
-    public boolean processANewHeartBeat(HeartBeat heartBeat){
-        return this.data.processANewHeartBeat(heartBeat);
-    }
-    public boolean checkForServerDeath(){
-        return this.data.checkForServerDeath();
-    }
-
     public String listAllAvailableServers(){
-        return this.data.listAllAvailableServers();
+        return this.server.listAllAvailableServers();
     }
-
-    public boolean serverLifeCheck(){
-        return this.data.serverLifeCheck();
-    }
-
-    public void closeDB() throws SQLException{
-        this.data.closeDB();
-    }
-
-    public void closeServer() throws IOException, InterruptedException {
+    public void closeServer() throws IOException, InterruptedException, SQLException {
         this.server.closeServer();
     }
 }

@@ -14,9 +14,9 @@ public class HeartBeat implements Serializable{
     private boolean available;
     private int databaseVersion;
     private int numberOfConnections;
-    private ArrayList<String> queries;
     private String dbPath;
     private LocalTime timeCreated;
+    private String mostRecentQuery;
 
     public HeartBeat(int portTcp, boolean available, int databaseVersion,
                      int numberOfConnections, String dbPath,
@@ -26,10 +26,19 @@ public class HeartBeat implements Serializable{
         this.available = available;
         this.databaseVersion = databaseVersion;
         this.numberOfConnections = numberOfConnections;
-        this.queries = new ArrayList<>();
         this.timeCreated = LocalTime.now();
         this.dbPath = dbPath;
         this.ip = ip;
+    }
+
+    public void setMostRecentQuery(String newQuery){
+        this.mostRecentQuery = newQuery;
+    }
+    public void resetMostRecentQuery(){
+        this.mostRecentQuery = null;
+    }
+    public String getMostRecentQuery() {
+        return mostRecentQuery;
     }
 
     public int getPortTcp(){return this.portTcp;}

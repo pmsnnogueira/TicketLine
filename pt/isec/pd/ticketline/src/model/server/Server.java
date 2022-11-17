@@ -7,14 +7,7 @@ import pt.isec.pd.ticketline.src.model.server.heartbeat.HeartBeat;
 import pt.isec.pd.ticketline.src.model.server.heartbeat.ServerLifeCheck;
 import pt.isec.pd.ticketline.src.ui.ServerUI;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -24,6 +17,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -31,15 +26,11 @@ import java.util.concurrent.TimeUnit;
 public class Server {
     private static final int multicastPort = 4004;
     private static final String ipMulticast = "239.39.39.39";
-    private Data data;
-    private String DBDirectory;
+    private final Data data;
+    private final String DBDirectory;
     private volatile boolean available;
     private int numberOfConnections;
-    private MulticastSocket mcs;
     private HeartBeat dbCopyHeartBeat;
-    private InetAddress ipGroup;
-    private SocketAddress sa;
-    private NetworkInterface ni;
     private HeartBeatReceiver hbh;
     private HeartBeat heartBeat;
     private int tcpPort;
@@ -47,7 +38,13 @@ public class Server {
     private DatabaseProvider dbProv;
 
     private boolean serverInitContinue;
-    
+
+    private MulticastSocket mcs;
+
+    private InetAddress ipGroup;
+    private SocketAddress sa;
+    private NetworkInterface ni;
+
     public static void main(String[] args)
     {
         ServerUI serverUI = null;
@@ -62,26 +59,22 @@ public class Server {
         serverUI.start();
     }
 
-    public Server(int port, String DBDirectory, Data data) throws SQLException, IOException, InterruptedException {
-        this.data = data;
+    public Server(int port, String DBDirectory) throws SQLException, IOException, InterruptedException {
         this.available = true;
         this.numberOfConnections = 0;
         this.dbCopyHeartBeat = null;
         this.DBDirectory = DBDirectory;
         this.tcpPort = port;
         this.serverInitContinue = true;
+        this.mcs = new MulticastSocket(multicastPort);
+        this.ipGroup = InetAddress.getByName(ipMulticast);
+        this.sa = new InetSocketAddress(ipGroup, multicastPort);
+        this.ni = NetworkInterface.getByIndex(0);
+        this.mcs.joinGroup(sa, ni);
+        this.data = new Data(this.mcs);
         //START SERVER
 
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
-        mcs = new MulticastSocket(multicastPort);
-        ipGroup = InetAddress.getByName(ipMulticast);
-        sa = new InetSocketAddress(ipGroup, multicastPort);
-        ni = NetworkInterface.getByIndex(0);
-        mcs.joinGroup(sa, ni);
-
-        heartBeat = new HeartBeat(port, available, data.getDatabaseVersion(),
-                                 numberOfConnections, DBDirectory, "127.0.0.1"
-                                 );
         
         // server initiaton phase
          si = new ServerInit();
@@ -95,6 +88,11 @@ public class Server {
         if(!this.data.connectToDB(port, DBDirectory)){
             throw new SQLException();
         }
+
+        heartBeat = new HeartBeat(port, available, this.data.getDatabaseVersion(),
+                numberOfConnections, DBDirectory, "127.0.0.1");
+
+        this.data.setServerHeartBeat(heartBeat);
 
         //Every 10 seconds, the server will send a heart beat through multicast
         //to every other on-line server
@@ -110,6 +108,146 @@ public class Server {
         //start database prpovider thread to pro
         dbProv = new DatabaseProvider();
         dbProv.start();
+    }
+
+
+    public String listUsers(Integer userID){
+        return this.data.listUsers(userID);
+    }
+
+    public String listShows(Integer showID){
+        return this.data.listShows(showID);
+    }
+
+    public String listReservations(Integer reservationID){
+        return this.data.listReservations(reservationID);
+    }
+
+    public String listSeats(Integer seatID){
+        return this.data.listSeats(seatID);
+    }
+
+    public void insertShow(){
+        updateDBVersion();
+        this.data.addShow();
+    }
+
+    public boolean insertSeat(ArrayList<ArrayList<String>> parameters , int numShow){
+        boolean bool = this.data.insertSeat(parameters, numShow);
+
+        if(bool){
+            updateDBVersion();
+            return true;
+        }
+
+        return false;
+    }
+
+    public boolean insertReservation(ArrayList<String> parameters){
+        boolean bool = this.data.insertReservation(parameters);
+
+        if(bool){
+            updateDBVersion();
+            return true;
+        }
+
+        return false;
+    }
+
+    public boolean insertUser(ArrayList<String> parameters){
+        boolean bool = this.data.insertUser(parameters);
+
+        if(bool){
+            updateDBVersion();
+            return true;
+        }
+
+        return false;
+    }
+
+    public boolean deleteShow(int id){
+        boolean bool = this.data.deleteShow(id);
+
+        if(bool){
+            updateDBVersion();
+            return true;
+        }
+
+        return false;
+    }
+
+    public boolean deleteReservations(int id){
+        boolean bool = this.data.deleteReservations(id);
+
+        if(bool){
+            updateDBVersion();
+            return true;
+        }
+
+        return false;
+    }
+
+    public boolean deleteSeat(int id){
+        boolean bool = this.data.deleteSeat(id);
+
+        if(bool){
+            updateDBVersion();
+            return true;
+        }
+
+        return false;
+    }
+
+    public boolean deleteUsers(int id){
+        boolean bool = this.data.deleteUsers(id);
+
+        if(bool){
+            updateDBVersion();
+            return true;
+        }
+
+        return false;
+    }
+
+    public boolean updateShows(int id, HashMap<String, String> newData){
+        boolean bool = this.data.updateShows(id, newData);
+
+        if(bool){
+            updateDBVersion();
+            return true;
+        }
+
+        return false;
+    }
+    public boolean updateSeats(int id, HashMap<String, String> newData){
+        boolean bool = this.data.updateSeats(id, newData);
+
+        if(bool){
+            updateDBVersion();
+            return true;
+        }
+
+        return false;
+    }
+    public boolean updateReservation(int id, HashMap<String, String> newData){
+        boolean bool = this.data.updateReservation(id, newData);
+
+        if(bool){
+            updateDBVersion();
+            return true;
+        }
+
+        return false;
+    }
+    public boolean updateUser(int id, HashMap<String, String> newData){
+        boolean bool = this.data.updateUser(id, newData);
+
+        if(bool){
+            updateDBVersion();
+            return true;
+        }
+
+        return false;
     }
 
     public void transferDatabase(HeartBeat dbHeartbeat){
@@ -152,12 +290,32 @@ public class Server {
         this.heartBeat.setDatabaseVersion(this.data.getDatabaseVersion());
     }
 
-    public void closeServer() throws InterruptedException, IOException {
+    public void closeServer() throws InterruptedException, IOException, SQLException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(baos);
+
+        oos.writeObject(heartBeat);
+        byte[] buffer = baos.toByteArray();
+        DatagramPacket dp = new DatagramPacket(buffer, buffer.length,
+                InetAddress.getByName("239.39.39.39"), 4004);
+        mcs.send(dp);
+
         heartBeat.setAvailable(false);
         hbh.join(10000);
         hbh.interrupt();
         mcs.leaveGroup(sa, ni);
         mcs.close();
+        this.data.closeDB();
+    }
+
+
+    private void updateDB(HeartBeat hBeat) {
+        this.data.processNewQuerie(hBeat.getMostRecentQuery());
+        this.heartBeat.resetMostRecentQuery();
+    }
+
+    public String listAllAvailableServers() {
+        return this.data.listAllAvailableServers();
     }
 
     class HeartBeatReceiver extends Thread{
@@ -182,16 +340,22 @@ public class Server {
                     ObjectInputStream ois = new ObjectInputStream(bais);
                     try
                     {
-                        HeartBeat heartBeat = (HeartBeat)ois.readObject();
+                        HeartBeat hBeat = (HeartBeat)ois.readObject();
 
-                        data.processANewHeartBeat(heartBeat);
+                        data.processANewHeartBeat(hBeat);
+
+                        if(hBeat.getDatabaseVersion() > heartBeat.getDatabaseVersion()){
+                            updateDB(hBeat);
+                        }
                     }
-                    catch(ClassNotFoundException cnfe){
+                    catch(ClassCastException | ClassNotFoundException cnfe){
                         cnfe.printStackTrace();
                     }
 
                     data.checkForServerDeath();
+
                 }catch (IOException e){
+                    e.printStackTrace();
                     break;
                 }
             }

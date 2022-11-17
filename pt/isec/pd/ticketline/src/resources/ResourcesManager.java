@@ -1,7 +1,9 @@
 package pt.isec.pd.ticketline.src.resources;
 
+import pt.isec.pd.ticketline.src.model.server.heartbeat.HeartBeat;
 import pt.isec.pd.ticketline.src.resources.db.DBManager;
 
+import java.net.MulticastSocket;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -9,12 +11,16 @@ import java.util.HashMap;
 public class ResourcesManager {
     private final DBManager dbManager;
 
-    public ResourcesManager() throws SQLException {
-        this.dbManager = new DBManager();
+    public ResourcesManager(MulticastSocket mcs) throws SQLException {
+        this.dbManager = new DBManager(mcs);
     }
 
     public boolean connectToDB(int port, String DBDirectory){
         return this.dbManager.connectToDB(port, DBDirectory);
+    }
+
+    public void processNewQuerie(String newQuerie){
+        this.dbManager.processNewQuerie(newQuerie);
     }
 
     public int testDatabaseVersion(String DBDirectory, int tcpPort){
@@ -88,5 +94,9 @@ public class ResourcesManager {
 
     public void closeDB() throws SQLException {
         this.dbManager.close();
+    }
+
+    public void setServerHB(HeartBeat serverHB){
+        this.dbManager.setServerHB(serverHB);
     }
 }

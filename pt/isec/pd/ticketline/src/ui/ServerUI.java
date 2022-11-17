@@ -242,7 +242,6 @@ public class ServerUI {
                 case 6 -> {
                     try{
                         this.data.closeServer();
-                        this.data.closeDB();
                     }catch (SQLException | IOException | InterruptedException ignored){}
                     return;
                 }

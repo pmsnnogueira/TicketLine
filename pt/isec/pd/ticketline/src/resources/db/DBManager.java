@@ -1,6 +1,9 @@
 package pt.isec.pd.ticketline.src.resources.db;
 
+import pt.isec.pd.ticketline.src.model.server.heartbeat.HeartBeat;
+
 import java.io.*;
+import java.net.*;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -8,15 +11,26 @@ import java.util.Map;
 
 public class DBManager {
     private Connection dbConn;
+    private Connection defaultDB;
+    private MulticastSocket mcs;
+    private HeartBeat serverHB;
 
-    public DBManager() throws SQLException {
+    public DBManager(MulticastSocket mcs) throws SQLException {
         this.dbConn = DriverManager.getConnection("jdbc:sqlite:pt/isec/pd/ticketline/src/resources/db/PD-2022-23-TP.db");
+        this.defaultDB = DriverManager.getConnection("jdbc:sqlite:pt/isec/pd/ticketline/src/resources/db/PD-2022-23-TP.db");
+        this.mcs = mcs;
     }
 
     public void close() throws SQLException
     {
-        if (dbConn != null)
+        if (dbConn != null && defaultDB != null){
             dbConn.close();
+            defaultDB.close();
+        }
+    }
+
+    public void setServerHB(HeartBeat serverHB) {
+        this.serverHB = serverHB;
     }
 
     public boolean connectToDB(int port, String DBDirectory){
@@ -94,7 +108,32 @@ public class DBManager {
         }
         return versao;
     }
-    
+
+    public void processNewQuerie(String newQuerie){
+        try{
+            Statement statement = this.dbConn.createStatement();
+            statement.executeUpdate(newQuerie);
+            statement.close();
+            updateVersion();
+        }catch (SQLException e){
+            e.printStackTrace();
+        }
+    }
+
+    public void multicastQuery(String newQuerie){
+        try{
+            this.serverHB.setMostRecentQuery(newQuerie);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ObjectOutputStream oos = new ObjectOutputStream(baos);
+
+            oos.writeObject(this.serverHB);
+            byte[] buffer = baos.toByteArray();
+            DatagramPacket dp = new DatagramPacket(buffer, buffer.length,
+                    InetAddress.getByName("239.39.39.39"), 4004);
+            mcs.send(dp);
+        }catch (IOException e){
+        }
+    }
 
     public String listShows(Integer showID){
         try{
@@ -255,12 +294,13 @@ public class DBManager {
                             parameters.get(i++) + "' , '" + parameters.get(i++) + "' , '" +
                             parameters.get(i++) + "' , '" + parameters.get(i++) + "' , '" +
                             parameters.get(i++) + "' , '" + parameters.get(i++) + "' , '" +
-                            parameters.get(i++) + "' , '" + "0" + "')";
+                            parameters.get(i) + "' , '" + "0" + "')";
 
         try{
             statement.executeUpdate(sqlQuery , statement.RETURN_GENERATED_KEYS);
             ResultSet rs = statement.getGeneratedKeys();
             statement.close();
+            multicastQuery(sqlQuery);
             updateVersion();
             return (rs.getInt(1));
         }catch (SQLException e){
@@ -282,9 +322,10 @@ public class DBManager {
             int i = 0;
             while(i < parameters.size()){
                 String sqlQuery = "INSERT INTO lugar VALUES (NULL, '" + parameters.get(i).get(contador++) + "' , '" +
-                    parameters.get(i).get(contador++) + "' , '" + parameters.get(i).get(contador++) + "' , '" +
+                    parameters.get(i).get(contador++) + "' , '" + parameters.get(i).get(contador) + "' , '" +
                     numShow + "')";
                     statement.executeUpdate(sqlQuery);
+                multicastQuery(sqlQuery);
                 i++;
                 contador = 0;
             }        
@@ -311,6 +352,7 @@ public class DBManager {
 
         try{
             statement.executeUpdate(sqlQuery);
+            multicastQuery(sqlQuery);
             statement.close();
         }catch (SQLException e){
             return false;
@@ -385,6 +427,7 @@ public class DBManager {
             
         try{
             statement.executeUpdate(sqlQuery);
+            multicastQuery(sqlQuery);
             statement.close();
         }catch (SQLException e){
             return false;
@@ -401,6 +444,7 @@ public class DBManager {
             String sqlQuery = "DELETE FROM espetaculo WHERE id=" + id;
             statement.executeUpdate(sqlQuery);
             statement.close();
+            multicastQuery(sqlQuery);
         }catch(SQLException e){
             return false;
         }
@@ -416,6 +460,7 @@ public class DBManager {
             String sqlQuery = "DELETE FROM lugar WHERE id=" + id;
             statement.executeUpdate(sqlQuery);
             statement.close();
+            multicastQuery(sqlQuery);
         }catch(SQLException e){
             return false;
         }
@@ -431,6 +476,7 @@ public class DBManager {
             String sqlQuery = "DELETE FROM reserva WHERE id=" + id;
             statement.executeUpdate(sqlQuery);
             statement.close();
+            multicastQuery(sqlQuery);
         }catch(SQLException e){
             return false;
         }
@@ -446,6 +492,7 @@ public class DBManager {
             String sqlQuery = "DELETE FROM utilizador WHERE id=" + id;
             statement.executeUpdate(sqlQuery);
             statement.close();
+            multicastQuery(sqlQuery);
         }catch(SQLException e){
             return false;
         }
@@ -486,6 +533,7 @@ public class DBManager {
                     }
                 }
                 statement.executeUpdate(sqlQuery);
+                multicastQuery(sqlQuery);
             }
 
             statement.close();
@@ -517,6 +565,7 @@ public class DBManager {
                     }
                 }
                 statement.executeUpdate(sqlQuery);
+                multicastQuery(sqlQuery);
             }
 
             statement.close();
@@ -548,6 +597,7 @@ public class DBManager {
                     }
                 }
                 statement.executeUpdate(sqlQuery);
+                multicastQuery(sqlQuery);
             }
 
             statement.close();
@@ -582,6 +632,7 @@ public class DBManager {
                     }
                 }
                 statement.executeUpdate(sqlQuery);
+                multicastQuery(sqlQuery);
             }
 
             statement.close();
