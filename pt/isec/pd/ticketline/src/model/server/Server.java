@@ -338,7 +338,7 @@ public class Server {
 
             while(handleDB){
                 try {
-                    Thread.sleep(500);
+                    Thread.sleep(100);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
@@ -349,7 +349,6 @@ public class Server {
                 }
 
                 if (this.hasNewDBRequest){
-                    System.out.println("DATABASEHANDLER - has new request");
                     switch (dbHelper.getOperation()){
                         case "INSERT"->{
                             switch (dbHelper.getTable()){
@@ -368,7 +367,6 @@ public class Server {
                             }
                         }
                         case "SELECT"->{
-                            System.out.println("DATABASEHANDLER - has new select");
                             switch (dbHelper.getTable()){
                                 case "show" ->{
                                     System.out.println(data.listShows(dbHelper.getId()));
@@ -425,7 +423,6 @@ public class Server {
                     hasNewDBRequest = false;
                 }
             }
-            System.out.println("DB THREAD ENDED");
         }
     }
 

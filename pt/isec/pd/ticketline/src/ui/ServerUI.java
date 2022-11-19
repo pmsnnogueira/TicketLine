@@ -229,6 +229,10 @@ public class ServerUI {
 
     public void start(){
         while (true){
+            try{
+                Thread.sleep(150);
+            }catch (InterruptedException ignored){
+            }
             int input = InputProtection.chooseOption("Choose an action:", "List information",
                                                      "Insert data","Delete data",
                                                      "Update data", "List available servers","Exit");
