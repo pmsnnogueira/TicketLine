@@ -80,7 +80,7 @@ public class Server {
         //START SERVER
 
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
-        
+
         // server initiaton phase
          si = new ServerInit();
          si.start();
@@ -337,13 +337,18 @@ public class Server {
             }
 
             while(handleDB){
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
                 if(hbWithHighestVersion != null){
                     updateDB(hbWithHighestVersion);
                     hbWithHighestVersion = null;
                     updateDBVersion();
                 }
 
-                if (hasNewDBRequest){
+                if (this.hasNewDBRequest){
                     System.out.println("DATABASEHANDLER - has new request");
                     switch (dbHelper.getOperation()){
                         case "INSERT"->{
@@ -413,12 +418,14 @@ public class Server {
                         }
                     }
 
+                    if(!dbHelper.getOperation().equals("SELECT")){
+                        updateDBVersion();
+                    }
                     dbHelper.reset();
                     hasNewDBRequest = false;
-                    updateDBVersion();
                 }
-
             }
+            System.out.println("DB THREAD ENDED");
         }
     }
 
@@ -496,6 +503,7 @@ public class Server {
                             continue;
                         }
                         if(heartBeat.getDatabaseVersion() > dbCopyHeartBeat.getDatabaseVersion()){
+                            System.out.println(heartBeat.getMostRecentQuery());
                             dbCopyHeartBeat = heartBeat;
                         }
                     }
