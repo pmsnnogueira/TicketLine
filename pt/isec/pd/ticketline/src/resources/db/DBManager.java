@@ -8,8 +8,8 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-
 public class DBManager {
+
     private Connection dbConn;
     private Connection defaultDB;
     private MulticastSocket mcs;
@@ -148,7 +148,7 @@ public class DBManager {
             ResultSet resultSet = statement.executeQuery(sqlQuery);
 
             StringBuilder str = new StringBuilder();
-            str.append("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+            str.append("\n-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
             str.append(String.format("|%-4s|%-40s|%-12s|%-17s|%-7s|%-55s|%-11s|%-10s|%-13s|", "ID", "Descricao", "Tipo", "Data_Hora", "Duracao","Local","Localidade","Pais","Classe_Etaria"));
             str.append("\n-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
 
@@ -188,7 +188,7 @@ public class DBManager {
             ResultSet resultSet = statement.executeQuery(sqlQuery);
 
             StringBuilder str = new StringBuilder();
-            str.append("---------------------------------------------------------\n");
+            str.append("\n---------------------------------------------------------\n");
             str.append(String.format("|%-4s|%-10s|%-10s|%-13s|%-14s|", "ID", "Fila", "Assento", "Preco", "Espetaculo_ID"));
             str.append("\n---------------------------------------------------------\n");
 
@@ -224,7 +224,7 @@ public class DBManager {
             ResultSet resultSet = statement.executeQuery(sqlQuery);
 
             StringBuilder str = new StringBuilder();
-            str.append("-----------------------------------------------------------------\n");
+            str.append("\n-----------------------------------------------------------------\n");
             str.append(String.format("|%-4s|%-17s|%-10s|%-14s|%-14s|", "ID", "Data_Hora", "Pago", "ID_Utilizador", "ID_Espetaculo"));
             str.append("\n-----------------------------------------------------------------\n");
 
@@ -258,7 +258,8 @@ public class DBManager {
 
             ResultSet resultSet = statement.executeQuery(sqlQuery);
 
-            StringBuilder str = new StringBuilder();str.append("---------------------------------------------------------------------------------------------\n");
+            StringBuilder str = new StringBuilder();
+            str.append("\n---------------------------------------------------------------------------------------------\n");
             str.append(String.format("|%-4s|%-19s|%-30s|%-22s|%-12s|", "ID", "Username", "Nome", "Administrador", "Autenticado"));
             str.append("\n---------------------------------------------------------------------------------------------\n");
     
@@ -280,9 +281,46 @@ public class DBManager {
         }
     }
 
+    //Vai procurar em todos os assentos se há filas repetidas, se houver vai procurar nessas filas se há cadeiras repetidas, se houver repetidas retorna TRUE
+    public boolean verificarRepetidos(ArrayList<ArrayList<String>> parameters){
+
+        for(int i = 0 ; i < parameters.size() ; i++){
+            for(int j = i + 1 ; j < parameters.size(); j++){
+                if(parameters.get(i).get(0).equals(parameters.get(j).get(0))){       //Aqui vai encontrar duas filas iguais
+                    if(parameters.get(i).get(1).equals(parameters.get(j).get(1))){    //Comparar se o Assento é o mesmo na mesma fila
+                        System.out.println("CAMPOS IGUAIS\n");
+                        return (true);                                                 //Se houver Filas iguais com assentos iguais ele não vai deixar criar
+                    }
+                }
+            }
+        }
+        System.out.println("CAMPOS DIFERENTES\n");
+
+        return (false);
+    }
+
+    //Verifica se é há elementos repetidos no ficheiro de texto, se não houver adiciona e retorna true
+    public boolean insertShowSeatFile(ArrayList<String> parametersShow , ArrayList<ArrayList<String>> parametersSeats){
+        if(!verificarRepetidos(parametersSeats)){
+            int numShow = insertShow(parametersShow);
+            //System.out.println("ola");
+            if(numShow > 0) {     //Se retornar -1 é porque houve algum erro na insercao
+                insertSeat(parametersSeats, numShow);
+                System.out.println("Ola");
+                return (true);
+            }
+        }
+
+        return (false);
+    }
+
+
     //Insert Show   ERROR: Return (-1)   else   return(show)
     public int insertShow(ArrayList<String> parameters){
         Statement statement;
+        /*if(parameters.size() > 8){
+            return (-1);
+        }*/
         try{
             statement = dbConn.createStatement();
         }catch (SQLException e){
@@ -302,6 +340,7 @@ public class DBManager {
             statement.close();
             multicastQuery(sqlQuery);
             updateVersion();
+            System.out.println("OlaFeito");
             return (rs.getInt(1));
         }catch (SQLException e){
             return (-1);
@@ -326,6 +365,7 @@ public class DBManager {
                     numShow + "')";
                     statement.executeUpdate(sqlQuery);
                 multicastQuery(sqlQuery);
+                updateVersion();
                 i++;
                 contador = 0;
             }        
@@ -333,7 +373,6 @@ public class DBManager {
         }catch (SQLException e){
             return false;
         }
-        updateVersion();
         return true;
     }
 

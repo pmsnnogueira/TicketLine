@@ -3,7 +3,7 @@ package pt.isec.pd.ticketline.src.model.server;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class DBHelper {
+public class    DBHelper {
     private Integer id;
     private String operation;
     private String table;

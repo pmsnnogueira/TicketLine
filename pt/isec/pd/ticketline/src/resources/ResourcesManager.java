@@ -55,6 +55,10 @@ public class ResourcesManager {
         return this.dbManager.listSeats(seatID);
     }
 
+    public boolean insertShowSeatFile(ArrayList<String> parametersShow , ArrayList<ArrayList<String>> parametersSeats) {
+        return this.dbManager.insertShowSeatFile(parametersShow , parametersSeats);
+    }
+
     public int insertShow(ArrayList<String> parameters) {
         return this.dbManager.insertShow(parameters);
     }

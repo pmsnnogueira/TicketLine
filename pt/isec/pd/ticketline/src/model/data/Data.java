@@ -60,6 +60,10 @@ public class Data {
         return this.resourcesManager.listSeats(seatID);
     }
 
+    public boolean insertShowSeatFile(ArrayList<String> parametersShow , ArrayList<ArrayList<String>> parametersSeats){
+        return this.resourcesManager.insertShowSeatFile(parametersShow , parametersSeats);
+    }
+
     public int insertShow(ArrayList<String> parameters){
         return this.resourcesManager.insertShow(parameters);
     }
@@ -86,7 +90,6 @@ public class Data {
         ArrayList<String> parameters = new ArrayList<>();
         ArrayList<ArrayList<String>> arraySeats = new ArrayList<>();
         String dateHour = "";
-        int numShow = -1;
         boolean seats = false;
 
         for(String string : information)
@@ -96,7 +99,6 @@ public class Data {
             if(!seats){
                 if(newString.contains("Designação"))
                 {
-        
                     String designation = splitted[1];
                     parameters.add(designation);
                 }
@@ -166,9 +168,8 @@ public class Data {
                 }
             }
         }
-        numShow = insertShow(parameters);
-        if(numShow > 0)
-            insertSeat(arraySeats , numShow);
+
+        insertShowSeatFile(parameters , arraySeats);
     }
 
     public boolean deleteShow(int id){return this.resourcesManager.deleteShow(id);}

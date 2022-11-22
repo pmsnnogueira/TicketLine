@@ -338,7 +338,7 @@ public class Server {
 
             while(handleDB){
                 try {
-                    Thread.sleep(100);
+                    Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
@@ -353,7 +353,8 @@ public class Server {
                         case "INSERT"->{
                             switch (dbHelper.getTable()){
                                 case "show" ->{
-                                    data.insertShow(dbHelper.getInsertParams());
+                                    System.out.println("Vou tentar");
+                                    data.addShow();
                                 }
                                 case "seat" ->{
                                     data.insertSeat(dbHelper.getSeatParams(), dbHelper.getId());
@@ -438,12 +439,11 @@ public class Server {
         public void run() {
             while(true)
             {
-
                 if (mcs.isClosed()){
                     break;
                 }
                 try{
-                    DatagramPacket dp = new DatagramPacket(new byte[512], 512);
+                    DatagramPacket dp = new DatagramPacket(new byte[1024], 1024);
                     mcs.receive(dp);
                     ByteArrayInputStream bais = new ByteArrayInputStream(dp.getData());
                     ObjectInputStream ois = new ObjectInputStream(bais);
