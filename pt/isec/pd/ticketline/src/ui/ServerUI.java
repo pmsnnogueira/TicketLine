@@ -230,7 +230,7 @@ public class ServerUI {
     public void start(){
         while (true){
             try{
-                Thread.sleep(150);
+                Thread.sleep(500);
             }catch (InterruptedException ignored){
             }
             int input = InputProtection.chooseOption("Choose an action:", "List information",

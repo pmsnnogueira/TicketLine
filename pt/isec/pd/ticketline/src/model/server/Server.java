@@ -48,6 +48,7 @@ public class Server {
     private InetAddress ipGroup;
     private SocketAddress sa;
     private NetworkInterface ni;
+    private ScheduledExecutorService scheduler;
 
     public static void main(String[] args)
     {
@@ -79,7 +80,7 @@ public class Server {
         this.data = new Data(this.mcs);
         //START SERVER
 
-        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
+        this.scheduler = Executors.newScheduledThreadPool(2);
 
         // server initiaton phase
          si = new ServerInit();
@@ -288,10 +289,15 @@ public class Server {
     }
 
     public void closeServer() throws InterruptedException, IOException, SQLException {
+        mcs.leaveGroup(sa, ni);
+        mcs.close();
+        this.data.closeDB();
+
         this.handleDB = false;
-        this.dbHandler.join();
+        this.dbHandler.join(1000);
         this.dbHandler.interrupt();
 
+        heartBeat.setAvailable(false);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ObjectOutputStream oos = new ObjectOutputStream(baos);
 
@@ -301,17 +307,17 @@ public class Server {
                 InetAddress.getByName("239.39.39.39"), 4004);
         mcs.send(dp);
 
-        heartBeat.setAvailable(false);
         hbh.join(10000);
         hbh.interrupt();
 
-        mcs.leaveGroup(sa, ni);
-        mcs.close();
-        this.data.closeDB();
+        scheduler.close();
+
+        si.join(1000);
+        si.interrupt();
     }
 
     private void updateDB(HeartBeat hBeat) {
-        this.data.processNewQuerie(hBeat.getMostRecentQuery());
+        this.data.processNewQuerie(hBeat.getQueries());
         this.heartBeat.resetMostRecentQuery();
     }
 
@@ -353,7 +359,6 @@ public class Server {
                         case "INSERT"->{
                             switch (dbHelper.getTable()){
                                 case "show" ->{
-                                    System.out.println("Vou tentar");
                                     data.addShow();
                                 }
                                 case "seat" ->{
@@ -443,7 +448,7 @@ public class Server {
                     break;
                 }
                 try{
-                    DatagramPacket dp = new DatagramPacket(new byte[1024], 1024);
+                    DatagramPacket dp = new DatagramPacket(new byte[20480], 20480);
                     mcs.receive(dp);
                     ByteArrayInputStream bais = new ByteArrayInputStream(dp.getData());
                     ObjectInputStream ois = new ObjectInputStream(bais);
@@ -500,7 +505,7 @@ public class Server {
                             continue;
                         }
                         if(heartBeat.getDatabaseVersion() > dbCopyHeartBeat.getDatabaseVersion()){
-                            System.out.println(heartBeat.getMostRecentQuery());
+                            System.out.println(heartBeat.getQueries());
                             dbCopyHeartBeat = heartBeat;
                         }
                     }

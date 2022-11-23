@@ -15,10 +15,13 @@ public class DBManager {
     private MulticastSocket mcs;
     private HeartBeat serverHB;
 
+    private String addShowQuery;
+
     public DBManager(MulticastSocket mcs) throws SQLException {
         this.dbConn = DriverManager.getConnection("jdbc:sqlite:pt/isec/pd/ticketline/src/resources/db/PD-2022-23-TP.db");
         this.defaultDB = DriverManager.getConnection("jdbc:sqlite:pt/isec/pd/ticketline/src/resources/db/PD-2022-23-TP.db");
         this.mcs = mcs;
+        this.addShowQuery = null;
     }
 
     public void close() throws SQLException
@@ -110,11 +113,14 @@ public class DBManager {
     }
 
     public void processNewQuerie(String newQuerie){
+        String[] queries = newQuerie.split("\\|");
         try{
-            Statement statement = this.dbConn.createStatement();
-            statement.executeUpdate(newQuerie);
-            statement.close();
-            updateVersion();
+            for (String str : queries){
+                Statement statement = this.dbConn.createStatement();
+                statement.executeUpdate(str);
+                statement.close();
+                updateVersion();
+            }
         }catch (SQLException e){
             e.printStackTrace();
         }
@@ -122,7 +128,7 @@ public class DBManager {
 
     public void multicastQuery(String newQuerie){
         try{
-            this.serverHB.setMostRecentQuery(newQuerie);
+            this.serverHB.setQueries(newQuerie);
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ObjectOutputStream oos = new ObjectOutputStream(baos);
 
@@ -288,13 +294,11 @@ public class DBManager {
             for(int j = i + 1 ; j < parameters.size(); j++){
                 if(parameters.get(i).get(0).equals(parameters.get(j).get(0))){       //Aqui vai encontrar duas filas iguais
                     if(parameters.get(i).get(1).equals(parameters.get(j).get(1))){    //Comparar se o Assento é o mesmo na mesma fila
-                        System.out.println("CAMPOS IGUAIS\n");
                         return (true);                                                 //Se houver Filas iguais com assentos iguais ele não vai deixar criar
                     }
                 }
             }
         }
-        System.out.println("CAMPOS DIFERENTES\n");
 
         return (false);
     }
@@ -303,10 +307,8 @@ public class DBManager {
     public boolean insertShowSeatFile(ArrayList<String> parametersShow , ArrayList<ArrayList<String>> parametersSeats){
         if(!verificarRepetidos(parametersSeats)){
             int numShow = insertShow(parametersShow);
-            //System.out.println("ola");
             if(numShow > 0) {     //Se retornar -1 é porque houve algum erro na insercao
                 insertSeat(parametersSeats, numShow);
-                System.out.println("Ola");
                 return (true);
             }
         }
@@ -318,9 +320,6 @@ public class DBManager {
     //Insert Show   ERROR: Return (-1)   else   return(show)
     public int insertShow(ArrayList<String> parameters){
         Statement statement;
-        /*if(parameters.size() > 8){
-            return (-1);
-        }*/
         try{
             statement = dbConn.createStatement();
         }catch (SQLException e){
@@ -338,9 +337,8 @@ public class DBManager {
             statement.executeUpdate(sqlQuery , statement.RETURN_GENERATED_KEYS);
             ResultSet rs = statement.getGeneratedKeys();
             statement.close();
-            multicastQuery(sqlQuery);
+            addShowQuery = sqlQuery;
             updateVersion();
-            System.out.println("OlaFeito");
             return (rs.getInt(1));
         }catch (SQLException e){
             return (-1);
@@ -357,6 +355,13 @@ public class DBManager {
             return false;
         }
 
+        StringBuilder sb = new StringBuilder();
+
+        if(addShowQuery != null){
+            sb.append(addShowQuery).append("|");
+            addShowQuery = null;
+        }
+
         try{
             int i = 0;
             while(i < parameters.size()){
@@ -364,12 +369,13 @@ public class DBManager {
                     parameters.get(i).get(contador++) + "' , '" + parameters.get(i).get(contador) + "' , '" +
                     numShow + "')";
                     statement.executeUpdate(sqlQuery);
-                multicastQuery(sqlQuery);
+                sb.append(sqlQuery).append("|");
                 updateVersion();
                 i++;
                 contador = 0;
             }        
             statement.close();
+            multicastQuery(sb.toString());
         }catch (SQLException e){
             return false;
         }
