@@ -558,8 +558,6 @@ public class Server {
                     int nBytes = is.read(msg);
                     String msgReceived = new String(msg, 0, nBytes);
 
-                    System.out.println(msgReceived);
-
                     if(msgReceived.equals("SERVER")){
                         byte[] buffer = new byte[512];
                         int readBytes = 0;
