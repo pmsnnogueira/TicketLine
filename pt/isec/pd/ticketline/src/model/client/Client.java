@@ -9,7 +9,7 @@ import java.util.Arrays;
 
 public class Client {
     public static void main(String[] args) {
-
+        Client client = new Client(args[0], Integer.parseInt(args[1]));
     }
 
     public String serverIP;
@@ -22,7 +22,9 @@ public class Client {
         this.serverPort = serverPort;
         this.CIHandle = true;
 
+        this.servers = new ArrayList<>();
 
+        ClientInit();
     }
 
     public boolean ClientInit(){
@@ -34,7 +36,7 @@ public class Client {
         }catch (IOException e){
             return false;
         }
-        String message = "Connect";
+        String message = "CONNECTION";
         DatagramPacket packetSent = new DatagramPacket(message.getBytes(), message.getBytes().length, ip, serverPort);
 
         try{
@@ -54,6 +56,7 @@ public class Client {
         String messageReceived = new String(packetReceived.getData(), 0, packetReceived.getLength());
         String[] strings = messageReceived.split("\\|");
         servers.addAll(Arrays.asList(strings));
+        System.out.println(servers);
         return true;
     }
 }

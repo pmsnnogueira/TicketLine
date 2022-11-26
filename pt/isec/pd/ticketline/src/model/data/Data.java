@@ -7,10 +7,7 @@ import pt.isec.pd.ticketline.src.resources.files.FileOpener;
 import java.net.MulticastSocket;
 import java.sql.SQLException;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 public class Data {
     private ResourcesManager resourcesManager;
@@ -218,5 +215,18 @@ public class Data {
 
     public boolean serverLifeCheck(){
         return heartBeatsReceived.removeIf(beat -> LocalTime.now().isAfter(beat.getTimeCreated().plusSeconds(35)));
+    }
+
+    public String getOrderedServers(){
+        ArrayList<HeartBeat> hb = new ArrayList<>(heartBeatsReceived);
+        hb.sort(Comparator.comparingInt(HeartBeat::getNumberOfConnections));
+
+        StringBuilder sb = new StringBuilder();
+
+        for (HeartBeat beat : hb){
+            sb.append(beat.getIp()).append("-").append(beat.getPortTcp()).append("|");
+        }
+
+        return sb.toString();
     }
 }

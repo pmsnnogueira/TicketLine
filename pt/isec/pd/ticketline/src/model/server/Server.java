@@ -8,14 +8,7 @@ import pt.isec.pd.ticketline.src.model.server.heartbeat.ServerLifeCheck;
 import pt.isec.pd.ticketline.src.ui.ServerUI;
 
 import java.io.*;
-import java.net.DatagramPacket;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.MulticastSocket;
-import java.net.NetworkInterface;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.SocketAddress;
+import java.net.*;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,7 +29,7 @@ public class Server {
     private HeartBeatReceiver hbh;
     private DataBaseHandler dbHandler;
     private DBHelper dbHelper;
-    private int tcpPort;
+    private int serverPort;
     private ServerInit si;
     private DatabaseProvider dbProv;
 
@@ -50,7 +43,10 @@ public class Server {
     private NetworkInterface ni;
     private ScheduledExecutorService scheduler;
     private boolean HBHandle;
-
+    private ClientInitHelper ch;
+    private boolean cihHandle;
+    private String clientIP;
+    private int clientPort;
     public static void main(String[] args)
     {
         ServerUI serverUI = null;
@@ -70,7 +66,7 @@ public class Server {
         this.numberOfConnections = 0;
         this.dbCopyHeartBeat = null;
         this.DBDirectory = DBDirectory;
-        this.tcpPort = port;
+        this.serverPort = port;
         this.serverInitContinue = true;
         this.mcs = new MulticastSocket(multicastPort);
         this.ipGroup = InetAddress.getByName(ipMulticast);
@@ -120,6 +116,11 @@ public class Server {
         //start database prpovider thread to pro
         dbProv = new DatabaseProvider();
         dbProv.start();
+
+        //start client handler thread
+        this.cihHandle = true;
+        this.ch = new ClientInitHelper();
+        this.ch.start();
     }
 
     public String listUsers(Integer userID){
@@ -251,11 +252,11 @@ public class Server {
     }
 
     public void transferDatabase(HeartBeat dbHeartbeat){
-        if((new File(DBDirectory + "/PD-2022-23-TP-" + tcpPort + ".db")).exists()){
+        if((new File(DBDirectory + "/PD-2022-23-TP-" + serverPort + ".db")).exists()){
             if (dbHeartbeat == null){
                 return;
             }
-            if(this.data.testDatabaseVersion(DBDirectory, tcpPort) >= dbHeartbeat.getDatabaseVersion()){
+            if(this.data.testDatabaseVersion(DBDirectory, serverPort) >= dbHeartbeat.getDatabaseVersion()){
                 return;
             }
         }
@@ -266,7 +267,7 @@ public class Server {
 
         try {
             Socket socket = new Socket(dbHeartbeat.getIp(), dbHeartbeat.getPortTcp());
-            File file = new File(DBDirectory + "/PD-2022-23-TP-" + tcpPort + ".db");
+            File file = new File(DBDirectory + "/PD-2022-23-TP-" + serverPort + ".db");
             FileOutputStream fo = new FileOutputStream(file);
             byte[] buffer = new byte[512];
             InputStream is = socket.getInputStream();
@@ -338,7 +339,7 @@ public class Server {
         @Override
         public void run() {
             //Connect to DB
-            if(!data.connectToDB(tcpPort, DBDirectory)){
+            if(!data.connectToDB(serverPort, DBDirectory)){
                 return;
             }
 
@@ -460,7 +461,7 @@ public class Server {
                         data.processANewHeartBeat(hBeat);
 
                         if(hBeat.getDatabaseVersion() > heartBeat.getDatabaseVersion()
-                                && hBeat.getPortTcp() != tcpPort){
+                                && hBeat.getPortTcp() != serverPort){
                             System.out.println(hBeat.getQueries());
                             hbWithHighestVersion = hBeat;
                         }
@@ -498,7 +499,7 @@ public class Server {
 
                         heartBeat = (HeartBeat)ois.readObject();
 
-                        if(heartBeat.getPortTcp() == tcpPort){
+                        if(heartBeat.getPortTcp() == serverPort){
                             continue;
                         }
 
@@ -529,12 +530,12 @@ public class Server {
             while(true)
             {
                 try {
-                    serverSocket = new ServerSocket(tcpPort);
+                    serverSocket = new ServerSocket(serverPort);
                     socket = serverSocket.accept();
                     OutputStream os = socket.getOutputStream();
                     byte[] buffer = new byte[512];
                     int readBytes = 0;
-                    fi = new FileInputStream(DBDirectory + "/PD-2022-23-TP-" + tcpPort + ".db");
+                    fi = new FileInputStream(DBDirectory + "/PD-2022-23-TP-" + serverPort + ".db");
 
                     do
                     {
@@ -557,6 +558,50 @@ public class Server {
             }
 
 
+        }
+    }
+
+    class ClientInitHelper extends Thread{
+        private DatagramSocket socket;
+
+        public ClientInitHelper(){
+            try{
+                this.socket = new DatagramSocket(serverPort);
+            }catch (IOException e){
+
+            }
+        }
+        @Override
+        public void run() {
+            while(cihHandle){
+                DatagramPacket packet = new DatagramPacket(new byte[256], 256);
+
+                try{
+                    socket.receive(packet);
+                }catch (IOException e){
+                    continue;
+                }
+
+                String messageReceived = new String(packet.getData(), 0, packet.getLength());
+
+                if(!messageReceived.equals("CONNECTION")){
+                    continue;
+                }
+
+                String msg = data.getOrderedServers();
+                byte[] msgBytes = msg.getBytes();
+
+                DatagramPacket packetToSend = new DatagramPacket(msgBytes, msgBytes.length, packet.getAddress(), packet.getPort());
+
+                try{
+                    socket.send(packetToSend);
+                }catch (IOException e){
+                    continue;
+                }
+
+            }
+
+            socket.close();
         }
     }
 }
