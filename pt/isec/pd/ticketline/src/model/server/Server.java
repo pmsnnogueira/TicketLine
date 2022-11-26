@@ -49,6 +49,7 @@ public class Server {
     private SocketAddress sa;
     private NetworkInterface ni;
     private ScheduledExecutorService scheduler;
+    private boolean HBHandle;
 
     public static void main(String[] args)
     {
@@ -83,20 +84,20 @@ public class Server {
         this.scheduler = Executors.newScheduledThreadPool(2);
 
         // server initiaton phase
-         si = new ServerInit();
-         si.start();
-         si.join(30000);
-         this.serverInitContinue = false;
+        si = new ServerInit();
+        si.start();
+        si.join(30000);
+        this.serverInitContinue = false;
 
-         transferDatabase(dbCopyHeartBeat);
+        transferDatabase(dbCopyHeartBeat);
 
         //start thread to handle the DB operations
         this.hbWithHighestVersion = null;
         this.handleDB = true;
         this.dbHelper = new DBHelper();
 
-         this.dbHandler = new DataBaseHandler();
-         this.dbHandler.start();
+        this.dbHandler = new DataBaseHandler();
+        this.dbHandler.start();
 
 
         heartBeat = new HeartBeat(port, available, this.data.getDatabaseVersion(),
@@ -112,6 +113,7 @@ public class Server {
         scheduler.scheduleAtFixedRate(new ServerLifeCheck(this.data), 0, 35, TimeUnit.SECONDS);
 
         //start thread to receive the heartbeats
+        this.HBHandle = true;
         hbh = new HeartBeatReceiver(mcs);
         hbh.start();
 
@@ -281,7 +283,7 @@ public class Server {
         } catch (IOException e) {
             e.printStackTrace();
             return;
-        }  
+        }
     }
 
     public void updateDBVersion(){
@@ -307,13 +309,11 @@ public class Server {
                 InetAddress.getByName("239.39.39.39"), 4004);
         mcs.send(dp);
 
+        HBHandle = false;
         hbh.join(10000);
         hbh.interrupt();
 
-        scheduler.close();
-
-        si.join(1000);
-        si.interrupt();
+        scheduler.shutdownNow();
     }
 
     private void updateDB(HeartBeat hBeat) {
@@ -344,10 +344,11 @@ public class Server {
 
             while(handleDB){
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(500);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
+                heartBeat.setDatabaseVersion(data.getDatabaseVersion());
                 if(hbWithHighestVersion != null){
                     updateDB(hbWithHighestVersion);
                     hbWithHighestVersion = null;
@@ -442,7 +443,7 @@ public class Server {
 
         @Override
         public void run() {
-            while(true)
+            while(HBHandle)
             {
                 if (mcs.isClosed()){
                     break;
@@ -460,6 +461,7 @@ public class Server {
 
                         if(hBeat.getDatabaseVersion() > heartBeat.getDatabaseVersion()
                                 && hBeat.getPortTcp() != tcpPort){
+                            System.out.println(hBeat.getQueries());
                             hbWithHighestVersion = hBeat;
                         }
                     }
@@ -499,13 +501,12 @@ public class Server {
                         if(heartBeat.getPortTcp() == tcpPort){
                             continue;
                         }
-                    
+
                         if(dbCopyHeartBeat == null){
                             dbCopyHeartBeat = heartBeat;
                             continue;
                         }
                         if(heartBeat.getDatabaseVersion() > dbCopyHeartBeat.getDatabaseVersion()){
-                            System.out.println(heartBeat.getQueries());
                             dbCopyHeartBeat = heartBeat;
                         }
                     }
@@ -534,7 +535,7 @@ public class Server {
                     byte[] buffer = new byte[512];
                     int readBytes = 0;
                     fi = new FileInputStream(DBDirectory + "/PD-2022-23-TP-" + tcpPort + ".db");
-    
+
                     do
                     {
                         readBytes = fi.read(buffer);
@@ -542,7 +543,7 @@ public class Server {
                             break;
                         os.write(buffer, 0, readBytes);
                     }while(readBytes > 0);
-    
+
                 } catch (IOException e) {
                     return;
                 }
@@ -554,7 +555,7 @@ public class Server {
                     e.printStackTrace();
                 }
             }
-            
+
 
         }
     }

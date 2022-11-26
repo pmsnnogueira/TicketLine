@@ -119,11 +119,11 @@ public class DBManager {
                 Statement statement = this.dbConn.createStatement();
                 statement.executeUpdate(str);
                 statement.close();
-                updateVersion();
             }
         }catch (SQLException e){
             e.printStackTrace();
         }
+        updateVersion();
     }
 
     public void multicastQuery(String newQuerie){
@@ -370,7 +370,6 @@ public class DBManager {
                     numShow + "')";
                     statement.executeUpdate(sqlQuery);
                 sb.append(sqlQuery).append("|");
-                updateVersion();
                 i++;
                 contador = 0;
             }        
