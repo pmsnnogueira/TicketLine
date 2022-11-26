@@ -31,7 +31,7 @@ public class Server {
     private DBHelper dbHelper;
     private int serverPort;
     private ServerInit si;
-    private DatabaseProvider dbProv;
+    private TCPHandler dbProv;
 
     private boolean serverInitContinue;
     private boolean handleDB;
@@ -114,7 +114,7 @@ public class Server {
         hbh.start();
 
         //start database prpovider thread to pro
-        dbProv = new DatabaseProvider();
+        dbProv = new TCPHandler();
         dbProv.start();
 
         //start client handler thread
@@ -252,21 +252,38 @@ public class Server {
     }
 
     public void transferDatabase(HeartBeat dbHeartbeat){
+        //if the server already has its own DB
         if((new File(DBDirectory + "/PD-2022-23-TP-" + serverPort + ".db")).exists()){
+            //and there is no other server running
             if (dbHeartbeat == null){
+                //there is no need to do anything
                 return;
             }
+            //or this server DB has a higher or equal version
             if(this.data.testDatabaseVersion(DBDirectory, serverPort) >= dbHeartbeat.getDatabaseVersion()){
+                //there is no need to do anything
                 return;
             }
         }
 
+        //if this server does not have its own DB
+        //and there are no other servers running
         if(dbHeartbeat == null){
+            //there is no need to do anything
             return;
         }
 
+        //if there are other servers running
+        //it needs to copy the DB from the server with the highest version
         try {
             Socket socket = new Socket(dbHeartbeat.getIp(), dbHeartbeat.getPortTcp());
+
+            //it needs to send a message indicating that it is a server
+            OutputStream os = socket.getOutputStream();
+            String str = "SERVER";
+            os.write(str.getBytes(), 0, str.length());
+
+            //and prepares to copy the DB
             File file = new File(DBDirectory + "/PD-2022-23-TP-" + serverPort + ".db");
             FileOutputStream fo = new FileOutputStream(file);
             byte[] buffer = new byte[512];
@@ -279,8 +296,11 @@ public class Server {
                 if(readBytes > -1)
                     fo.write(buffer, 0, readBytes);
             }while(readBytes > 0);
-            socket.close();
+
+            os.close();
             fo.close();
+            is.close();
+            socket.close();
         } catch (IOException e) {
             e.printStackTrace();
             return;
@@ -521,29 +541,47 @@ public class Server {
         }
     }
 
-    class DatabaseProvider extends Thread{
+    class TCPHandler extends Thread{
         @Override
         public void run() {
             ServerSocket serverSocket;
             Socket socket;
-            FileInputStream fi;
             while(true)
             {
                 try {
                     serverSocket = new ServerSocket(serverPort);
                     socket = serverSocket.accept();
+                    InputStream is =socket.getInputStream();
                     OutputStream os = socket.getOutputStream();
-                    byte[] buffer = new byte[512];
-                    int readBytes = 0;
-                    fi = new FileInputStream(DBDirectory + "/PD-2022-23-TP-" + serverPort + ".db");
 
-                    do
-                    {
-                        readBytes = fi.read(buffer);
-                        if(readBytes == -1)
-                            break;
-                        os.write(buffer, 0, readBytes);
-                    }while(readBytes > 0);
+                    byte[] msg = new byte[1024];
+                    int nBytes = is.read(msg);
+                    String msgReceived = new String(msg, 0, nBytes);
+
+                    System.out.println(msgReceived);
+
+                    if(msgReceived.equals("SERVER")){
+                        byte[] buffer = new byte[512];
+                        int readBytes = 0;
+                        FileInputStream fi = new FileInputStream(DBDirectory + "/PD-2022-23-TP-" + serverPort + ".db");
+
+                        do
+                        {
+                            readBytes = fi.read(buffer);
+                            if(readBytes == -1)
+                                break;
+                            os.write(buffer, 0, readBytes);
+                        }while(readBytes > 0);
+
+                        fi.close();
+                    }
+
+                    if(msgReceived.equals("CLIENT")){
+                        String s = "CONFIRMED";
+                        os.write(s.getBytes(), 0, s.length());
+
+
+                    }
 
                 } catch (IOException e) {
                     return;
@@ -551,7 +589,6 @@ public class Server {
                 try {
                     serverSocket.close();
                     socket.close();
-                    fi.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
