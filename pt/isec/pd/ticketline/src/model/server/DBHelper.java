@@ -1,9 +1,10 @@
 package pt.isec.pd.ticketline.src.model.server;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class    DBHelper {
+public class DBHelper implements Serializable {
     private Integer id;
     private String operation;
     private String table;

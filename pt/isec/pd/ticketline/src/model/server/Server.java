@@ -82,7 +82,7 @@ public class Server {
         // server initiaton phase
         si = new ServerInit();
         si.start();
-        si.join(30000);
+        si.join(30);
         this.serverInitContinue = false;
 
         transferDatabase(dbCopyHeartBeat);
@@ -551,7 +551,7 @@ public class Server {
                 try {
                     serverSocket = new ServerSocket(serverPort);
                     socket = serverSocket.accept();
-                    InputStream is =socket.getInputStream();
+                    InputStream is = socket.getInputStream();
                     OutputStream os = socket.getOutputStream();
 
                     byte[] msg = new byte[1024];
@@ -575,8 +575,14 @@ public class Server {
                     }
 
                     if(msgReceived.equals("CLIENT")){
+
                         String s = "CONFIRMED";
+                        System.out.println("Ola " + s.length());
+
+
                         os.write(s.getBytes(), 0, s.length());
+                        os.flush();
+
 
 
                     }
@@ -590,6 +596,8 @@ public class Server {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+
+
             }
 
 
