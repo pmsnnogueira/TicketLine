@@ -1,29 +1,26 @@
 package pt.isec.pd.ticketline.src.model.client;
 
-import pt.isec.pd.ticketline.src.model.data.Data;
 import pt.isec.pd.ticketline.src.model.server.DBHelper;
-import pt.isec.pd.ticketline.src.model.server.Server;
 import pt.isec.pd.ticketline.src.ui.ClientUI;
 
 import java.io.*;
-import java.lang.reflect.Array;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 
 public class Client {
     public static void main(String[] args) {
-
-        //ClientUI clientUI = null;
-
+        ClientUI clientUI = null;
         try {
             Client client = new Client(args[0], Integer.parseInt(args[1]));
-            //clientUI = new ClientUI();
-        } catch (Exception e) {
+            clientUI = new ClientUI(client);
+        } catch (SocketException e) {
             System.out.println("Could not create a client (ERROR:" + e + ")");
+            e.printStackTrace();
         }
-        //assert clientUI != null;
-        //clientUI.start();
+
+        assert clientUI != null;
+        clientUI.start();
     }
 
     public String serverIP;
@@ -32,7 +29,7 @@ public class Client {
     public ArrayList<String> servers;
     private Socket socket;
 
-    public Client(String serverIP, int serverPort) throws Exception {
+    public Client(String serverIP, int serverPort) throws SocketException {
         this.serverIP = serverIP;
         this.serverPort = serverPort;
         this.CIHandle = true;
@@ -40,13 +37,11 @@ public class Client {
         this.servers = new ArrayList<>();
 
         if (!clientInit()) {
-            throw new Exception();
+            throw new SocketException();
         }
-        if (!connectToServer()) {
+/*        if (!connectToServer()) {
             throw new Exception();
-        }
-
-        initClientUI();
+        }*/
     }
 
     public boolean clientInit() {
@@ -97,7 +92,6 @@ public class Client {
                 String msg = "CLIENT";
                 os.write(msg.getBytes(), 0, msg.length());
 
-
                 InputStream is = socket.getInputStream();
                 byte[] m = new byte[512];
                 int nBytes = is.read(m);
@@ -117,13 +111,7 @@ public class Client {
         return false;
     }
 
-    public void initClientUI() {
-        ClientUI clientUI = new ClientUI(this);
-        clientUI.start();
-    }
-
-
-    public DBHelper addDBhelper(String operation, String table, ArrayList<String> insertParams) {
+    public DBHelper addDBHelper(String operation, String table, ArrayList<String> insertParams) {
         DBHelper dbHelper = new DBHelper();
         if (operation.equals("INSERT")) {
             if (table.equals("user")) {
@@ -143,26 +131,46 @@ public class Client {
         for (String str : servers) {
             String[] s = str.split("-");
             try {
-                System.out.println(s[0] + Integer.parseInt(s[1]));
+//                System.out.println(s[0] + Integer.parseInt(s[1]));
                 socket = new Socket(s[0], Integer.parseInt(s[1]));
                 OutputStream os = socket.getOutputStream();
-                ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());      //Write to Server*/
-
                 String msg = "CLIENT";
                 os.write(msg.getBytes(), 0, msg.length());
-
 
                 InputStream is = socket.getInputStream();
                 byte[] m = new byte[512];
                 int nBytes = is.read(m);
                 String msgReceived = new String(m, 0, nBytes);
+
                 System.out.println(msgReceived);
 
-                DBHelper dbHelper = addDBhelper(operation, table, insertParams);      //Criar o DBhelper
-                if (dbHelper == null)
+                if(!msgReceived.equals("CONFIRMED")){
+                    socket.close();
                     return false;
+                }
 
+                DBHelper dbHelper = addDBHelper(operation, table, insertParams); //Criar o DBhelper
+                if (dbHelper == null){
+                    socket.close();
+                    return false;
+                }
+
+                System.out.println("DBHELPER");
+
+                ObjectOutputStream oos = null;//Write to Server
+                try{
+                    oos = new ObjectOutputStream(socket.getOutputStream());
+                }catch (IOException e){
+                    e.printStackTrace();
+                }
+                System.out.println("OOS");
                 oos.writeObject(dbHelper);
+                System.out.println("WRITE");
+
+                is.close();
+                os.close();
+                oos.close();
+
                 socket.close();
                 return true;
             } catch (IOException e) {

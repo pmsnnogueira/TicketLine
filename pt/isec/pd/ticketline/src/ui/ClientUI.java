@@ -329,6 +329,7 @@ public class ClientUI {
     }
 
     public void start(){
+        System.out.println(art());
         while (true){
             try{
                 Thread.sleep(500);

@@ -82,7 +82,7 @@ public class Server {
         // server initiaton phase
         si = new ServerInit();
         si.start();
-        si.join(30);
+        si.join(30000);
         this.serverInitContinue = false;
 
         transferDatabase(dbCopyHeartBeat);
@@ -90,7 +90,7 @@ public class Server {
         //start thread to handle the DB operations
         this.hbWithHighestVersion = null;
         this.handleDB = true;
-        this.dbHelper = new DBHelper();
+        dbHelper = new DBHelper();
 
         this.dbHandler = new DataBaseHandler();
         this.dbHandler.start();
@@ -124,7 +124,7 @@ public class Server {
     }
 
     public String listUsers(Integer userID){
-        this.dbHelper.setId(userID);
+        dbHelper.setId(userID);
         this.dbHelper.setOperation("SELECT");
         this.dbHelper.setTable("user");
         this.dbHandler.setHasNewDBRequest();
@@ -544,12 +544,16 @@ public class Server {
     class TCPHandler extends Thread{
         @Override
         public void run() {
-            ServerSocket serverSocket;
-            Socket socket;
+            ServerSocket serverSocket = null;
+            try {
+                serverSocket = new ServerSocket(serverPort);
+            } catch (IOException e) {
+                return;
+            }
+            Socket socket = null;
             while(true)
             {
                 try {
-                    serverSocket = new ServerSocket(serverPort);
                     socket = serverSocket.accept();
                     InputStream is = socket.getInputStream();
                     OutputStream os = socket.getOutputStream();
@@ -575,31 +579,36 @@ public class Server {
                     }
 
                     if(msgReceived.equals("CLIENT")){
+                        System.out.println("CLIENT CONNECTED");
 
                         String s = "CONFIRMED";
-                        System.out.println("Ola " + s.length());
-
-
                         os.write(s.getBytes(), 0, s.length());
-                        os.flush();
 
+                        ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
 
+                        DBHelper dbh = null;
+                        try{
+                            dbh = (DBHelper) ois.readObject();
+                        }catch (ClassNotFoundException ignored){
 
+                        }
+                        System.out.println("OBJECT READ");
+                        ois.close();
+                        os.close();
                     }
 
-                } catch (IOException e) {
-                    return;
-                }
-                try {
-                    serverSocket.close();
                     socket.close();
+
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    break;
                 }
-
-
             }
 
+            try {
+                serverSocket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
         }
     }
