@@ -114,6 +114,7 @@ public class ClientUI {
     private void listInformation(){
         int input = InputProtection.chooseOption(null, "List shows", "List reservations",
                 "List seats", "List users");
+        ArrayList<String> empty = new ArrayList<>();
         switch (input){
             case 1 -> {
                 int id = InputProtection.readInt("Show ID (-1 for all shows): ");
@@ -129,7 +130,8 @@ public class ClientUI {
             }
             case 4 ->{
                 int id = InputProtection.readInt("User ID (-1 for all users): ");
-                //System.out.println(this.data.listUsers(id == -1 ? null : id));
+                System.out.println(this.client.sendInfoToServer("SELECT","user" , empty,id));
+
             }
             default -> {
                 System.out.println("Not a valid option! Try again!");
@@ -193,9 +195,7 @@ public class ClientUI {
                 parameters.add(Integer.toString(autenticado));
 
                 //Send information to server
-                if (!this.client.sendInfoToServer("INSERT","user",parameters)) {
-                    System.out.println("Could not insert data");
-                }
+                System.out.println(this.client.sendInfoToServer("INSERT","user" , parameters,-1));
             }
             case 4 ->{
                 //Enviar informacao da leitura do ficheiro do show

@@ -11,7 +11,9 @@ import java.io.*;
 import java.net.*;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -28,7 +30,9 @@ public class Server {
     private HeartBeat hbWithHighestVersion;
     private HeartBeatReceiver hbh;
     private DataBaseHandler dbHandler;
-    private DBHelper dbHelper;
+    private DBHelper dbHelper = null;
+
+    private LinkedList<DBHelper> listDbHelper;
     private int serverPort;
     private ServerInit si;
     private TCPHandler dbProv;
@@ -82,7 +86,7 @@ public class Server {
         // server initiaton phase
         si = new ServerInit();
         si.start();
-        si.join(30000);
+        si.join(30);
         this.serverInitContinue = false;
 
         transferDatabase(dbCopyHeartBeat);
@@ -90,7 +94,8 @@ public class Server {
         //start thread to handle the DB operations
         this.hbWithHighestVersion = null;
         this.handleDB = true;
-        dbHelper = new DBHelper();
+        dbHelper = null;
+        listDbHelper = new LinkedList<>();
 
         this.dbHandler = new DataBaseHandler();
         this.dbHandler.start();
@@ -356,6 +361,24 @@ public class Server {
             this.hasNewDBRequest = true;
         }
 
+        public boolean sendStringToClient(DBHelper dbHelper,String msg){
+            //Connect to client
+            try{
+                System.out.println(dbHelper.getClientIp() +" "+ dbHelper.getClientPort());
+                Socket socket = new Socket(dbHelper.getClientIp(), dbHelper.getClientPort());
+                System.out.println("Cliente Iniciado e conectado com um Servidor");
+                OutputStream os = socket.getOutputStream();
+                os.write(msg.getBytes(), 0, msg.length());
+                os.close();
+                socket.close();
+            }catch (IOException e){
+                System.out.println("Erro a escrever para o cliente");
+                e.printStackTrace();
+                return false;
+            }
+            return true;
+        }
+
         @Override
         public void run() {
             //Connect to DB
@@ -375,9 +398,11 @@ public class Server {
                     hbWithHighestVersion = null;
                     updateDBVersion();
                 }
-
-                if (this.hasNewDBRequest){
-                    switch (dbHelper.getOperation()){
+                DBHelper aux = null;
+                if (listDbHelper.size() > 0){
+                    aux = listDbHelper.get(0);
+                    System.out.println("Pedido realizado");
+                    switch (aux.getOperation()){
                         case "INSERT"->{
                             switch (dbHelper.getTable()){
                                 case "show" ->{
@@ -390,12 +415,16 @@ public class Server {
                                     data.insertReservation(dbHelper.getInsertParams());
                                 }
                                 case "user" ->{
-                                    data.insertUser(dbHelper.getInsertParams());
+                                    if(data.insertUser(dbHelper.getInsertParams())) {
+                                        sendStringToClient(dbHelper,"User inserted with sucess!");
+                                    }else{
+                                        sendStringToClient(dbHelper,"User was not inserted!");
+                                    }
                                 }
                             }
                         }
                         case "SELECT"->{
-                            switch (dbHelper.getTable()){
+                            switch (aux.getTable()){
                                 case "show" ->{
                                     System.out.println(data.listShows(dbHelper.getId()));
                                 }
@@ -406,7 +435,9 @@ public class Server {
                                     System.out.println(data.listReservations(dbHelper.getId()));
                                 }
                                 case "user" ->{
-                                    System.out.println(data.listUsers(dbHelper.getId()));
+                                    //Enviar para o client esta informacao
+                                    String output = data.listUsers(aux.getId());
+                                    sendStringToClient(aux,output);
                                 }
                             }
                         }
@@ -444,10 +475,12 @@ public class Server {
                         }
                     }
 
-                    if(!dbHelper.getOperation().equals("SELECT")){
+                    if(!aux.getOperation().equals("SELECT")){
                         updateDBVersion();
                     }
-                    dbHelper.reset();
+                    aux = null;
+                    listDbHelper.remove(0);
+                    dbHelper = null;
                     hasNewDBRequest = false;
                 }
             }
@@ -586,12 +619,20 @@ public class Server {
 
                         ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
 
-                        DBHelper dbh = null;
+                        dbHelper = null;
                         try{
-                            dbh = (DBHelper) ois.readObject();
-                        }catch (ClassNotFoundException ignored){
-
+                            dbHelper = (DBHelper) ois.readObject();
+                            clientIP = socket.getInetAddress().toString().replace("/","");
+                            clientPort = socket.getPort();
+                            dbHelper.setClientIp(clientIP);
+                            dbHelper.setClientPort(clientPort);
+                            listDbHelper.add(dbHelper);
+                        }catch (ClassNotFoundException e){
+                            e.printStackTrace();
                         }
+                        if(dbHelper == null)
+                            System.out.println("DbHelper null");
+
                         System.out.println("OBJECT READ");
                         ois.close();
                         os.close();

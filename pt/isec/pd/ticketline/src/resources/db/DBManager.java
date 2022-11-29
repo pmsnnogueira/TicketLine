@@ -455,7 +455,13 @@ public class DBManager {
         }
         return true;
     }
-   
+
+    public void printParameters(ArrayList<String> parameters){
+        for(String a : parameters){
+            System.out.println(a);
+        }
+    }
+
     public boolean insertUser(ArrayList<String> parameters){
         Statement statement;
         try{
@@ -465,15 +471,37 @@ public class DBManager {
         }
 
         int i = 0;
+        //Verificar se há algum com nome ou utilizador igual
+        printParameters(parameters);
+        String verificar = "SELECT Count(*) AS contador FROM utilizador WHERE lower(username)=lower('" + parameters.get(0) + "') or lower(nome)=lower('" + parameters.get(1)+"')";
+        System.out.println(verificar);
+        try {
+            ResultSet resultSet = statement.executeQuery(verificar);
+
+            int contador = resultSet.getInt("contador");
+            if(contador > 0){
+                System.out.println("Username ou Nome ou já em uso");
+                statement.close();
+                return false;
+            }
+
+        }catch (SQLException e){
+            e.printStackTrace();
+        }
+
+
         String sqlQuery = "INSERT INTO utilizador VALUES (NULL, '" + parameters.get(i++) + "' , '" +
                 parameters.get(i++) + "' , '" + parameters.get(i++) + "' , '" +
                 parameters.get(i++) + "' , '" + parameters.get(i++) + "')";
+
+        System.out.println(sqlQuery);
             
         try{
             statement.executeUpdate(sqlQuery);
             multicastQuery(sqlQuery);
             statement.close();
         }catch (SQLException e){
+            e.printStackTrace();
             return false;
         }
         updateVersion();
@@ -686,4 +714,8 @@ public class DBManager {
         updateVersion();
         return true;
     }
+
+
+
+
 }

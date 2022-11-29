@@ -12,6 +12,11 @@ public class DBHelper implements Serializable {
     private ArrayList<String> insertParams;
     private HashMap<String, String> updateParams;
 
+    private String clientIp;
+
+    private int clientPort;
+
+
     public void reset(){
         this.id = null;
         this.operation = null;
@@ -19,6 +24,9 @@ public class DBHelper implements Serializable {
         this.seatParams = null;
         this.insertParams = null;
         this.updateParams = null;
+        this.clientIp = null;
+        this.clientPort = 0;
+
     }
 
     public Integer getId() {
@@ -40,6 +48,11 @@ public class DBHelper implements Serializable {
     public String getTable() {
         return table;
     }
+
+    public String getClientIp(){return clientIp;}
+    public int getClientPort(){return clientPort;}
+    public void setClientIp(String clientIp){this.clientIp = clientIp;}
+    public void setClientPort(int clientPort){this.clientPort = clientPort;}
 
     public void setTable(String table) {
         this.table = table;
