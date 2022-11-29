@@ -409,20 +409,20 @@ public class Server {
             return;
         }
 
-        System.out.println(newIP + " " + newPort);
         String msgConfirm = "SERVER-CONFIRMATION";
         DatagramPacket packet = new DatagramPacket(msgConfirm.getBytes(), msgConfirm.getBytes().length, ip, newPort);
 
         try{
             socket.send(packet);
         }catch (IOException e){
+            socket.close();
             return;
         }
+        socket.close();
     }
 
     public synchronized void getServersConfirmation(DatagramSocket socketUDP){
         int nTimeouts = 0;
-        System.out.println("IM here");
 
         while(true){
             DatagramPacket packet = new DatagramPacket(new byte[256], 256);
@@ -442,10 +442,7 @@ public class Server {
 
                 ++confirmations;
 
-                System.out.println("CONF="+confirmations + " " + "CONN="+data.getNumberOfServersConnected());
-
                 if(confirmations >= data.getNumberOfServersConnected() - 1){
-                    System.out.println("vai fazer commit");
                     sendCommit();
                     break;
                 }
@@ -613,16 +610,16 @@ public class Server {
                         data.processANewHeartBeat(hBeat);
 
                         if(hBeat.getMessage().equals("PREPARE") && hBeat.getPortTcp() != heartBeat.getPortTcp()){
-                            System.out.println("PREPARE");
                             prepare .set(true);
+                            try{
+                                Thread.sleep(800);
+                            }catch (InterruptedException ignored){}
                             sendConfirmation(hBeat.getIp(), hBeat.getPortTcp());
                         }
                         if(hBeat.getMessage().equals("ABORT") && hBeat.getPortTcp() != heartBeat.getPortTcp()){
-                            System.out.println("ABORT");
                             prepare.set(false);
                         }
                         if(hBeat.getMessage().equals("COMMIT") && hBeat.getPortTcp() != heartBeat.getPortTcp()){
-                            System.out.println("COMMIT");
                             hbWithHighestVersion = hBeat;
                             prepare.set(false);
                         }
@@ -760,6 +757,7 @@ public class Server {
         public UDPHandler(){
             try{
                 socketUDP = new DatagramSocket(serverPort);
+                socketUDP.setSoTimeout(1000);
             }catch (SocketException e){
                 return;
             }
@@ -767,7 +765,7 @@ public class Server {
         @Override
         public void run() {
             while(UDPHandle){
-                if(prepare.get()){
+                if(prepare.get() && masterSV.get()){
                     getServersConfirmation(socketUDP);
                     continue;
                 }
