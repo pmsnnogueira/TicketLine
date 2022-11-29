@@ -18,8 +18,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class Server {
-    private static final int multicastPort = 4004;
-    private static final String ipMulticast = "239.39.39.39";
     private final Data data;
     private final String DBDirectory;
     private volatile boolean available;
@@ -76,9 +74,9 @@ public class Server {
         this.DBDirectory = DBDirectory;
         this.serverPort = port;
         this.serverInitContinue = true;
-        this.mcs = new MulticastSocket(multicastPort);
-        this.ipGroup = InetAddress.getByName(ipMulticast);
-        this.sa = new InetSocketAddress(ipGroup, multicastPort);
+        this.mcs = new MulticastSocket(Integer.parseInt(MULTICAST.getValue(1)));
+        this.ipGroup = InetAddress.getByName( MULTICAST.getValue(0));
+        this.sa = new InetSocketAddress(ipGroup, Integer.parseInt( MULTICAST.getValue(1)));
         this.ni = NetworkInterface.getByIndex(0);
         this.mcs.joinGroup(sa, ni);
 
@@ -118,7 +116,7 @@ public class Server {
 
         //start thread to receive the heartbeats
         this.HBHandle = true;
-        hbh = new HeartBeatReceiver(mcs);
+        hbh = new HeartBeatReceiver();
         hbh.start();
 
         //start database prpovider thread to pro
@@ -335,7 +333,7 @@ public class Server {
         oos.writeObject(heartBeat);
         byte[] buffer = baos.toByteArray();
         DatagramPacket dp = new DatagramPacket(buffer, buffer.length,
-                InetAddress.getByName("239.39.39.39"), 4004);
+                InetAddress.getByName(MULTICAST.getValue(0)),Integer.parseInt( MULTICAST.getValue(1)));
         mcs.send(dp);
 
         HBHandle = false;
@@ -363,7 +361,7 @@ public class Server {
             oos.writeObject(this.heartBeat);
             byte[] buffer = baos.toByteArray();
             DatagramPacket dp = new DatagramPacket(buffer, buffer.length,
-                    InetAddress.getByName("239.39.39.39"), 4004);
+                    InetAddress.getByName( MULTICAST.getValue(0)), Integer.parseInt( MULTICAST.getValue(1)));
             mcs.send(dp);
 
             this.heartBeat.setMessage("");
@@ -384,7 +382,7 @@ public class Server {
             oos.writeObject(this.heartBeat);
             byte[] buffer = baos.toByteArray();
             DatagramPacket dp = new DatagramPacket(buffer, buffer.length,
-                    InetAddress.getByName("239.39.39.39"), 4004);
+                    InetAddress.getByName( MULTICAST.getValue(0)), Integer.parseInt( MULTICAST.getValue(1)));
             mcs.send(dp);
 
             this.heartBeat.setMessage("");
@@ -438,8 +436,6 @@ public class Server {
             }
 
             if(messageReceived.equals("SERVER-CONFIRMATION")){
-                System.out.println(messageReceived);
-
                 ++confirmations;
 
                 if(confirmations >= data.getNumberOfServersConnected() - 1){
@@ -459,7 +455,7 @@ public class Server {
             oos.writeObject(this.heartBeat);
             byte[] buffer = baos.toByteArray();
             DatagramPacket dp = new DatagramPacket(buffer, buffer.length,
-                    InetAddress.getByName("239.39.39.39"), 4004);
+                    InetAddress.getByName( MULTICAST.getValue(0)), Integer.parseInt( MULTICAST.getValue(1)));
             mcs.send(dp);
             this.heartBeat.setMessage("");
             prepare.set(true);
@@ -574,7 +570,6 @@ public class Server {
                     if(!dbHelper.getOperation().equals("SELECT")){
                         updateDBVersion();
                         sendPrepare();
-                        System.out.println("Já fez o prepare");
                     }
                     dbHelper.reset();
                     hasNewDBRequest = false;
@@ -585,12 +580,6 @@ public class Server {
 
 
     class HeartBeatReceiver extends Thread{
-        private MulticastSocket mcs;
-
-        public HeartBeatReceiver(MulticastSocket mcs){
-            this.mcs = mcs;
-        }
-
         @Override
         public void run() {
             while(HBHandle)
