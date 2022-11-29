@@ -1,5 +1,6 @@
 package pt.isec.pd.ticketline.src.resources.db;
 
+import pt.isec.pd.ticketline.src.model.server.MULTICAST;
 import pt.isec.pd.ticketline.src.model.server.heartbeat.HeartBeat;
 
 import java.io.*;
@@ -127,18 +128,7 @@ public class DBManager {
     }
 
     public void multicastQuery(String newQuerie){
-        try{
-            this.serverHB.setQueries(newQuerie);
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ObjectOutputStream oos = new ObjectOutputStream(baos);
-
-            oos.writeObject(this.serverHB);
-            byte[] buffer = baos.toByteArray();
-            DatagramPacket dp = new DatagramPacket(buffer, buffer.length,
-                    InetAddress.getByName("239.39.39.39"), 4004);
-            mcs.send(dp);
-        }catch (IOException e){
-        }
+        this.serverHB.setQueries(newQuerie);
     }
 
     public String listShows(Integer showID){

@@ -229,4 +229,8 @@ public class Data {
 
         return sb.toString();
     }
+
+    public int getNumberOfServersConnected(){
+        return heartBeatsReceived.size();
+    }
 }

@@ -8,6 +8,7 @@ public class HeartBeat implements Serializable{
     @Serial
     private static final long serialVersionUID = 2L;
 
+    private String message;
     private int portTcp;
     private String ip;
     private boolean available;
@@ -28,6 +29,7 @@ public class HeartBeat implements Serializable{
         this.timeCreated = LocalTime.now();
         this.dbPath = dbPath;
         this.ip = ip;
+        this.message = "";
     }
 
     public void setQueries(String newQuery){
@@ -64,6 +66,12 @@ public class HeartBeat implements Serializable{
 
     public LocalTime getTimeCreated() {
         return LocalTime.of(timeCreated.getHour(), timeCreated.getMinute(), timeCreated.getSecond());
+    }
+    public String getMessage() {
+        return message;
+    }
+    public void setMessage(String message) {
+        this.message = message;
     }
 
     @Override

@@ -52,6 +52,7 @@ public class Client {
             socket.setSoTimeout(1000);
             ip = InetAddress.getByName(serverIP);
         } catch (IOException e) {
+            System.out.println("init");
             return false;
         }
         String message = "CONNECTION";
@@ -60,6 +61,7 @@ public class Client {
         try {
             socket.send(packetSent);
         } catch (IOException e) {
+            System.out.println("send");
             return false;
         }
 
@@ -68,6 +70,7 @@ public class Client {
         try {
             socket.receive(packetReceived);
         } catch (IOException e) {
+            System.out.println("received");
             return false;
         }
 
