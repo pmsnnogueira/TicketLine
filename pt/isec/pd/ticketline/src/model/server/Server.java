@@ -1,6 +1,7 @@
 package pt.isec.pd.ticketline.src.model.server;
 
 import pt.isec.pd.ticketline.src.model.ModelManager;
+import pt.isec.pd.ticketline.src.model.data.DBHelper;
 import pt.isec.pd.ticketline.src.model.data.Data;
 import pt.isec.pd.ticketline.src.model.server.heartbeat.ExecutorSendHeartBeat;
 import pt.isec.pd.ticketline.src.model.server.heartbeat.HeartBeat;
@@ -11,7 +12,6 @@ import java.io.*;
 import java.net.*;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.concurrent.Executors;
@@ -129,10 +129,11 @@ public class Server {
     }
 
     public String listUsers(Integer userID){
+        dbHelper = new DBHelper();
         dbHelper.setId(userID);
         this.dbHelper.setOperation("SELECT");
         this.dbHelper.setTable("user");
-        this.dbHandler.setHasNewDBRequest();
+        listDbHelper.add(dbHelper);
         return "";
     }
 
@@ -140,7 +141,7 @@ public class Server {
         this.dbHelper.setId(showID);
         this.dbHelper.setOperation("SELECT");
         this.dbHelper.setTable("show");
-        this.dbHandler.setHasNewDBRequest();
+
         return "";
     }
 
@@ -148,7 +149,7 @@ public class Server {
         this.dbHelper.setId(reservationID);
         this.dbHelper.setOperation("SELECT");
         this.dbHelper.setTable("reservation");
-        this.dbHandler.setHasNewDBRequest();
+
         return "";
     }
 
@@ -156,14 +157,14 @@ public class Server {
         this.dbHelper.setId(seatID);
         this.dbHelper.setOperation("SELECT");
         this.dbHelper.setTable("seat");
-        this.dbHandler.setHasNewDBRequest();
+
         return "";
     }
 
     public void insertShow(){
         this.dbHelper.setOperation("INSERT");
         this.dbHelper.setTable("show");
-        this.dbHandler.setHasNewDBRequest();
+
     }
 
     public boolean insertSeat(ArrayList<ArrayList<String>> parameters , int numShow){
@@ -171,7 +172,7 @@ public class Server {
         this.dbHelper.setTable("seat");
         this.dbHelper.setSeatParams(parameters);
         this.dbHelper.setId(numShow);
-        this.dbHandler.setHasNewDBRequest();
+
         return true;
     }
 
@@ -179,7 +180,7 @@ public class Server {
         this.dbHelper.setOperation("INSERT");
         this.dbHelper.setTable("reservation");
         this.dbHelper.setInsertParams(parameters);
-        this.dbHandler.setHasNewDBRequest();
+
         return true;
     }
 
@@ -187,7 +188,7 @@ public class Server {
         this.dbHelper.setOperation("INSERT");
         this.dbHelper.setTable("user");
         this.dbHelper.setInsertParams(parameters);
-        this.dbHandler.setHasNewDBRequest();
+
         return true;
     }
 
@@ -195,7 +196,7 @@ public class Server {
         this.dbHelper.setOperation("DELETE");
         this.dbHelper.setTable("show");
         this.dbHelper.setId(id);
-        this.dbHandler.setHasNewDBRequest();
+
         return true;
     }
 
@@ -203,7 +204,7 @@ public class Server {
         this.dbHelper.setOperation("DELETE");
         this.dbHelper.setTable("reservation");
         this.dbHelper.setId(id);
-        this.dbHandler.setHasNewDBRequest();
+
         return true;
     }
 
@@ -211,7 +212,7 @@ public class Server {
         this.dbHelper.setOperation("DELETE");
         this.dbHelper.setTable("seat");
         this.dbHelper.setId(id);
-        this.dbHandler.setHasNewDBRequest();
+
         return true;
     }
 
@@ -219,7 +220,7 @@ public class Server {
         this.dbHelper.setOperation("DELETE");
         this.dbHelper.setTable("user");
         this.dbHelper.setId(id);
-        this.dbHandler.setHasNewDBRequest();
+
         return true;
     }
 
@@ -228,7 +229,7 @@ public class Server {
         this.dbHelper.setTable("show");
         this.dbHelper.setId(id);
         this.dbHelper.setUpdateParams(newData);
-        this.dbHandler.setHasNewDBRequest();
+
         return true;
     }
     public boolean updateSeats(int id, HashMap<String, String> newData){
@@ -236,7 +237,7 @@ public class Server {
         this.dbHelper.setTable("seat");
         this.dbHelper.setId(id);
         this.dbHelper.setUpdateParams(newData);
-        this.dbHandler.setHasNewDBRequest();
+
         return true;
     }
     public boolean updateReservation(int id, HashMap<String, String> newData){
@@ -244,7 +245,6 @@ public class Server {
         this.dbHelper.setTable("reservation");
         this.dbHelper.setId(id);
         this.dbHelper.setUpdateParams(newData);
-        this.dbHandler.setHasNewDBRequest();
         return true;
     }
     public boolean updateUser(int id, HashMap<String, String> newData){
@@ -252,7 +252,6 @@ public class Server {
         this.dbHelper.setTable("user");
         this.dbHelper.setId(id);
         this.dbHelper.setUpdateParams(newData);
-        this.dbHandler.setHasNewDBRequest();
         return true;
     }
 
@@ -352,33 +351,6 @@ public class Server {
     }
 
     class DataBaseHandler extends Thread{
-        private boolean hasNewDBRequest;
-        public DataBaseHandler(){
-            this.hasNewDBRequest = false;
-        }
-
-        public void setHasNewDBRequest() {
-            this.hasNewDBRequest = true;
-        }
-
-        public boolean sendStringToClient(DBHelper dbHelper,String msg){
-            //Connect to client
-            try{
-                System.out.println(dbHelper.getClientIp() +" "+ dbHelper.getClientPort());
-                Socket socket = new Socket(dbHelper.getClientIp(), dbHelper.getClientPort());
-                System.out.println("Cliente Iniciado e conectado com um Servidor");
-                OutputStream os = socket.getOutputStream();
-                os.write(msg.getBytes(), 0, msg.length());
-                os.close();
-                socket.close();
-            }catch (IOException e){
-                System.out.println("Erro a escrever para o cliente");
-                e.printStackTrace();
-                return false;
-            }
-            return true;
-        }
-
         @Override
         public void run() {
             //Connect to DB
@@ -398,90 +370,98 @@ public class Server {
                     hbWithHighestVersion = null;
                     updateDBVersion();
                 }
-                DBHelper aux = null;
-                if (listDbHelper.size() > 0){
-                    aux = listDbHelper.get(0);
-                    System.out.println("Pedido realizado");
-                    switch (aux.getOperation()){
+
+                if (listDbHelper.size() > 0 ){
+                    String requestResult = null;
+                    DBHelper dbHelper = listDbHelper.pop();
+                    switch (dbHelper.getOperation()){
                         case "INSERT"->{
                             switch (dbHelper.getTable()){
                                 case "show" ->{
                                     data.addShow();
                                 }
                                 case "seat" ->{
-                                    data.insertSeat(dbHelper.getSeatParams(), dbHelper.getId());
+                                    requestResult = String.valueOf(data.insertSeat(dbHelper.getSeatParams(), dbHelper.getId()));
                                 }
                                 case "reservation" ->{
-                                    data.insertReservation(dbHelper.getInsertParams());
+                                    requestResult = String.valueOf(data.insertReservation(dbHelper.getInsertParams()));
                                 }
                                 case "user" ->{
-                                    if(data.insertUser(dbHelper.getInsertParams())) {
-                                        sendStringToClient(dbHelper,"User inserted with sucess!");
-                                    }else{
-                                        sendStringToClient(dbHelper,"User was not inserted!");
-                                    }
+                                    requestResult = String.valueOf(data.insertUser(dbHelper.getInsertParams()));
                                 }
                             }
                         }
                         case "SELECT"->{
-                            switch (aux.getTable()){
+                            switch (dbHelper.getTable()){
                                 case "show" ->{
-                                    System.out.println(data.listShows(dbHelper.getId()));
+                                    requestResult = data.listShows(dbHelper.getId());
                                 }
                                 case "seat" ->{
-                                    System.out.println(data.listSeats(dbHelper.getId()));
+                                    requestResult = data.listSeats(dbHelper.getId());
                                 }
                                 case "reservation" ->{
-                                    System.out.println(data.listReservations(dbHelper.getId()));
+                                    requestResult = data.listReservations(dbHelper.getId());
                                 }
                                 case "user" ->{
-                                    //Enviar para o client esta informacao
-                                    String output = data.listUsers(aux.getId());
-                                    sendStringToClient(aux,output);
+                                    requestResult = data.listUsers(dbHelper.getId());
+                                    System.out.println(requestResult);
                                 }
                             }
                         }
                         case "UPDATE"->{
                             switch (dbHelper.getTable()){
                                 case "show" ->{
-                                    data.updateShows(dbHelper.getId(),dbHelper.getUpdateParams());
+                                    requestResult = String.valueOf(data.updateShows(dbHelper.getId(),dbHelper.getUpdateParams()));
                                 }
                                 case "seat" ->{
-                                    data.updateSeats(dbHelper.getId(), dbHelper.getUpdateParams());
+                                    requestResult = String.valueOf(data.updateSeats(dbHelper.getId(), dbHelper.getUpdateParams()));
                                 }
                                 case "reservation" ->{
-                                    data.updateReservation(dbHelper.getId(), dbHelper.getUpdateParams());
+                                    requestResult = String.valueOf(data.updateReservation(dbHelper.getId(), dbHelper.getUpdateParams()));
                                 }
                                 case "user" ->{
-                                    data.updateUser(dbHelper.getId(), dbHelper.getUpdateParams());
+                                    requestResult = String.valueOf(data.updateUser(dbHelper.getId(), dbHelper.getUpdateParams()));
                                 }
                             }
                         }
                         case "DELETE"->{
                             switch (dbHelper.getTable()){
                                 case "show" ->{
-                                    data.deleteShow(dbHelper.getId());
+                                    requestResult = String.valueOf(data.deleteShow(dbHelper.getId()));
                                 }
                                 case "seat" ->{
-                                    data.deleteSeat(dbHelper.getId());
+                                    requestResult = String.valueOf(data.deleteSeat(dbHelper.getId()));
                                 }
                                 case "reservation" ->{
-                                    data.deleteReservations(dbHelper.getId());
+                                    requestResult = String.valueOf(data.deleteReservations(dbHelper.getId()));
                                 }
                                 case "user" ->{
-                                    data.deleteUsers(dbHelper.getId());
+                                    requestResult = String.valueOf(data.deleteUsers(dbHelper.getId()));
                                 }
                             }
                         }
                     }
 
-                    if(!aux.getOperation().equals("SELECT")){
+                    try{
+                        Socket socket = dbHelper.getSocketClient();
+
+                        ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+
+
+                        oos.writeObject(requestResult);
+
+                        System.out.println("OBJECT WRITTEN");
+
+                        oos.close();
+
+                        socket.close();
+                    }catch (IOException e){
+                        e.printStackTrace();
+                    }
+                    
+                    if(!dbHelper.getOperation().equals("SELECT")){
                         updateDBVersion();
                     }
-                    aux = null;
-                    listDbHelper.remove(0);
-                    dbHelper = null;
-                    hasNewDBRequest = false;
                 }
             }
         }
@@ -595,7 +575,7 @@ public class Server {
                     int nBytes = is.read(msg);
                     String msgReceived = new String(msg, 0, nBytes);
 
-                    if(msgReceived.equals("SERVER")){
+                    if(msgReceived.equals("SERVER")){ // when server communicates with another server
                         byte[] buffer = new byte[512];
                         int readBytes = 0;
                         FileInputStream fi = new FileInputStream(DBDirectory + "/PD-2022-23-TP-" + serverPort + ".db");
@@ -611,21 +591,19 @@ public class Server {
                         fi.close();
                     }
 
-                    if(msgReceived.equals("CLIENT")){
+                    if(msgReceived.equals("CLIENT")){// when the server receives a new request from a client
                         System.out.println("CLIENT CONNECTED");
 
                         String s = "CONFIRMED";
                         os.write(s.getBytes(), 0, s.length());
+
 
                         ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
 
                         dbHelper = null;
                         try{
                             dbHelper = (DBHelper) ois.readObject();
-                            clientIP = socket.getInetAddress().toString().replace("/","");
-                            clientPort = socket.getPort();
-                            dbHelper.setClientIp(clientIP);
-                            dbHelper.setClientPort(clientPort);
+                            dbHelper.setSocketClient(socket);
                             listDbHelper.add(dbHelper);
                         }catch (ClassNotFoundException e){
                             e.printStackTrace();
@@ -633,12 +611,10 @@ public class Server {
                         if(dbHelper == null)
                             System.out.println("DbHelper null");
 
+
                         System.out.println("OBJECT READ");
-                        ois.close();
-                        os.close();
                     }
 
-                    socket.close();
 
                 } catch (IOException e) {
                     break;

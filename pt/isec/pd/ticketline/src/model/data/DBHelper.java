@@ -1,6 +1,7 @@
-package pt.isec.pd.ticketline.src.model.server;
+package pt.isec.pd.ticketline.src.model.data;
 
 import java.io.Serializable;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -11,10 +12,7 @@ public class DBHelper implements Serializable {
     private ArrayList<ArrayList<String>> seatParams;
     private ArrayList<String> insertParams;
     private HashMap<String, String> updateParams;
-
-    private String clientIp;
-
-    private int clientPort;
+    private Socket socketClient;
 
 
     public void reset(){
@@ -24,9 +22,15 @@ public class DBHelper implements Serializable {
         this.seatParams = null;
         this.insertParams = null;
         this.updateParams = null;
-        this.clientIp = null;
-        this.clientPort = 0;
+        this.socketClient = null;
+    }
 
+    public void setSocketClient(Socket socket){
+        this.socketClient = socket;
+    }
+
+    public Socket getSocketClient(){
+        return this.socketClient;
     }
 
     public Integer getId() {
@@ -48,11 +52,6 @@ public class DBHelper implements Serializable {
     public String getTable() {
         return table;
     }
-
-    public String getClientIp(){return clientIp;}
-    public int getClientPort(){return clientPort;}
-    public void setClientIp(String clientIp){this.clientIp = clientIp;}
-    public void setClientPort(int clientPort){this.clientPort = clientPort;}
 
     public void setTable(String table) {
         this.table = table;

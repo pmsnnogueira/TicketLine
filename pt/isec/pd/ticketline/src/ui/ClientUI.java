@@ -1,12 +1,8 @@
 package pt.isec.pd.ticketline.src.ui;
 
 import pt.isec.pd.ticketline.src.model.client.Client;
-import pt.isec.pd.ticketline.src.model.server.Server;
-import pt.isec.pd.ticketline.src.model.server.heartbeat.HeartBeat;
 import pt.isec.pd.ticketline.src.ui.util.InputProtection;
 
-import java.io.IOException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -130,8 +126,8 @@ public class ClientUI {
             }
             case 4 ->{
                 int id = InputProtection.readInt("User ID (-1 for all users): ");
-                System.out.println(this.client.sendInfoToServer("SELECT","user" , empty,id));
-
+                this.client.createDBHelper("SELECT","user" , empty,id);
+                System.out.println(client.waitToReceiveResultRequest());
             }
             default -> {
                 System.out.println("Not a valid option! Try again!");
@@ -195,7 +191,8 @@ public class ClientUI {
                 parameters.add(Integer.toString(autenticado));
 
                 //Send information to server
-                System.out.println(this.client.sendInfoToServer("INSERT","user" , parameters,-1));
+                this.client.createDBHelper("INSERT","user" , parameters,-1);
+                System.out.println(client.waitToReceiveResultRequest());
             }
             case 4 ->{
                 //Enviar informacao da leitura do ficheiro do show

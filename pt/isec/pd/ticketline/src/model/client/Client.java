@@ -1,14 +1,14 @@
 package pt.isec.pd.ticketline.src.model.client;
 
-import pt.isec.pd.ticketline.src.model.server.DBHelper;
-import pt.isec.pd.ticketline.src.model.server.Server;
+import pt.isec.pd.ticketline.src.model.data.DBHelper;
 import pt.isec.pd.ticketline.src.ui.ClientUI;
 
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.logging.Handler;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class Client {
 
@@ -41,17 +41,25 @@ public class Client {
     public int serverPort;
     public boolean CIHandle;
     public ArrayList<String> servers;
-    private Socket socket;
-    ServerReader sr;
-    public boolean srHandle;
-    public boolean confirmHandle;
+    ConnectToServer sr;
+    public AtomicReference<Boolean> srHandle;
+    public AtomicReference<Boolean> confirmHandle;
+    public AtomicReference<Boolean> hasNewRequest;
+    public DBHelper dbHelper;
+
+    public AtomicInteger indexSV;
+    public AtomicReference<String> requestResult;
 
     public Client(String serverIP, int serverPort) throws IOException {
         this.serverIP = serverIP;
         this.serverPort = serverPort;
         this.CIHandle = true;
-        this.srHandle = true;
-        this.confirmHandle = false;
+        this.srHandle = new AtomicReference<>(true);
+        this.confirmHandle = new AtomicReference<>(false);
+        this.hasNewRequest = new AtomicReference<>(false);
+        this.indexSV = new AtomicInteger(0);
+        this.dbHelper = null;
+        this.requestResult = new AtomicReference<>("");
 
         this.servers = new ArrayList<>();
 
@@ -59,15 +67,8 @@ public class Client {
             throw new SocketException();
         }
 
-
-            this.sr = new ServerReader();
-            sr.start();
-
-
-
-/*        if (!connectToServer()) {
-            throw new Exception();
-        }*/
+        this.sr = new ConnectToServer();
+        sr.start();
     }
 
     public boolean clientInit() {
@@ -113,40 +114,10 @@ public class Client {
         return true;
     }
 
-    public boolean connectToServer() {
-        for (String str : servers) {
-            String[] s = str.split("-");
-
-            try {
-                socket = new Socket(s[0], Integer.parseInt(s[1]));
-                OutputStream os = socket.getOutputStream();
-                String msg = "CLIENT";
-                os.write(msg.getBytes(), 0, msg.length());
-
-                InputStream is = socket.getInputStream();
-                byte[] m = new byte[512];
-                int nBytes = is.read(m);
-                String msgReceived = new String(m, 0, nBytes);
-                System.out.println(msgReceived);
-                os.close();
-                is.close();
-                socket.close();
-
-            } catch (IOException e) {
-                continue;
-            }
-
-            return true;
-        }
-
-        return false;
-    }
-
     public DBHelper addDBHelper(String operation, String table, ArrayList<String> insertParams, int id) {
         DBHelper dbHelper = new DBHelper();
         if (operation.equals("INSERT")) {
             if (table.equals("user")) {
-                //dbHelper.setClientIp();
                 insertUser(dbHelper,insertParams);
                 return dbHelper;
             }
@@ -176,109 +147,81 @@ public class Client {
         return null;
     }
 
-    class ServerReader extends Thread{
-        Socket socketSr;
-        private boolean update;
-        public ServerReader()  {
-            update = false;
-            srHandle = false;
-
-            String[] s = servers.get(0).split("-");
-            try {
-                this.socketSr = new Socket(s[0], Integer.parseInt(s[1]));
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+    public String waitToReceiveResultRequest(){
+        while(true){
+            if(!requestResult.get().equals("")){
+                return requestResult.get();
             }
         }
+    }
+    public void setHasNewRequest(boolean hasNewRequest) {
+        this.hasNewRequest.set(hasNewRequest);
+    }
+
+    class ConnectToServer extends Thread{
         @Override
         public void run() {
-            while(true) {
-
+            while(srHandle.get()) {
+                if(hasNewRequest.get()){
+                    requestResult.set("");
                     try {
-                        OutputStream os = socketSr.getOutputStream();
-                        String msg = "CLIENT";
-                        os.write(msg.getBytes(), 0, msg.length());
-                        os.close();
+                        String[] s = servers.get(indexSV.get()).split("-");
+                        Socket socketSr = null;
+                        try {
+                            socketSr = new Socket(s[0], Integer.parseInt(s[1]));
+                        } catch (IOException e) {
+                            indexSV.set(indexSV.get()+1 > servers.size()-1? 0 : indexSV.get()+1);
+                            continue;
+                        }
 
-                        System.out.println("Antes de Ler");
-                        InputStream is = this.socketSr.getInputStream();
+                        System.out.println("CONNECTED");
+
+                        OutputStream os = socketSr.getOutputStream();
+                        InputStream is = socketSr.getInputStream();
+
+                        System.out.println("STREAMS");
+
+                        String client = "CLIENT";
+                        os.write(client.getBytes(), 0, client.length());
+
                         byte[] m = new byte[512];
                         int nBytes = is.read(m);
                         String msgReceived = new String(m, 0, nBytes);
-                        System.out.println("Mensagem lida");
                         System.out.println(msgReceived);
 
-                        if (msgReceived.equals(CONFIRMED))
-                            confirmHandle = true;
+                        if(msgReceived.equals("CONFIRMED")){
+                            ObjectOutputStream oos = new ObjectOutputStream(socketSr.getOutputStream());
 
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
+                            System.out.println("Object streams");
+
+                            oos.writeObject(dbHelper);
+
+                            ObjectInputStream ois = new ObjectInputStream(socketSr.getInputStream());
+
+                            requestResult.set((String) ois.readObject());
+
+                            oos.close();
+                            ois.close();
+                        }
+
+                        os.close();
+                        is.close();
+                        socketSr.close();
+                    } catch (IOException | ClassNotFoundException e) {
+                        e.printStackTrace();
                     }
+
+                    hasNewRequest.set(false);
+                }
             }
         }
     }
 
 
-    public String sendInfoToServer(String operation, String table, ArrayList<String> insertParams , int id) {
-
-        for (String str : servers) {
-            String[] s = str.split("-");
-            /*try {
-//                System.out.println(s[0] + Integer.parseInt(s[1]));
-                socket = new Socket(s[0], Integer.parseInt(s[1]));
-                OutputStream os = socket.getOutputStream();
-                String msg = "CLIENT";
-                os.write(msg.getBytes(), 0, msg.length());
-                os.close();*/
-
-                /*InputStream is = socket.getInputStream();
-                byte[] m = new byte[512];
-                int nBytes = is.read(m);
-                String msgReceived = new String(m, 0, nBytes);
-
-                System.out.println(msgReceived);
-
-                if(!msgReceived.equals("CONFIRMED")){
-                    socket.close();
-                    return "";
-                }
-
-                DBHelper dbHelper = addDBHelper(operation, table, insertParams,id); //Criar o DBhelper
-                if (dbHelper == null){
-                    socket.close();
-                    return "";
-                }
-
-                System.out.println("DBHELPER");
-
-                ObjectOutputStream oos = null;//Write to Server
-                try{
-                    oos = new ObjectOutputStream(socket.getOutputStream());
-                }catch (IOException e){
-                    e.printStackTrace();
-                }
-
-                System.out.println("OOS");
-                srHandle = true;
-                oos.writeObject(dbHelper);
-                System.out.println("WRITE");
-
-                is.close();
-                os.close();
-                oos.close();*/
-               /* socket.close();
-                srHandle = false;
-
-                return "Lido Alguma coisa";
-            } catch (IOException e) {
-                continue;
-            }*/
-        }
-        return "";
+    public void createDBHelper(String operation, String table, ArrayList<String> insertParams , int id) {
+        dbHelper = addDBHelper(operation, table, insertParams, id);
+        hasNewRequest.set(true);
     }
-
-
-
 
     public boolean insertUser(DBHelper dbHelper,ArrayList<String> parameters){
         dbHelper.setOperation(INSERT);
@@ -300,7 +243,7 @@ public class Client {
     }
 
     public String listUsers(DBHelper dbHelper,Integer userID){
-        dbHelper.setId(userID);
+        dbHelper.setId(userID == -1? null : userID);
         dbHelper.setOperation(SELECT);
         dbHelper.setTable(USER);
         return "";
