@@ -86,7 +86,7 @@ public class Server {
         // server initiaton phase
         si = new ServerInit();
         si.start();
-        si.join(30);
+        si.join(3);
         this.serverInitContinue = false;
 
         transferDatabase(dbCopyHeartBeat);
@@ -379,6 +379,7 @@ public class Server {
                             switch (dbHelper.getTable()){
                                 case "show" ->{
                                     data.addShow();
+                                    requestResult = String.valueOf("Show Inserted");
                                 }
                                 case "seat" ->{
                                     requestResult = String.valueOf(data.insertSeat(dbHelper.getSeatParams(), dbHelper.getId()));

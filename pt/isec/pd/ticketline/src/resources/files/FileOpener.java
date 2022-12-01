@@ -1,7 +1,8 @@
 package pt.isec.pd.ticketline.src.resources.files;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,7 +12,7 @@ public class FileOpener
     {
             List<String> fileTokens = new ArrayList<>();
     
-            try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filePath), "UTF-8"))) {
                 String line;
     
                 while ((line = br.readLine()) != null) {

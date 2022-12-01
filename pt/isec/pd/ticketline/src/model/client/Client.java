@@ -243,26 +243,23 @@ public class Client {
     }
 
     public String listUsers(DBHelper dbHelper,Integer userID){
-        dbHelper.setId(userID == -1? null : userID);
+        dbHelper.setId(userID == -1 ? null : userID);
         dbHelper.setOperation(SELECT);
         dbHelper.setTable(USER);
         return "";
     }
 
     public String listShows(DBHelper dbHelper,Integer showID){
-        dbHelper.setId(showID);
+        dbHelper.setId(showID == -1 ? null : showID);
         dbHelper.setOperation(SELECT);
         dbHelper.setTable(SHOW);
         return "";
     }
 
     public String listReservations(DBHelper dbHelper,Integer reservationID){
-        dbHelper.setId(reservationID);
+        dbHelper.setId(reservationID == -1 ? null : reservationID);
         dbHelper.setOperation(SELECT);
         dbHelper.setTable(RESERVATION);
         return "";
     }
-
-
-
 }

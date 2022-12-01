@@ -114,10 +114,14 @@ public class ClientUI {
         switch (input){
             case 1 -> {
                 int id = InputProtection.readInt("Show ID (-1 for all shows): ");
+                this.client.createDBHelper("SELECT", "show", empty, id);
+                System.out.println(client.waitToReceiveResultRequest());
                 /*System.out.println(this.data.listShows(id == -1 ? null : id));*/
             }
             case 2 ->{
                 int id = InputProtection.readInt("Reservation ID (-1 for all reservations): ");
+                this.client.createDBHelper("SELECT", "reservation", empty, id);
+                System.out.println(client.waitToReceiveResultRequest());
                 //System.out.println(this.data.listReservations(id == -1 ? null : id));
             }
             case 3 ->{
@@ -137,27 +141,10 @@ public class ClientUI {
     }
 
     public void insertData(){
-        int input = InputProtection.chooseOption(null, "Insert a seat", "Insert a reservation", "Insert an user", "Insert Show");
+        int input = InputProtection.chooseOption(null, "Insert a reservation", "Insert an user", "Insert Show");
 
         switch (input){
             case 1 ->{
-                //Insert Seat
-                ArrayList<ArrayList<String>> parameters = new ArrayList<>();
-                String fila = InputProtection.readString("Row: ", true);
-                String assento = InputProtection.readString("Seat: ", true);
-                double preco = InputProtection.readNumber("Price: ");
-                int espetaculo_id = InputProtection.readInt("Show ID: ");
-                ArrayList<String> enviar = new ArrayList<>();
-                Collections.addAll(enviar, fila , assento , Double.toString(preco) );
-                parameters.add(enviar);
-
-                //Send information to server
-
-                /*if (!this.data.insertSeat(parameters , espetaculo_id)){
-                    System.out.println("Could not insert data");
-                }*/
-            }
-            case 2 ->{
                 //Insert Reservation
                 String data_hora = InputProtection.readString("Date_Hour: ", false);
                 int pago = InputProtection.readInt("Paid?: ");
@@ -170,12 +157,11 @@ public class ClientUI {
                 parameters.add(Integer.toString(id_utilizador));
                 parameters.add(Integer.toString(id_espetaculo));
 
-                //Send information to server
-                /*if (!this.data.insertReservation(parameters)) {
-                    System.out.println("Could not insert data");
-                }*/
+                this.client.createDBHelper("INSERT", "reservation", parameters, -1);
+                System.out.println(client.waitToReceiveResultRequest());
+
             }
-            case 3 ->{
+            case 2 ->{
                 //Insert user
                 String username = InputProtection.readString("Username: ", false);
                 String nome = InputProtection.readString("Name: ", false);
@@ -194,9 +180,10 @@ public class ClientUI {
                 this.client.createDBHelper("INSERT","user" , parameters,-1);
                 System.out.println(client.waitToReceiveResultRequest());
             }
-            case 4 ->{
-                //Enviar informacao da leitura do ficheiro do show
-                //data.insertShow();
+            case 3 ->{
+                // Insert a show
+                this.client.createDBHelper("INSERT", "show", null, -1);
+                System.out.println(client.waitToReceiveResultRequest());
             }
             default -> {
                 System.out.println("Not a valid option!");
