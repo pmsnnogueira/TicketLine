@@ -97,7 +97,7 @@ public class  Server {
         dbHelper = null;
         listDbHelper = new LinkedList<>();
 
-        this.dbHandler = new DataBaseHandler();
+        dbHandler = new DataBaseHandler();
         this.dbHandler.start();
 
 
@@ -452,10 +452,7 @@ public class  Server {
 
                         ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
 
-
                         oos.writeObject(requestResult);
-
-                        System.out.println("OBJECT WRITTEN");
 
                         oos.close();
 
@@ -597,7 +594,6 @@ public class  Server {
                     }
 
                     if(msgReceived.equals("CLIENT")){// when the server receives a new request from a client
-                        System.out.println("CLIENT CONNECTED");
 
                         String s = "CONFIRMED";
                         os.write(s.getBytes(), 0, s.length());
@@ -615,8 +611,6 @@ public class  Server {
                         if(dbHelper == null)
                             System.out.println("DbHelper null");
 
-
-                        System.out.println("OBJECT READ");
                     }
 
 

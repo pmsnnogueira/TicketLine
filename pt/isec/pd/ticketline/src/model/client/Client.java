@@ -30,10 +30,9 @@ public class Client {
             clientUI = new ClientUI(client);
         } catch (IOException e) {
             System.out.println("Could not create a client (ERROR:" + e + ")");
-            e.printStackTrace();
+            return;
         }
 
-        assert clientUI != null;
         clientUI.start();
     }
 
@@ -64,7 +63,7 @@ public class Client {
         this.servers = new ArrayList<>();
 
         if (!clientInit()) {
-            throw new SocketException();
+            throw new IOException();
         }
 
         this.sr = new ConnectToServer();
@@ -104,6 +103,10 @@ public class Client {
         }
 
         String messageReceived = new String(packetReceived.getData(), 0, packetReceived.getLength());
+
+        if(messageReceived.isEmpty()){
+            return false;
+        }
 
         String[] strings = messageReceived.split("\\|");
 
@@ -175,12 +178,8 @@ public class Client {
                             continue;
                         }
 
-                        System.out.println("CONNECTED");
-
                         OutputStream os = socketSr.getOutputStream();
                         InputStream is = socketSr.getInputStream();
-
-                        System.out.println("STREAMS");
 
                         String client = "CLIENT";
                         os.write(client.getBytes(), 0, client.length());
@@ -188,12 +187,9 @@ public class Client {
                         byte[] m = new byte[512];
                         int nBytes = is.read(m);
                         String msgReceived = new String(m, 0, nBytes);
-                        System.out.println(msgReceived);
 
                         if(msgReceived.equals("CONFIRMED")){
                             ObjectOutputStream oos = new ObjectOutputStream(socketSr.getOutputStream());
-
-                            System.out.println("Object streams");
 
                             oos.writeObject(dbHelper);
 
