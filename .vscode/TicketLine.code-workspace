@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		}
+	],
+	"settings": {
+		"java.project.referencedLibraries": [
+			"lib/**/*.jar",
+			"pt/isec/pd/ticketline/src/resources/db/sqlite-jdbc-3.39.3.0.jar"
+		]
+	}
+}

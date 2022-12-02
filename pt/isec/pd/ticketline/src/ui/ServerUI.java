@@ -18,6 +18,16 @@ public class ServerUI {
         this.data = data;
     }
 
+    public String artServer (){
+        return ("""
+                                        
+                  _______ _____ _____ _  ________ _______ _      _____ _   _ ______    _____ ______ _______      ________ _____ \s
+                 |__   __|_   _/ ____| |/ /  ____|__   __| |    |_   _| \\ | |  ____|  / ____|  ____|  __ \\ \\    / /  ____|  __ \\\s
+                    | |    | || |    | ' /| |__     | |  | |      | | |  \\| | |__    | (___ | |__  | |__) \\ \\  / /| |__  | |__) |
+                    | |    | || |    |  < |  __|    | |  | |      | | | . ` |  __|    \\___ \\|  __| |  _  / \\ \\/ / |  __| |  _  /\s
+                    | |   _| || |____| . \\| |____   | |  | |____ _| |_| |\\  | |____   ____) | |____| | \\ \\  \\  /  | |____| | \\ \\\s
+                    |_|  |_____\\_____|_|\\_\\______|  |_|  |______|_____|_| \\_|______| |_____/|______|_|  \\_\\  \\/   |______|_|  \\_\\""");
+    }
     private void listInformation(){
         int input = InputProtection.chooseOption(null, "List shows", "List reservations",
                                                  "List seats", "List users");
@@ -228,11 +238,15 @@ public class ServerUI {
     }
 
     public void start(){
+        System.out.println(artServer());
         while (true){
             try{
                 Thread.sleep(500);
             }catch (InterruptedException ignored){
             }
+
+
+
             int input = InputProtection.chooseOption("Choose an action:", "List information",
                                                      "Insert data","Delete data",
                                                      "Update data", "List available servers","Exit");

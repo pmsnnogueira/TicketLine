@@ -45,6 +45,7 @@ public class Data {
         return this.resourcesManager.listUsers(userID);
     }
 
+    public String verifyUserLogin(ArrayList<String> parameters){return this.resourcesManager.verifyUserLogin(parameters);}
     public String listShows(Integer showID){
         return this.resourcesManager.listShows(showID);
     }
@@ -84,6 +85,7 @@ public class Data {
     public void addShow()
     {
         List<String> information = FileOpener.openFile("pt/isec/pd/ticketline/src/resources/files/teste.txt");
+        System.out.println(information);
         ArrayList<String> parameters = new ArrayList<>();
         ArrayList<ArrayList<String>> arraySeats = new ArrayList<>();
         String dateHour = "";
@@ -142,11 +144,6 @@ public class Data {
                 {
                     String age = splitted[1];
                     parameters.add(age);
-                }
-                else if(newString.contains(":"))
-                {
-                    String row = splitted.toString();
-                    parameters.add(row);
                 }
                 else if(newString.contains("Fila"))
                     seats = true;
@@ -228,5 +225,9 @@ public class Data {
         }
 
         return sb.toString();
+    }
+
+    public int getNumberOfServersConnected(){
+        return heartBeatsReceived.size();
     }
 }

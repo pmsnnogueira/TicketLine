@@ -1,12 +1,8 @@
 package pt.isec.pd.ticketline.src.ui;
 
 import pt.isec.pd.ticketline.src.model.client.Client;
-import pt.isec.pd.ticketline.src.model.server.Server;
-import pt.isec.pd.ticketline.src.model.server.heartbeat.HeartBeat;
 import pt.isec.pd.ticketline.src.ui.util.InputProtection;
 
-import java.io.IOException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -21,13 +17,12 @@ public class ClientUI {
 
     public String art(){
         return ("""
-  _______   _____    _____   _  __  ______   _______   _        _____   _   _   ______ 
- |__   __| |_   _|  / ____| | |/ / |  ____| |__   __| | |      |_   _| | \\ | | |  ____|
-    | |      | |   | |      | ' /  | |__       | |    | |        | |   |  \\| | | |__   
-    | |      | |   | |      |  <   |  __|      | |    | |        | |   | . ` | |  __|  
-    | |     _| |_  | |____  | . \\  | |____     | |    | |____   _| |_  | |\\  | | |____ 
-    |_|    |_____|  \\_____| |_|\\_\\ |______|    |_|    |______| |_____| |_| \\_| |______|
-                """);
+                 _______ _____ _____ _  ________ _______ _      _____ _   _ ______    _____ _      _____ ______ _   _ _______\s
+                |__   __|_   _/ ____| |/ /  ____|__   __| |    |_   _| \\ | |  ____|  / ____| |    |_   _|  ____| \\ | |__   __|
+                   | |    | || |    | ' /| |__     | |  | |      | | |  \\| | |__    | |    | |      | | | |__  |  \\| |  | |  \s
+                   | |    | || |    |  < |  __|    | |  | |      | | | . ` |  __|   | |    | |      | | |  __| | . ` |  | |  \s
+                   | |   _| || |____| . \\| |____   | |  | |____ _| |_| |\\  | |____  | |____| |____ _| |_| |____| |\\  |  | |  \s
+                   |_|  |_____\\_____|_|\\_\\______|  |_|  |______|_____|_| \\_|______|  \\_____|______|_____|______|_| \\_|  |_|  \s  """);
     }
 
     public int menuInicial(){
@@ -49,7 +44,7 @@ public class ClientUI {
         boolean res = false;
 
         System.out.println(art());
-        opcao = menuInicial();
+        opcao = InputProtection.chooseOption("Choose a menu: " , "Login","Register","Exit");
         do {
             if (opcao == 1) {
                 res = login();
@@ -69,21 +64,25 @@ public class ClientUI {
     public boolean registerUser(){
         Scanner sc = new Scanner(System.in);
         String nome, username, password;
-        do {
-            System.out.println("\nInserir Nome: ");
-            nome = sc.next();
-        }while(nome.isEmpty());
 
-        do {
-            System.out.println("Inserir Username: ");
-            username = sc.next();
-        }while (username.isEmpty());
+        nome = InputProtection.readString("Name: ", false);
+        username = InputProtection.readString("Username: ", false);
 
-        do {
-            System.out.println("Inserir Password: ");
-            password = sc.next();
-        }while (password.isEmpty());
+        password = InputProtection.readString("Password: ", false);
 
+        int administrador = 0;
+        int autenticado = 1;
+
+        ArrayList<String> parameters = new ArrayList<>();
+        parameters.add(username);
+        parameters.add(nome);
+        parameters.add(password);
+        parameters.add(Integer.toString(administrador));
+        parameters.add(Integer.toString(autenticado));
+
+        //Send information to server
+        this.client.createDBHelper("INSERT","user" , parameters,-1 ,null);
+        System.out.println(client.waitToReceiveResultRequest());
         //adicionar user à db
         //System.out.println((connDB.insertUser(nome , username , password))?
           //      "Utilizador Inserido com sucesso":"Nome de Utilizador já em uso");
@@ -91,22 +90,22 @@ public class ClientUI {
     }
     public boolean login(){
 
-        Scanner sc = new Scanner(System.in);
         String username, password;
+        System.out.println("\nLogin");
         do {
-            System.out.println("\nInserir Username: ");
-            username = sc.next();
-        }while (username.isEmpty());
+            username = InputProtection.readString("\tUsername: ", true);
 
-        do{
-            System.out.println("Inserir Password: ");
-            password = sc.next();
-        }while (password.isEmpty());
+            password = InputProtection.readString("\tPassword: ", true);
 
-        //Verificar com a db
-/*        System.out.println((connDB.loginUser(username , password))?
-                "User Válido":"User Inválido");*/
-        return true;
+            verifyLogin(username, password);
+            int out = Integer.parseInt(client.waitToReceiveResultRequest());
+
+            if(out > 0)
+                break;
+            System.out.println("\nInvalid username or password");
+        }while (true);
+
+        return true ;
     }
 
 
@@ -114,13 +113,18 @@ public class ClientUI {
     private void listInformation(){
         int input = InputProtection.chooseOption(null, "List shows", "List reservations",
                 "List seats", "List users");
+        ArrayList<String> empty = new ArrayList<>();
         switch (input){
             case 1 -> {
                 int id = InputProtection.readInt("Show ID (-1 for all shows): ");
+                this.client.createDBHelper("SELECT", "show", empty, id,null);
+                System.out.println(client.waitToReceiveResultRequest());
                 /*System.out.println(this.data.listShows(id == -1 ? null : id));*/
             }
             case 2 ->{
                 int id = InputProtection.readInt("Reservation ID (-1 for all reservations): ");
+                this.client.createDBHelper("SELECT", "reservation", empty, id , null);
+                System.out.println(client.waitToReceiveResultRequest());
                 //System.out.println(this.data.listReservations(id == -1 ? null : id));
             }
             case 3 ->{
@@ -129,7 +133,8 @@ public class ClientUI {
             }
             case 4 ->{
                 int id = InputProtection.readInt("User ID (-1 for all users): ");
-                //System.out.println(this.data.listUsers(id == -1 ? null : id));
+                this.client.createDBHelper("SELECT","user" , empty,id,null);
+                System.out.println(client.waitToReceiveResultRequest());
             }
             default -> {
                 System.out.println("Not a valid option! Try again!");
@@ -139,27 +144,10 @@ public class ClientUI {
     }
 
     public void insertData(){
-        int input = InputProtection.chooseOption(null, "Insert a seat", "Insert a reservation", "Insert an user", "Insert Show");
+        int input = InputProtection.chooseOption(null, "Insert a reservation", "Insert an user", "Insert Show");
 
         switch (input){
             case 1 ->{
-                //Insert Seat
-                ArrayList<ArrayList<String>> parameters = new ArrayList<>();
-                String fila = InputProtection.readString("Row: ", true);
-                String assento = InputProtection.readString("Seat: ", true);
-                double preco = InputProtection.readNumber("Price: ");
-                int espetaculo_id = InputProtection.readInt("Show ID: ");
-                ArrayList<String> enviar = new ArrayList<>();
-                Collections.addAll(enviar, fila , assento , Double.toString(preco) );
-                parameters.add(enviar);
-
-                //Send information to server
-
-                /*if (!this.data.insertSeat(parameters , espetaculo_id)){
-                    System.out.println("Could not insert data");
-                }*/
-            }
-            case 2 ->{
                 //Insert Reservation
                 String data_hora = InputProtection.readString("Date_Hour: ", false);
                 int pago = InputProtection.readInt("Paid?: ");
@@ -172,12 +160,11 @@ public class ClientUI {
                 parameters.add(Integer.toString(id_utilizador));
                 parameters.add(Integer.toString(id_espetaculo));
 
-                //Send information to server
-                /*if (!this.data.insertReservation(parameters)) {
-                    System.out.println("Could not insert data");
-                }*/
+                this.client.createDBHelper("INSERT", "reservation", parameters, -1 , null);
+                System.out.println(client.waitToReceiveResultRequest());
+
             }
-            case 3 ->{
+            case 2 ->{
                 //Insert user
                 String username = InputProtection.readString("Username: ", false);
                 String nome = InputProtection.readString("Name: ", false);
@@ -193,13 +180,13 @@ public class ClientUI {
                 parameters.add(Integer.toString(autenticado));
 
                 //Send information to server
-                if (!this.client.sendInfoToServer("INSERT","user",parameters)) {
-                    System.out.println("Could not insert data");
-                }
+                this.client.createDBHelper("INSERT","user" , parameters,-1 ,null);
+                System.out.println(client.waitToReceiveResultRequest());
             }
-            case 4 ->{
-                //Enviar informacao da leitura do ficheiro do show
-                //data.insertShow();
+            case 3 ->{
+                // Insert a show
+                this.client.createDBHelper("INSERT", "show", null, -1 , null);
+                System.out.println(client.waitToReceiveResultRequest());
             }
             default -> {
                 System.out.println("Not a valid option!");
@@ -328,17 +315,26 @@ public class ClientUI {
         //System.out.println(this.data.listAllAvailableServers());
     }
 
+    public void verifyLogin(String username,String password){
+
+        ArrayList<String> aux= new ArrayList<>();
+        aux.add(username);
+        aux.add(password);
+        this.client.createDBHelper("SELECT","user" ,  null,-1 ,aux);
+    }
+
     public void start(){
-        System.out.println(art());
+
+        if(!loginRegister())
+            return;
+
         while (true){
             try{
                 Thread.sleep(500);
             }catch (InterruptedException ignored){
             }
 
-           /* if(!loginRegister())
-                return;*/
-
+            System.out.println("Main Menu");
             int input = InputProtection.chooseOption("Choose an action:", "List information",
                     "Insert data","Delete data",
                     "Update data", "List available servers","Exit");

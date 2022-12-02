@@ -1,5 +1,6 @@
 package pt.isec.pd.ticketline.src.resources.db;
 
+import pt.isec.pd.ticketline.src.model.server.MULTICAST;
 import pt.isec.pd.ticketline.src.model.server.heartbeat.HeartBeat;
 
 import java.io.*;
@@ -127,18 +128,7 @@ public class DBManager {
     }
 
     public void multicastQuery(String newQuerie){
-        try{
-            this.serverHB.setQueries(newQuerie);
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ObjectOutputStream oos = new ObjectOutputStream(baos);
-
-            oos.writeObject(this.serverHB);
-            byte[] buffer = baos.toByteArray();
-            DatagramPacket dp = new DatagramPacket(buffer, buffer.length,
-                    InetAddress.getByName("239.39.39.39"), 4004);
-            mcs.send(dp);
-        }catch (IOException e){
-        }
+        this.serverHB.setQueries(newQuerie);
     }
 
     public String listShows(Integer showID){
@@ -285,6 +275,30 @@ public class DBManager {
         }catch (SQLException e){
             return "Could not list user";
         }
+    }
+
+    public String verifyUserLogin(ArrayList<String> parameters){
+        try{
+            Statement statement = dbConn.createStatement();
+
+            String sqlQuery = "SELECT Count(*) as contador FROM utilizador WHERE lower(username) = lower('" + parameters.get(0) + "') and password = '" + parameters.get(1) + "'";
+
+            ResultSet resultSet = statement.executeQuery(sqlQuery);
+
+            StringBuilder str = new StringBuilder();
+
+            while(resultSet.next()){
+                int contador = resultSet.getInt("contador");
+                str.append((contador == 0) ? "-1":"1");
+            }
+            resultSet.close();
+            statement.close();
+            return str.toString();
+        }catch (SQLException e){
+            return "Could not list user";
+        }
+
+
     }
 
     //Vai procurar em todos os assentos se há filas repetidas, se houver vai procurar nessas filas se há cadeiras repetidas, se houver repetidas retorna TRUE
@@ -455,7 +469,13 @@ public class DBManager {
         }
         return true;
     }
-   
+
+    public void printParameters(ArrayList<String> parameters){
+        for(String a : parameters){
+            System.out.println(a);
+        }
+    }
+
     public boolean insertUser(ArrayList<String> parameters){
         Statement statement;
         try{
@@ -465,6 +485,22 @@ public class DBManager {
         }
 
         int i = 0;
+        //Verificar se há algum com nome ou utilizador igual
+        String verificar = "SELECT Count(*) AS contador FROM utilizador WHERE lower(username)=lower('" + parameters.get(0) + "') or lower(nome)=lower('" + parameters.get(1)+"')";
+        try {
+            ResultSet resultSet = statement.executeQuery(verificar);
+
+            int contador = resultSet.getInt("contador");
+            if(contador > 0){
+                statement.close();
+                return false;
+            }
+
+        }catch (SQLException e){
+            e.printStackTrace();
+        }
+
+
         String sqlQuery = "INSERT INTO utilizador VALUES (NULL, '" + parameters.get(i++) + "' , '" +
                 parameters.get(i++) + "' , '" + parameters.get(i++) + "' , '" +
                 parameters.get(i++) + "' , '" + parameters.get(i++) + "')";
@@ -474,6 +510,7 @@ public class DBManager {
             multicastQuery(sqlQuery);
             statement.close();
         }catch (SQLException e){
+            e.printStackTrace();
             return false;
         }
         updateVersion();
@@ -686,4 +723,8 @@ public class DBManager {
         updateVersion();
         return true;
     }
+
+
+
+
 }

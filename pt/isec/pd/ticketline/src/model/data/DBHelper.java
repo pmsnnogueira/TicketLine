@@ -1,16 +1,22 @@
-package pt.isec.pd.ticketline.src.model.server;
+package pt.isec.pd.ticketline.src.model.data;
 
 import java.io.Serializable;
+import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 
 public class DBHelper implements Serializable {
+
     private Integer id;
     private String operation;
     private String table;
     private ArrayList<ArrayList<String>> seatParams;
     private ArrayList<String> insertParams;
     private HashMap<String, String> updateParams;
+    private Socket socketClient;
+
+    private ArrayList<String> verifyUsername;
 
     public void reset(){
         this.id = null;
@@ -19,6 +25,16 @@ public class DBHelper implements Serializable {
         this.seatParams = null;
         this.insertParams = null;
         this.updateParams = null;
+        this.socketClient = null;
+        this.verifyUsername = null;
+    }
+
+    public void setSocketClient(Socket socket){
+        this.socketClient = socket;
+    }
+
+    public Socket getSocketClient(){
+        return this.socketClient;
     }
 
     public Integer getId() {
@@ -67,5 +83,13 @@ public class DBHelper implements Serializable {
 
     public void setUpdateParams(HashMap<String, String> updateParams) {
         this.updateParams = updateParams;
+    }
+
+    public void setVerifyUsername(ArrayList<String> parameters) {
+        this.verifyUsername = parameters;
+    }
+
+    public ArrayList<String> getverifyUsername() {
+        return verifyUsername;
     }
 }

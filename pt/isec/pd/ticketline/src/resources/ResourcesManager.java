@@ -43,6 +43,7 @@ public class ResourcesManager {
         return this.dbManager.listUsers(userID);
     }
 
+    public String verifyUserLogin(ArrayList<String> parameters){return this.dbManager.verifyUserLogin(parameters);}
     public String listShows(Integer showID){
         return this.dbManager.listShows(showID);
     }

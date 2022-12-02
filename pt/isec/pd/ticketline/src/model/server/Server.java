@@ -1,6 +1,7 @@
 package pt.isec.pd.ticketline.src.model.server;
 
 import pt.isec.pd.ticketline.src.model.ModelManager;
+import pt.isec.pd.ticketline.src.model.data.DBHelper;
 import pt.isec.pd.ticketline.src.model.data.Data;
 import pt.isec.pd.ticketline.src.model.server.heartbeat.ExecutorSendHeartBeat;
 import pt.isec.pd.ticketline.src.model.server.heartbeat.HeartBeat;
@@ -12,13 +13,13 @@ import java.net.*;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class Server {
-    private static final int multicastPort = 4004;
-    private static final String ipMulticast = "239.39.39.39";
     private final Data data;
     private final String DBDirectory;
     private volatile boolean available;
@@ -28,7 +29,9 @@ public class Server {
     private HeartBeat hbWithHighestVersion;
     private HeartBeatReceiver hbh;
     private DataBaseHandler dbHandler;
-    private DBHelper dbHelper;
+    private DBHelper dbHelper = null;
+
+    private LinkedList<DBHelper> listDbHelper;
     private int serverPort;
     private ServerInit si;
     private TCPHandler dbProv;
@@ -43,10 +46,14 @@ public class Server {
     private NetworkInterface ni;
     private ScheduledExecutorService scheduler;
     private boolean HBHandle;
-    private ClientInitHelper ch;
-    private boolean cihHandle;
+    private UDPHandler ch;
+    private boolean UDPHandle;
     private String clientIP;
     private int clientPort;
+    private AtomicReference<Boolean> prepare;
+    private AtomicReference<Boolean> masterSV;
+
+    private int confirmations;
     public static void main(String[] args)
     {
         ServerUI serverUI = null;
@@ -62,15 +69,18 @@ public class Server {
     }
 
     public Server(int port, String DBDirectory) throws SQLException, IOException, InterruptedException {
+        this.prepare = new AtomicReference<>(false);
+        this.masterSV = new AtomicReference<>(false);
+
         this.available = true;
         this.numberOfConnections = 0;
         this.dbCopyHeartBeat = null;
         this.DBDirectory = DBDirectory;
         this.serverPort = port;
         this.serverInitContinue = true;
-        this.mcs = new MulticastSocket(multicastPort);
-        this.ipGroup = InetAddress.getByName(ipMulticast);
-        this.sa = new InetSocketAddress(ipGroup, multicastPort);
+        this.mcs = new MulticastSocket(Integer.parseInt(MULTICAST.getValue(1)));
+        this.ipGroup = InetAddress.getByName( MULTICAST.getValue(0));
+        this.sa = new InetSocketAddress(ipGroup, Integer.parseInt( MULTICAST.getValue(1)));
         this.ni = NetworkInterface.getByIndex(0);
         this.mcs.joinGroup(sa, ni);
 
@@ -90,9 +100,10 @@ public class Server {
         //start thread to handle the DB operations
         this.hbWithHighestVersion = null;
         this.handleDB = true;
-        dbHelper = new DBHelper();
+        dbHelper = null;
+        listDbHelper = new LinkedList<>();
 
-        this.dbHandler = new DataBaseHandler();
+        dbHandler = new DataBaseHandler();
         this.dbHandler.start();
 
 
@@ -110,7 +121,7 @@ public class Server {
 
         //start thread to receive the heartbeats
         this.HBHandle = true;
-        hbh = new HeartBeatReceiver(mcs);
+        hbh = new HeartBeatReceiver();
         hbh.start();
 
         //start database prpovider thread to pro
@@ -118,16 +129,17 @@ public class Server {
         dbProv.start();
 
         //start client handler thread
-        this.cihHandle = true;
-        this.ch = new ClientInitHelper();
+        this.UDPHandle = true;
+        this.ch = new UDPHandler();
         this.ch.start();
     }
 
     public String listUsers(Integer userID){
+        dbHelper = new DBHelper();
         dbHelper.setId(userID);
         this.dbHelper.setOperation("SELECT");
         this.dbHelper.setTable("user");
-        this.dbHandler.setHasNewDBRequest();
+        listDbHelper.add(dbHelper);
         return "";
     }
 
@@ -135,7 +147,7 @@ public class Server {
         this.dbHelper.setId(showID);
         this.dbHelper.setOperation("SELECT");
         this.dbHelper.setTable("show");
-        this.dbHandler.setHasNewDBRequest();
+
         return "";
     }
 
@@ -143,7 +155,7 @@ public class Server {
         this.dbHelper.setId(reservationID);
         this.dbHelper.setOperation("SELECT");
         this.dbHelper.setTable("reservation");
-        this.dbHandler.setHasNewDBRequest();
+
         return "";
     }
 
@@ -151,14 +163,14 @@ public class Server {
         this.dbHelper.setId(seatID);
         this.dbHelper.setOperation("SELECT");
         this.dbHelper.setTable("seat");
-        this.dbHandler.setHasNewDBRequest();
+
         return "";
     }
 
     public void insertShow(){
         this.dbHelper.setOperation("INSERT");
         this.dbHelper.setTable("show");
-        this.dbHandler.setHasNewDBRequest();
+
     }
 
     public boolean insertSeat(ArrayList<ArrayList<String>> parameters , int numShow){
@@ -166,7 +178,7 @@ public class Server {
         this.dbHelper.setTable("seat");
         this.dbHelper.setSeatParams(parameters);
         this.dbHelper.setId(numShow);
-        this.dbHandler.setHasNewDBRequest();
+
         return true;
     }
 
@@ -174,7 +186,7 @@ public class Server {
         this.dbHelper.setOperation("INSERT");
         this.dbHelper.setTable("reservation");
         this.dbHelper.setInsertParams(parameters);
-        this.dbHandler.setHasNewDBRequest();
+
         return true;
     }
 
@@ -182,7 +194,7 @@ public class Server {
         this.dbHelper.setOperation("INSERT");
         this.dbHelper.setTable("user");
         this.dbHelper.setInsertParams(parameters);
-        this.dbHandler.setHasNewDBRequest();
+
         return true;
     }
 
@@ -190,7 +202,7 @@ public class Server {
         this.dbHelper.setOperation("DELETE");
         this.dbHelper.setTable("show");
         this.dbHelper.setId(id);
-        this.dbHandler.setHasNewDBRequest();
+
         return true;
     }
 
@@ -198,7 +210,7 @@ public class Server {
         this.dbHelper.setOperation("DELETE");
         this.dbHelper.setTable("reservation");
         this.dbHelper.setId(id);
-        this.dbHandler.setHasNewDBRequest();
+
         return true;
     }
 
@@ -206,7 +218,7 @@ public class Server {
         this.dbHelper.setOperation("DELETE");
         this.dbHelper.setTable("seat");
         this.dbHelper.setId(id);
-        this.dbHandler.setHasNewDBRequest();
+
         return true;
     }
 
@@ -214,7 +226,7 @@ public class Server {
         this.dbHelper.setOperation("DELETE");
         this.dbHelper.setTable("user");
         this.dbHelper.setId(id);
-        this.dbHandler.setHasNewDBRequest();
+
         return true;
     }
 
@@ -223,7 +235,7 @@ public class Server {
         this.dbHelper.setTable("show");
         this.dbHelper.setId(id);
         this.dbHelper.setUpdateParams(newData);
-        this.dbHandler.setHasNewDBRequest();
+
         return true;
     }
     public boolean updateSeats(int id, HashMap<String, String> newData){
@@ -231,7 +243,7 @@ public class Server {
         this.dbHelper.setTable("seat");
         this.dbHelper.setId(id);
         this.dbHelper.setUpdateParams(newData);
-        this.dbHandler.setHasNewDBRequest();
+
         return true;
     }
     public boolean updateReservation(int id, HashMap<String, String> newData){
@@ -239,7 +251,6 @@ public class Server {
         this.dbHelper.setTable("reservation");
         this.dbHelper.setId(id);
         this.dbHelper.setUpdateParams(newData);
-        this.dbHandler.setHasNewDBRequest();
         return true;
     }
     public boolean updateUser(int id, HashMap<String, String> newData){
@@ -247,11 +258,10 @@ public class Server {
         this.dbHelper.setTable("user");
         this.dbHelper.setId(id);
         this.dbHelper.setUpdateParams(newData);
-        this.dbHandler.setHasNewDBRequest();
         return true;
     }
 
-    public void transferDatabase(HeartBeat dbHeartbeat){
+    public synchronized void transferDatabase(HeartBeat dbHeartbeat){
         //if the server already has its own DB
         if((new File(DBDirectory + "/PD-2022-23-TP-" + serverPort + ".db")).exists()){
             //and there is no other server running
@@ -286,6 +296,7 @@ public class Server {
             //and prepares to copy the DB
             File file = new File(DBDirectory + "/PD-2022-23-TP-" + serverPort + ".db");
             FileOutputStream fo = new FileOutputStream(file);
+
             byte[] buffer = new byte[512];
             InputStream is = socket.getInputStream();
             int readBytes=0;
@@ -307,11 +318,11 @@ public class Server {
         }
     }
 
-    public void updateDBVersion(){
+    public synchronized void updateDBVersion(){
         this.heartBeat.setDatabaseVersion(this.data.getDatabaseVersion());
     }
 
-    public void closeServer() throws InterruptedException, IOException, SQLException {
+    public synchronized void closeServer() throws InterruptedException, IOException, SQLException {
         mcs.leaveGroup(sa, ni);
         mcs.close();
         this.data.closeDB();
@@ -327,7 +338,7 @@ public class Server {
         oos.writeObject(heartBeat);
         byte[] buffer = baos.toByteArray();
         DatagramPacket dp = new DatagramPacket(buffer, buffer.length,
-                InetAddress.getByName("239.39.39.39"), 4004);
+                InetAddress.getByName(MULTICAST.getValue(0)),Integer.parseInt( MULTICAST.getValue(1)));
         mcs.send(dp);
 
         HBHandle = false;
@@ -337,25 +348,129 @@ public class Server {
         scheduler.shutdownNow();
     }
 
-    private void updateDB(HeartBeat hBeat) {
+    private synchronized void updateDB(HeartBeat hBeat) {
         this.data.processNewQuerie(hBeat.getQueries());
         this.heartBeat.resetMostRecentQuery();
     }
 
-    public String listAllAvailableServers() {
+    public synchronized String listAllAvailableServers() {
         return this.data.listAllAvailableServers();
     }
 
+    public synchronized void sendCommit(){
+        try{
+            this.heartBeat.setMessage("COMMIT");
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ObjectOutputStream oos = new ObjectOutputStream(baos);
+
+            oos.writeObject(this.heartBeat);
+            byte[] buffer = baos.toByteArray();
+            DatagramPacket dp = new DatagramPacket(buffer, buffer.length,
+                    InetAddress.getByName( MULTICAST.getValue(0)), Integer.parseInt( MULTICAST.getValue(1)));
+            mcs.send(dp);
+
+            this.heartBeat.setMessage("");
+            prepare.set(false);
+            masterSV.set(false);
+        }catch (IOException e){
+            System.out.println("sendCommit");
+            sendAbort();
+            return;
+        }
+    }
+    public synchronized void sendAbort(){
+        try{
+            this.heartBeat.setMessage("ABORT");
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ObjectOutputStream oos = new ObjectOutputStream(baos);
+
+            oos.writeObject(this.heartBeat);
+            byte[] buffer = baos.toByteArray();
+            DatagramPacket dp = new DatagramPacket(buffer, buffer.length,
+                    InetAddress.getByName( MULTICAST.getValue(0)), Integer.parseInt( MULTICAST.getValue(1)));
+            mcs.send(dp);
+
+            this.heartBeat.setMessage("");
+            prepare.set(false);
+            masterSV.set(false);
+        }catch (IOException e){
+            return;
+        }
+    }
+    public synchronized void sendConfirmation(String newIP, int newPort){
+        InetAddress ip;
+        try{
+            ip = InetAddress.getByName(newIP);
+        }catch (UnknownHostException e){
+            return;
+        }
+
+        DatagramSocket socket = null;
+        try{
+            socket = new DatagramSocket();
+        }catch (SocketException e){
+            return;
+        }
+
+        String msgConfirm = "SERVER-CONFIRMATION";
+        DatagramPacket packet = new DatagramPacket(msgConfirm.getBytes(), msgConfirm.getBytes().length, ip, newPort);
+
+        try{
+            socket.send(packet);
+        }catch (IOException e){
+            socket.close();
+            return;
+        }
+        socket.close();
+    }
+
+    public synchronized void getServersConfirmation(DatagramSocket socketUDP){
+        int nTimeouts = 0;
+
+        while(true){
+            DatagramPacket packet = new DatagramPacket(new byte[256], 256);
+
+            String messageReceived = "";
+            try{
+                socketUDP.receive(packet);
+                messageReceived = new String(packet.getData(), 0, packet.getLength());
+            }catch (SocketTimeoutException e){
+                ++nTimeouts;
+            }catch (IOException e){
+                break;
+            }
+
+            if(messageReceived.equals("SERVER-CONFIRMATION")){
+                ++confirmations;
+
+                if(confirmations >= data.getNumberOfServersConnected() - 1){
+                    sendCommit();
+                    break;
+                }
+            }
+        }
+    }
+
+    public synchronized void sendPrepare(){
+        try{
+            this.heartBeat.setMessage("PREPARE");
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ObjectOutputStream oos = new ObjectOutputStream(baos);
+
+            oos.writeObject(this.heartBeat);
+            byte[] buffer = baos.toByteArray();
+            DatagramPacket dp = new DatagramPacket(buffer, buffer.length,
+                    InetAddress.getByName( MULTICAST.getValue(0)), Integer.parseInt( MULTICAST.getValue(1)));
+            mcs.send(dp);
+            this.heartBeat.setMessage("");
+            prepare.set(true);
+            masterSV.set(true);
+        }catch (IOException e){
+            return;
+        }
+    }
+
     class DataBaseHandler extends Thread{
-        private boolean hasNewDBRequest;
-        public DataBaseHandler(){
-            this.hasNewDBRequest = false;
-        }
-
-        public void setHasNewDBRequest() {
-            this.hasNewDBRequest = true;
-        }
-
         @Override
         public void run() {
             //Connect to DB
@@ -364,91 +479,116 @@ public class Server {
             }
 
             while(handleDB){
+                if (prepare.get()){
+                    continue;
+                }
+
                 try {
                     Thread.sleep(500);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
-                heartBeat.setDatabaseVersion(data.getDatabaseVersion());
+
                 if(hbWithHighestVersion != null){
                     updateDB(hbWithHighestVersion);
                     hbWithHighestVersion = null;
                     updateDBVersion();
                 }
 
-                if (this.hasNewDBRequest){
+                if (listDbHelper.size() > 0 ){
+                    String requestResult = null;
+                    DBHelper dbHelper = listDbHelper.pop();
                     switch (dbHelper.getOperation()){
                         case "INSERT"->{
                             switch (dbHelper.getTable()){
                                 case "show" ->{
                                     data.addShow();
+                                    requestResult = String.valueOf("Show Inserted");
                                 }
                                 case "seat" ->{
-                                    data.insertSeat(dbHelper.getSeatParams(), dbHelper.getId());
+                                    requestResult = String.valueOf(data.insertSeat(dbHelper.getSeatParams(), dbHelper.getId()));
                                 }
                                 case "reservation" ->{
-                                    data.insertReservation(dbHelper.getInsertParams());
+                                    requestResult = String.valueOf(data.insertReservation(dbHelper.getInsertParams()));
                                 }
                                 case "user" ->{
-                                    data.insertUser(dbHelper.getInsertParams());
+                                    requestResult = String.valueOf(data.insertUser(dbHelper.getInsertParams()));
                                 }
                             }
                         }
                         case "SELECT"->{
                             switch (dbHelper.getTable()){
                                 case "show" ->{
-                                    System.out.println(data.listShows(dbHelper.getId()));
+                                    requestResult = data.listShows(dbHelper.getId());
                                 }
                                 case "seat" ->{
-                                    System.out.println(data.listSeats(dbHelper.getId()));
+                                    requestResult = data.listSeats(dbHelper.getId());
                                 }
                                 case "reservation" ->{
-                                    System.out.println(data.listReservations(dbHelper.getId()));
+                                    requestResult = data.listReservations(dbHelper.getId());
                                 }
                                 case "user" ->{
-                                    System.out.println(data.listUsers(dbHelper.getId()));
+                                    if(dbHelper.getverifyUsername() != null){
+                                        requestResult = data.verifyUserLogin(dbHelper.getverifyUsername());
+                                    }
+                                    else {
+                                        requestResult = data.listUsers(dbHelper.getId());
+                                    } //System.out.println(requestResult);
                                 }
                             }
                         }
                         case "UPDATE"->{
                             switch (dbHelper.getTable()){
                                 case "show" ->{
-                                    data.updateShows(dbHelper.getId(),dbHelper.getUpdateParams());
+                                    requestResult = String.valueOf(data.updateShows(dbHelper.getId(),dbHelper.getUpdateParams()));
                                 }
                                 case "seat" ->{
-                                    data.updateSeats(dbHelper.getId(), dbHelper.getUpdateParams());
+                                    requestResult = String.valueOf(data.updateSeats(dbHelper.getId(), dbHelper.getUpdateParams()));
                                 }
                                 case "reservation" ->{
-                                    data.updateReservation(dbHelper.getId(), dbHelper.getUpdateParams());
+                                    requestResult = String.valueOf(data.updateReservation(dbHelper.getId(), dbHelper.getUpdateParams()));
                                 }
                                 case "user" ->{
-                                    data.updateUser(dbHelper.getId(), dbHelper.getUpdateParams());
+                                    requestResult = String.valueOf(data.updateUser(dbHelper.getId(), dbHelper.getUpdateParams()));
                                 }
                             }
                         }
                         case "DELETE"->{
                             switch (dbHelper.getTable()){
                                 case "show" ->{
-                                    data.deleteShow(dbHelper.getId());
+                                    requestResult = String.valueOf(data.deleteShow(dbHelper.getId()));
                                 }
                                 case "seat" ->{
-                                    data.deleteSeat(dbHelper.getId());
+                                    requestResult = String.valueOf(data.deleteSeat(dbHelper.getId()));
                                 }
                                 case "reservation" ->{
-                                    data.deleteReservations(dbHelper.getId());
+                                    requestResult = String.valueOf(data.deleteReservations(dbHelper.getId()));
                                 }
                                 case "user" ->{
-                                    data.deleteUsers(dbHelper.getId());
+                                    requestResult = String.valueOf(data.deleteUsers(dbHelper.getId()));
                                 }
                             }
                         }
                     }
 
+                    try{
+                        Socket socket = dbHelper.getSocketClient();
+
+                        ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+
+                        oos.writeObject(requestResult);
+
+                        oos.close();
+
+                        socket.close();
+                    }catch (IOException e){
+                        e.printStackTrace();
+                    }
+                    
                     if(!dbHelper.getOperation().equals("SELECT")){
                         updateDBVersion();
+                        sendPrepare();
                     }
-                    dbHelper.reset();
-                    hasNewDBRequest = false;
                 }
             }
         }
@@ -456,12 +596,6 @@ public class Server {
 
 
     class HeartBeatReceiver extends Thread{
-        private MulticastSocket mcs;
-
-        public HeartBeatReceiver(MulticastSocket mcs){
-            this.mcs = mcs;
-        }
-
         @Override
         public void run() {
             while(HBHandle)
@@ -480,10 +614,19 @@ public class Server {
 
                         data.processANewHeartBeat(hBeat);
 
-                        if(hBeat.getDatabaseVersion() > heartBeat.getDatabaseVersion()
-                                && hBeat.getPortTcp() != serverPort){
-                            System.out.println(hBeat.getQueries());
+                        if(hBeat.getMessage().equals("PREPARE") && hBeat.getPortTcp() != heartBeat.getPortTcp()){
+                            prepare .set(true);
+                            try{
+                                Thread.sleep(800);
+                            }catch (InterruptedException ignored){}
+                            sendConfirmation(hBeat.getIp(), hBeat.getPortTcp());
+                        }
+                        if(hBeat.getMessage().equals("ABORT") && hBeat.getPortTcp() != heartBeat.getPortTcp()){
+                            prepare.set(false);
+                        }
+                        if(hBeat.getMessage().equals("COMMIT") && hBeat.getPortTcp() != heartBeat.getPortTcp()){
                             hbWithHighestVersion = hBeat;
+                            prepare.set(false);
                         }
                     }
                     catch(ClassCastException | ClassNotFoundException cnfe){
@@ -562,7 +705,7 @@ public class Server {
                     int nBytes = is.read(msg);
                     String msgReceived = new String(msg, 0, nBytes);
 
-                    if(msgReceived.equals("SERVER")){
+                    if(msgReceived.equals("SERVER")){ // when server communicates with another server
                         byte[] buffer = new byte[512];
                         int readBytes = 0;
                         FileInputStream fi = new FileInputStream(DBDirectory + "/PD-2022-23-TP-" + serverPort + ".db");
@@ -576,28 +719,33 @@ public class Server {
                         }while(readBytes > 0);
 
                         fi.close();
+                        socket.close();
+                        continue;
                     }
 
-                    if(msgReceived.equals("CLIENT")){
-                        System.out.println("CLIENT CONNECTED");
+                    if(msgReceived.equals("CLIENT")){// when the server receives a new request from a client
 
-                        String s = "CONFIRMED";
+                        String s = prepare.get() ? "SERVER IS UPDATING - PLEASE TRY AGAIN" : "CONFIRMED";
                         os.write(s.getBytes(), 0, s.length());
 
-                        ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
-
-                        DBHelper dbh = null;
-                        try{
-                            dbh = (DBHelper) ois.readObject();
-                        }catch (ClassNotFoundException ignored){
-
+                        if(prepare.get()){
+                            socket.close();
                         }
-                        System.out.println("OBJECT READ");
-                        ois.close();
-                        os.close();
+
+                        ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+                        dbHelper = null;
+                        try{
+                            dbHelper = (DBHelper) ois.readObject();
+                            dbHelper.setSocketClient(socket);
+                            listDbHelper.add(dbHelper);
+                        }catch (ClassNotFoundException e){
+                            e.printStackTrace();
+                        }
+                        if(dbHelper == null)
+                            System.out.println("DbHelper null");
+
                     }
 
-                    socket.close();
 
                 } catch (IOException e) {
                     break;
@@ -613,28 +761,34 @@ public class Server {
         }
     }
 
-    class ClientInitHelper extends Thread{
-        private DatagramSocket socket;
+    class UDPHandler extends Thread{
+        private DatagramSocket socketUDP;
 
-        public ClientInitHelper(){
+        public UDPHandler(){
             try{
-                this.socket = new DatagramSocket(serverPort);
-            }catch (IOException e){
-
+                socketUDP = new DatagramSocket(serverPort);
+                socketUDP.setSoTimeout(1000);
+            }catch (SocketException e){
+                return;
             }
         }
         @Override
         public void run() {
-            while(cihHandle){
-                DatagramPacket packet = new DatagramPacket(new byte[256], 256);
-
-                try{
-                    socket.receive(packet);
-                }catch (IOException e){
+            while(UDPHandle){
+                if(prepare.get() && masterSV.get()){
+                    getServersConfirmation(socketUDP);
                     continue;
                 }
 
-                String messageReceived = new String(packet.getData(), 0, packet.getLength());
+                DatagramPacket packet = new DatagramPacket(new byte[256], 256);
+
+                String messageReceived;
+                try{
+                    socketUDP.receive(packet);
+                    messageReceived = new String(packet.getData(), 0, packet.getLength());
+                }catch (IOException e){
+                    continue;
+                }
 
                 if(!messageReceived.equals("CONNECTION")){
                     continue;
@@ -646,14 +800,11 @@ public class Server {
                 DatagramPacket packetToSend = new DatagramPacket(msgBytes, msgBytes.length, packet.getAddress(), packet.getPort());
 
                 try{
-                    socket.send(packetToSend);
+                    socketUDP.send(packetToSend);
                 }catch (IOException e){
                     continue;
                 }
-
             }
-
-            socket.close();
         }
     }
 }
