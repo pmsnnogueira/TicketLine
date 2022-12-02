@@ -17,10 +17,9 @@ import java.util.LinkedList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
-public class  Server {
-    private static final int multicastPort = 4004;
-    private static final String ipMulticast = "239.39.39.39";
+public class Server {
     private final Data data;
     private final String DBDirectory;
     private volatile boolean available;
@@ -47,10 +46,14 @@ public class  Server {
     private NetworkInterface ni;
     private ScheduledExecutorService scheduler;
     private boolean HBHandle;
-    private ClientInitHelper ch;
-    private boolean cihHandle;
+    private UDPHandler ch;
+    private boolean UDPHandle;
     private String clientIP;
     private int clientPort;
+    private AtomicReference<Boolean> prepare;
+    private AtomicReference<Boolean> masterSV;
+
+    private int confirmations;
     public static void main(String[] args)
     {
         ServerUI serverUI = null;
@@ -66,15 +69,18 @@ public class  Server {
     }
 
     public Server(int port, String DBDirectory) throws SQLException, IOException, InterruptedException {
+        this.prepare = new AtomicReference<>(false);
+        this.masterSV = new AtomicReference<>(false);
+
         this.available = true;
         this.numberOfConnections = 0;
         this.dbCopyHeartBeat = null;
         this.DBDirectory = DBDirectory;
         this.serverPort = port;
         this.serverInitContinue = true;
-        this.mcs = new MulticastSocket(multicastPort);
-        this.ipGroup = InetAddress.getByName(ipMulticast);
-        this.sa = new InetSocketAddress(ipGroup, multicastPort);
+        this.mcs = new MulticastSocket(Integer.parseInt(MULTICAST.getValue(1)));
+        this.ipGroup = InetAddress.getByName( MULTICAST.getValue(0));
+        this.sa = new InetSocketAddress(ipGroup, Integer.parseInt( MULTICAST.getValue(1)));
         this.ni = NetworkInterface.getByIndex(0);
         this.mcs.joinGroup(sa, ni);
 
@@ -115,7 +121,7 @@ public class  Server {
 
         //start thread to receive the heartbeats
         this.HBHandle = true;
-        hbh = new HeartBeatReceiver(mcs);
+        hbh = new HeartBeatReceiver();
         hbh.start();
 
         //start database prpovider thread to pro
@@ -123,8 +129,8 @@ public class  Server {
         dbProv.start();
 
         //start client handler thread
-        this.cihHandle = true;
-        this.ch = new ClientInitHelper();
+        this.UDPHandle = true;
+        this.ch = new UDPHandler();
         this.ch.start();
     }
 
@@ -255,7 +261,7 @@ public class  Server {
         return true;
     }
 
-    public void transferDatabase(HeartBeat dbHeartbeat){
+    public synchronized void transferDatabase(HeartBeat dbHeartbeat){
         //if the server already has its own DB
         if((new File(DBDirectory + "/PD-2022-23-TP-" + serverPort + ".db")).exists()){
             //and there is no other server running
@@ -311,11 +317,11 @@ public class  Server {
         }
     }
 
-    public void updateDBVersion(){
+    public synchronized void updateDBVersion(){
         this.heartBeat.setDatabaseVersion(this.data.getDatabaseVersion());
     }
 
-    public void closeServer() throws InterruptedException, IOException, SQLException {
+    public synchronized void closeServer() throws InterruptedException, IOException, SQLException {
         mcs.leaveGroup(sa, ni);
         mcs.close();
         this.data.closeDB();
@@ -331,7 +337,7 @@ public class  Server {
         oos.writeObject(heartBeat);
         byte[] buffer = baos.toByteArray();
         DatagramPacket dp = new DatagramPacket(buffer, buffer.length,
-                InetAddress.getByName("239.39.39.39"), 4004);
+                InetAddress.getByName(MULTICAST.getValue(0)),Integer.parseInt( MULTICAST.getValue(1)));
         mcs.send(dp);
 
         HBHandle = false;
@@ -341,13 +347,126 @@ public class  Server {
         scheduler.shutdownNow();
     }
 
-    private void updateDB(HeartBeat hBeat) {
+    private synchronized void updateDB(HeartBeat hBeat) {
         this.data.processNewQuerie(hBeat.getQueries());
         this.heartBeat.resetMostRecentQuery();
     }
 
-    public String listAllAvailableServers() {
+    public synchronized String listAllAvailableServers() {
         return this.data.listAllAvailableServers();
+    }
+
+    public synchronized void sendCommit(){
+        try{
+            this.heartBeat.setMessage("COMMIT");
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ObjectOutputStream oos = new ObjectOutputStream(baos);
+
+            oos.writeObject(this.heartBeat);
+            byte[] buffer = baos.toByteArray();
+            DatagramPacket dp = new DatagramPacket(buffer, buffer.length,
+                    InetAddress.getByName( MULTICAST.getValue(0)), Integer.parseInt( MULTICAST.getValue(1)));
+            mcs.send(dp);
+
+            this.heartBeat.setMessage("");
+            prepare.set(false);
+            masterSV.set(false);
+        }catch (IOException e){
+            System.out.println("sendCommit");
+            sendAbort();
+            return;
+        }
+    }
+    public synchronized void sendAbort(){
+        try{
+            this.heartBeat.setMessage("ABORT");
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ObjectOutputStream oos = new ObjectOutputStream(baos);
+
+            oos.writeObject(this.heartBeat);
+            byte[] buffer = baos.toByteArray();
+            DatagramPacket dp = new DatagramPacket(buffer, buffer.length,
+                    InetAddress.getByName( MULTICAST.getValue(0)), Integer.parseInt( MULTICAST.getValue(1)));
+            mcs.send(dp);
+
+            this.heartBeat.setMessage("");
+            prepare.set(false);
+            masterSV.set(false);
+        }catch (IOException e){
+            return;
+        }
+    }
+    public synchronized void sendConfirmation(String newIP, int newPort){
+        InetAddress ip;
+        try{
+            ip = InetAddress.getByName(newIP);
+        }catch (UnknownHostException e){
+            return;
+        }
+
+        DatagramSocket socket = null;
+        try{
+            socket = new DatagramSocket();
+        }catch (SocketException e){
+            return;
+        }
+
+        String msgConfirm = "SERVER-CONFIRMATION";
+        DatagramPacket packet = new DatagramPacket(msgConfirm.getBytes(), msgConfirm.getBytes().length, ip, newPort);
+
+        try{
+            socket.send(packet);
+        }catch (IOException e){
+            socket.close();
+            return;
+        }
+        socket.close();
+    }
+
+    public synchronized void getServersConfirmation(DatagramSocket socketUDP){
+        int nTimeouts = 0;
+
+        while(true){
+            DatagramPacket packet = new DatagramPacket(new byte[256], 256);
+
+            String messageReceived = "";
+            try{
+                socketUDP.receive(packet);
+                messageReceived = new String(packet.getData(), 0, packet.getLength());
+            }catch (SocketTimeoutException e){
+                ++nTimeouts;
+            }catch (IOException e){
+                break;
+            }
+
+            if(messageReceived.equals("SERVER-CONFIRMATION")){
+                ++confirmations;
+
+                if(confirmations >= data.getNumberOfServersConnected() - 1){
+                    sendCommit();
+                    break;
+                }
+            }
+        }
+    }
+
+    public synchronized void sendPrepare(){
+        try{
+            this.heartBeat.setMessage("PREPARE");
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ObjectOutputStream oos = new ObjectOutputStream(baos);
+
+            oos.writeObject(this.heartBeat);
+            byte[] buffer = baos.toByteArray();
+            DatagramPacket dp = new DatagramPacket(buffer, buffer.length,
+                    InetAddress.getByName( MULTICAST.getValue(0)), Integer.parseInt( MULTICAST.getValue(1)));
+            mcs.send(dp);
+            this.heartBeat.setMessage("");
+            prepare.set(true);
+            masterSV.set(true);
+        }catch (IOException e){
+            return;
+        }
     }
 
     class DataBaseHandler extends Thread{
@@ -359,12 +478,16 @@ public class  Server {
             }
 
             while(handleDB){
+                if (prepare.get()){
+                    continue;
+                }
+
                 try {
                     Thread.sleep(500);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
-                heartBeat.setDatabaseVersion(data.getDatabaseVersion());
+
                 if(hbWithHighestVersion != null){
                     updateDB(hbWithHighestVersion);
                     hbWithHighestVersion = null;
@@ -463,6 +586,7 @@ public class  Server {
                     
                     if(!dbHelper.getOperation().equals("SELECT")){
                         updateDBVersion();
+                        sendPrepare();
                     }
                 }
             }
@@ -471,12 +595,6 @@ public class  Server {
 
 
     class HeartBeatReceiver extends Thread{
-        private MulticastSocket mcs;
-
-        public HeartBeatReceiver(MulticastSocket mcs){
-            this.mcs = mcs;
-        }
-
         @Override
         public void run() {
             while(HBHandle)
@@ -495,10 +613,19 @@ public class  Server {
 
                         data.processANewHeartBeat(hBeat);
 
-                        if(hBeat.getDatabaseVersion() > heartBeat.getDatabaseVersion()
-                                && hBeat.getPortTcp() != serverPort){
-                            System.out.println(hBeat.getQueries());
+                        if(hBeat.getMessage().equals("PREPARE") && hBeat.getPortTcp() != heartBeat.getPortTcp()){
+                            prepare .set(true);
+                            try{
+                                Thread.sleep(800);
+                            }catch (InterruptedException ignored){}
+                            sendConfirmation(hBeat.getIp(), hBeat.getPortTcp());
+                        }
+                        if(hBeat.getMessage().equals("ABORT") && hBeat.getPortTcp() != heartBeat.getPortTcp()){
+                            prepare.set(false);
+                        }
+                        if(hBeat.getMessage().equals("COMMIT") && hBeat.getPortTcp() != heartBeat.getPortTcp()){
                             hbWithHighestVersion = hBeat;
+                            prepare.set(false);
                         }
                     }
                     catch(ClassCastException | ClassNotFoundException cnfe){
@@ -595,7 +722,7 @@ public class  Server {
 
                     if(msgReceived.equals("CLIENT")){// when the server receives a new request from a client
 
-                        String s = "CONFIRMED";
+                        String s = prepare.get() ? "SERVER IS UPDATING - PLEASE TRY AGAIN" : "CONFIRMED";
                         os.write(s.getBytes(), 0, s.length());
 
 
@@ -628,28 +755,34 @@ public class  Server {
         }
     }
 
-    class ClientInitHelper extends Thread{
-        private DatagramSocket socket;
+    class UDPHandler extends Thread{
+        private DatagramSocket socketUDP;
 
-        public ClientInitHelper(){
+        public UDPHandler(){
             try{
-                this.socket = new DatagramSocket(serverPort);
-            }catch (IOException e){
-
+                socketUDP = new DatagramSocket(serverPort);
+                socketUDP.setSoTimeout(1000);
+            }catch (SocketException e){
+                return;
             }
         }
         @Override
         public void run() {
-            while(cihHandle){
-                DatagramPacket packet = new DatagramPacket(new byte[256], 256);
-
-                try{
-                    socket.receive(packet);
-                }catch (IOException e){
+            while(UDPHandle){
+                if(prepare.get() && masterSV.get()){
+                    getServersConfirmation(socketUDP);
                     continue;
                 }
 
-                String messageReceived = new String(packet.getData(), 0, packet.getLength());
+                DatagramPacket packet = new DatagramPacket(new byte[256], 256);
+
+                String messageReceived;
+                try{
+                    socketUDP.receive(packet);
+                    messageReceived = new String(packet.getData(), 0, packet.getLength());
+                }catch (IOException e){
+                    continue;
+                }
 
                 if(!messageReceived.equals("CONNECTION")){
                     continue;
@@ -661,14 +794,11 @@ public class  Server {
                 DatagramPacket packetToSend = new DatagramPacket(msgBytes, msgBytes.length, packet.getAddress(), packet.getPort());
 
                 try{
-                    socket.send(packetToSend);
+                    socketUDP.send(packetToSend);
                 }catch (IOException e){
                     continue;
                 }
-
             }
-
-            socket.close();
         }
     }
 }
