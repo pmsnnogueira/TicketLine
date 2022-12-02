@@ -92,7 +92,7 @@ public class Server {
         // server initiaton phase
         si = new ServerInit();
         si.start();
-        si.join(3);
+        si.join(30000);
         this.serverInitContinue = false;
 
         transferDatabase(dbCopyHeartBeat);
@@ -296,6 +296,7 @@ public class Server {
             //and prepares to copy the DB
             File file = new File(DBDirectory + "/PD-2022-23-TP-" + serverPort + ".db");
             FileOutputStream fo = new FileOutputStream(file);
+
             byte[] buffer = new byte[512];
             InputStream is = socket.getInputStream();
             int readBytes=0;
@@ -718,6 +719,8 @@ public class Server {
                         }while(readBytes > 0);
 
                         fi.close();
+                        socket.close();
+                        continue;
                     }
 
                     if(msgReceived.equals("CLIENT")){// when the server receives a new request from a client
@@ -725,6 +728,9 @@ public class Server {
                         String s = prepare.get() ? "SERVER IS UPDATING - PLEASE TRY AGAIN" : "CONFIRMED";
                         os.write(s.getBytes(), 0, s.length());
 
+                        if(prepare.get()){
+                            socket.close();
+                        }
 
                         ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
                         dbHelper = null;

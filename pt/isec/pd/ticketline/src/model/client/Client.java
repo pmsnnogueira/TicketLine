@@ -188,6 +188,8 @@ public class Client {
                         int nBytes = is.read(m);
                         String msgReceived = new String(m, 0, nBytes);
 
+
+
                         if(msgReceived.equals("CONFIRMED")){
                             ObjectOutputStream oos = new ObjectOutputStream(socketSr.getOutputStream());
 
@@ -199,6 +201,9 @@ public class Client {
 
                             oos.close();
                             ois.close();
+                        }
+                        if(msgReceived.equals("SERVER IS UPDATING - PLEASE TRY AGAIN")){
+                            requestResult.set("SERVER IS UPDATING - PLEASE TRY AGAIN");
                         }
 
                         os.close();
