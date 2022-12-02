@@ -18,7 +18,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class Server {
+public class  Server {
     private static final int multicastPort = 4004;
     private static final String ipMulticast = "239.39.39.39";
     private final Data data;
@@ -404,8 +404,12 @@ public class Server {
                                     requestResult = data.listReservations(dbHelper.getId());
                                 }
                                 case "user" ->{
-                                    requestResult = data.listUsers(dbHelper.getId());
-                                    System.out.println(requestResult);
+                                    if(dbHelper.getverifyUsername() != null){
+                                        requestResult = data.verifyUserLogin(dbHelper.getverifyUsername());
+                                    }
+                                    else {
+                                        requestResult = data.listUsers(dbHelper.getId());
+                                    } //System.out.println(requestResult);
                                 }
                             }
                         }
@@ -600,7 +604,6 @@ public class Server {
 
 
                         ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
-
                         dbHelper = null;
                         try{
                             dbHelper = (DBHelper) ois.readObject();

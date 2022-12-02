@@ -3,9 +3,11 @@ package pt.isec.pd.ticketline.src.model.data;
 import java.io.Serializable;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 
 public class DBHelper implements Serializable {
+
     private Integer id;
     private String operation;
     private String table;
@@ -14,6 +16,7 @@ public class DBHelper implements Serializable {
     private HashMap<String, String> updateParams;
     private Socket socketClient;
 
+    private ArrayList<String> verifyUsername;
 
     public void reset(){
         this.id = null;
@@ -23,6 +26,7 @@ public class DBHelper implements Serializable {
         this.insertParams = null;
         this.updateParams = null;
         this.socketClient = null;
+        this.verifyUsername = null;
     }
 
     public void setSocketClient(Socket socket){
@@ -79,5 +83,13 @@ public class DBHelper implements Serializable {
 
     public void setUpdateParams(HashMap<String, String> updateParams) {
         this.updateParams = updateParams;
+    }
+
+    public void setVerifyUsername(ArrayList<String> parameters) {
+        this.verifyUsername = parameters;
+    }
+
+    public ArrayList<String> getverifyUsername() {
+        return verifyUsername;
     }
 }

@@ -114,7 +114,7 @@ public class Client {
         return true;
     }
 
-    public DBHelper addDBHelper(String operation, String table, ArrayList<String> insertParams, int id) {
+    public DBHelper addDBHelper(String operation, String table, ArrayList<String> insertParams, int id , ArrayList<String> userLogin) {
         DBHelper dbHelper = new DBHelper();
         if (operation.equals("INSERT")) {
             if (table.equals("user")) {
@@ -132,6 +132,10 @@ public class Client {
         }
         if(operation.equals("SELECT")){
             if(table.equals("user")){
+                if(userLogin != null){
+                    verifyUserLogin(dbHelper,userLogin);
+                    return dbHelper;
+                }
                 listUsers(dbHelper , id);
                 return dbHelper;
             }
@@ -153,9 +157,6 @@ public class Client {
                 return requestResult.get();
             }
         }
-    }
-    public void setHasNewRequest(boolean hasNewRequest) {
-        this.hasNewRequest.set(hasNewRequest);
     }
 
     class ConnectToServer extends Thread{
@@ -218,8 +219,8 @@ public class Client {
     }
 
 
-    public void createDBHelper(String operation, String table, ArrayList<String> insertParams , int id) {
-        dbHelper = addDBHelper(operation, table, insertParams, id);
+    public void createDBHelper(String operation, String table, ArrayList<String> insertParams , int id,  ArrayList<String> userLogin) {
+        dbHelper = addDBHelper(operation, table, insertParams, id , userLogin);
         hasNewRequest.set(true);
     }
 
@@ -262,4 +263,12 @@ public class Client {
         dbHelper.setTable(RESERVATION);
         return "";
     }
+
+    public String verifyUserLogin(DBHelper dbHelper ,ArrayList<String> parameters){
+        dbHelper.setOperation(SELECT);
+        dbHelper.setTable(USER);
+        dbHelper.setVerifyUsername(parameters);
+        return "";
+    }
+
 }

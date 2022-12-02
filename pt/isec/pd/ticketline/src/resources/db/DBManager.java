@@ -287,6 +287,30 @@ public class DBManager {
         }
     }
 
+    public String verifyUserLogin(ArrayList<String> parameters){
+        try{
+            Statement statement = dbConn.createStatement();
+
+            String sqlQuery = "SELECT Count(*) as contador FROM utilizador WHERE lower(username) = lower('" + parameters.get(0) + "') and password = '" + parameters.get(1) + "'";
+
+            ResultSet resultSet = statement.executeQuery(sqlQuery);
+
+            StringBuilder str = new StringBuilder();
+
+            while(resultSet.next()){
+                int contador = resultSet.getInt("contador");
+                str.append((contador == 0) ? "-1":"1");
+            }
+            resultSet.close();
+            statement.close();
+            return str.toString();
+        }catch (SQLException e){
+            return "Could not list user";
+        }
+
+
+    }
+
     //Vai procurar em todos os assentos se há filas repetidas, se houver vai procurar nessas filas se há cadeiras repetidas, se houver repetidas retorna TRUE
     public boolean verificarRepetidos(ArrayList<ArrayList<String>> parameters){
 

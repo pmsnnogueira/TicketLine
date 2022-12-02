@@ -45,6 +45,7 @@ public class Data {
         return this.resourcesManager.listUsers(userID);
     }
 
+    public String verifyUserLogin(ArrayList<String> parameters){return this.resourcesManager.verifyUserLogin(parameters);}
     public String listShows(Integer showID){
         return this.resourcesManager.listShows(showID);
     }
