@@ -74,6 +74,10 @@ public class HeartBeat implements Serializable{
         this.message = message;
     }
 
+    public void setNumberOfConnections(int numberOfConnections) {
+        this.numberOfConnections = numberOfConnections;
+    }
+
     @Override
     public String toString() {
         return "Port:[" + portTcp + "] Available -> [" + available + "] Database version -> [" +

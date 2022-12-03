@@ -113,7 +113,7 @@ public class Client {
         servers.clear();
         servers.addAll(Arrays.asList(strings));
         System.out.println(servers);
-        socket.close(); 
+        socket.close();
         return true;
     }
 
@@ -191,11 +191,19 @@ public class Client {
 
 
                         if(msgReceived.equals("CONFIRMED")){
+                            ObjectInputStream ois = new ObjectInputStream(socketSr.getInputStream());
+
+                            String newServers = (String) ois.readObject();
+
+                            String[] strings = newServers.split("\\|");
+                            servers.clear();
+                            servers.addAll(Arrays.asList(strings));
+
+                            System.out.println(servers);
+
                             ObjectOutputStream oos = new ObjectOutputStream(socketSr.getOutputStream());
 
                             oos.writeObject(dbHelper);
-
-                            ObjectInputStream ois = new ObjectInputStream(socketSr.getInputStream());
 
                             requestResult.set((String) ois.readObject());
 
@@ -203,7 +211,8 @@ public class Client {
                             ois.close();
                         }
                         if(msgReceived.equals("SERVER IS UPDATING - PLEASE TRY AGAIN")){
-                            requestResult.set("SERVER IS UPDATING - PLEASE TRY AGAIN");
+                            indexSV.set(indexSV.get()+1 > servers.size()-1? 0 : indexSV.get()+1);
+                            continue;
                         }
 
                         os.close();

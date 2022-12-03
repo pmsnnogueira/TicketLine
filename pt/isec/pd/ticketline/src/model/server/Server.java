@@ -570,21 +570,22 @@ public class Server {
                             }
                         }
                     }
-
                     try{
                         Socket socket = dbHelper.getSocketClient();
 
-                        ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+                        ObjectOutputStream oos = dbHelper.getOos();
 
                         oos.writeObject(requestResult);
 
                         oos.close();
 
                         socket.close();
+
+                        heartBeat.setNumberOfConnections(heartBeat.getNumberOfConnections()-1);
                     }catch (IOException e){
                         e.printStackTrace();
                     }
-                    
+
                     if(!dbHelper.getOperation().equals("SELECT")){
                         updateDBVersion();
                         sendPrepare();
@@ -732,12 +733,18 @@ public class Server {
                             socket.close();
                         }
 
+                        ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+
+                        oos.writeObject(data.getOrderedServers());
+
                         ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
                         dbHelper = null;
                         try{
                             dbHelper = (DBHelper) ois.readObject();
                             dbHelper.setSocketClient(socket);
+                            dbHelper.setOos(oos);
                             listDbHelper.add(dbHelper);
+                            heartBeat.setNumberOfConnections(heartBeat.getNumberOfConnections()+1);
                         }catch (ClassNotFoundException e){
                             e.printStackTrace();
                         }

@@ -1,5 +1,6 @@
 package pt.isec.pd.ticketline.src.model.data;
 
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -15,8 +16,9 @@ public class DBHelper implements Serializable {
     private ArrayList<String> insertParams;
     private HashMap<String, String> updateParams;
     private Socket socketClient;
-
+    private ObjectOutputStream oos;
     private ArrayList<String> verifyUsername;
+
 
     public void reset(){
         this.id = null;
@@ -27,6 +29,7 @@ public class DBHelper implements Serializable {
         this.updateParams = null;
         this.socketClient = null;
         this.verifyUsername = null;
+        this.oos = null;
     }
 
     public void setSocketClient(Socket socket){
@@ -91,5 +94,13 @@ public class DBHelper implements Serializable {
 
     public ArrayList<String> getverifyUsername() {
         return verifyUsername;
+    }
+
+    public ObjectOutputStream getOos() {
+        return oos;
+    }
+
+    public void setOos(ObjectOutputStream oos) {
+        this.oos = oos;
     }
 }
