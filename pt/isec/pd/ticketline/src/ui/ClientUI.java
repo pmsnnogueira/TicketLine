@@ -11,6 +11,7 @@ import java.util.Scanner;
 public class ClientUI {
 
     private final Client client;
+    private int admin = 0;
     public ClientUI(Client client){
         this.client = client;
     }
@@ -98,14 +99,17 @@ public class ClientUI {
             password = InputProtection.readString("\tPassword: ", true);
 
             verifyLogin(username, password);
-            int out = Integer.parseInt(client.waitToReceiveResultRequest());
+            String out = client.waitToReceiveResultRequest();
+            
 
-            if(out > 0)
-                break;
-            System.out.println("\nInvalid username or password");
+            if(out.equals("User doesnt exist!")){
+                System.out.println(out);
+                return false;
+            }
+            if(out.contains("\nAdmin:1"))
+                admin = 1;
+            return true;
         }while (true);
-
-        return true ;
     }
 
 
@@ -144,7 +148,7 @@ public class ClientUI {
     }
 
     public void insertData(){
-        int input = InputProtection.chooseOption(null, "Insert a reservation", "Insert an user", "Insert Show");
+        int input = InputProtection.chooseOption(null, "Insert a reservation", "Insert an user");
 
         switch (input){
             case 1 ->{
@@ -181,11 +185,6 @@ public class ClientUI {
 
                 //Send information to server
                 this.client.createDBHelper("INSERT","user" , parameters,-1 ,null);
-                System.out.println(client.waitToReceiveResultRequest());
-            }
-            case 3 ->{
-                // Insert a show
-                this.client.createDBHelper("INSERT", "show", null, -1 , null);
                 System.out.println(client.waitToReceiveResultRequest());
             }
             default -> {
@@ -334,22 +333,38 @@ public class ClientUI {
             }catch (InterruptedException ignored){
             }
 
-            System.out.println("Main Menu");
-            int input = InputProtection.chooseOption("Choose an action:", "List information",
+            if(admin == 1){
+                System.out.println("Admin Menu");
+                int input = InputProtection.chooseOption("Choose an action:", "Insert show",
+                    "Make show visible","Delete non payed show"
+                    ,"Exit");
+                
+                switch(input){
+                    case 1 -> this.client.createDBHelper("INSERT", "show", null, -1 , null);
+                    case 4 -> {return;}
+                    default -> {
+                        System.out.println("Not a valid option.");
+                    }
+                }
+            }
+            else{
+                System.out.println("Main Menu");
+                int input = InputProtection.chooseOption("Choose an action:", "List information",
                     "Insert data","Delete data",
                     "Update data", "List available servers","Exit");
 
-            switch (input){
-                case 1 -> listInformation();
-                case 2 -> insertData();
-                case 3 -> deleteData();
-                case 4 -> updateData();
-                case 5 -> listAllAvailableServers();
-                case 6 -> {
-                    /*try{
-                        this.data.closeServer();
-                    }catch (SQLException | IOException | InterruptedException ignored){}*/
-                    return;
+                switch (input){
+                    case 1 -> listInformation();
+                    case 2 -> insertData();
+                    case 3 -> deleteData();
+                    case 4 -> updateData();
+                    case 5 -> listAllAvailableServers();
+                    case 6 -> {
+                        /*try{
+                            this.data.closeServer();
+                        }catch (SQLException | IOException | InterruptedException ignored){}*/
+                        return;
+                    }
                 }
             }
         }

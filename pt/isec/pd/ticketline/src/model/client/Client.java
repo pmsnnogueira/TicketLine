@@ -16,7 +16,6 @@ public class Client {
     private static final String INSERT = "INSERT";
     private static final String UPDATE = "UPDATE";
     private static final String DELETE = "DELETE";
-
     private static final String USER = "user";
     private static final String SHOW = "show";
     private static final String SEAT = "seat";

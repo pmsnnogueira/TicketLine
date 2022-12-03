@@ -92,7 +92,7 @@ public class Server {
         // server initiaton phase
         si = new ServerInit();
         si.start();
-        si.join(30000);
+        si.join(3);
         this.serverInitContinue = false;
 
         transferDatabase(dbCopyHeartBeat);
@@ -575,8 +575,9 @@ public class Server {
                         Socket socket = dbHelper.getSocketClient();
 
                         ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
-
+                        System.out.print(requestResult);
                         oos.writeObject(requestResult);
+                        System.out.print(requestResult);
 
                         oos.close();
 

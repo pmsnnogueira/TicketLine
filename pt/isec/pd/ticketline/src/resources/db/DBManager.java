@@ -281,23 +281,30 @@ public class DBManager {
         try{
             Statement statement = dbConn.createStatement();
 
-            String sqlQuery = "SELECT Count(*) as contador FROM utilizador WHERE lower(username) = lower('" + parameters.get(0) + "') and password = '" + parameters.get(1) + "'";
+            String sqlQuery = "SELECT id,username,nome,password,administrador,autenticado FROM utilizador WHERE lower(username) = lower('" + parameters.get(0) + "') and password = '" + parameters.get(1) + "'";
 
             ResultSet resultSet = statement.executeQuery(sqlQuery);
-
             StringBuilder str = new StringBuilder();
 
             while(resultSet.next()){
-                int contador = resultSet.getInt("contador");
-                str.append((contador == 0) ? "-1":"1");
+                str.append("ID: " + resultSet.getInt("id"))
+                .append("\nUsername:" + resultSet.getString("username"))
+                .append("\nName:" + resultSet.getString("nome"))
+                .append("\nPassword:" + resultSet.getString("password"))
+                .append("\nAdmin:" + resultSet.getInt("administrador"))
+                .append("\nAuthenthicated:" + resultSet.getInt("autenticado"));
             }
             resultSet.close();
             statement.close();
+
+            if(str.toString().isEmpty() || str.toString().isBlank())
+                return "User doesnt exist!";
+                
             return str.toString();
         }catch (SQLException e){
-            return "Could not list user";
+            e.printStackTrace();
+            return "User doesnt exist!";
         }
-
 
     }
 
