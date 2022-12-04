@@ -569,7 +569,11 @@ public class Server {
                                         requestResult = data.listSeats(dbHelper.getId());
                                     }
                                     case "reservation" ->{
-                                        requestResult = data.listReservations(dbHelper.getId());
+                                        if(dbHelper.getOption() != null){
+                                           if(dbHelper.getOption() == 3 || dbHelper.getOption() == 4)
+                                                    requestResult = data.listNotOrPaidReservations(dbHelper.getId(),dbHelper.getInsertParams());
+                                        }else
+                                            requestResult = data.listReservations(dbHelper.getId());
                                     }
                                     case "user" ->{
                                         if(dbHelper.getverifyUsername() != null){

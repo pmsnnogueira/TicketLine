@@ -275,7 +275,7 @@ public class DBManager {
         }
     }
 
-    public String listNotOrPaidReservations(Integer userID,ArrayList<String>parameters){
+    public String listNotOrPaidReservations(Integer userID,  ArrayList<String>parameters){
         try{
             Statement statement = dbConn.createStatement();
 
@@ -359,6 +359,7 @@ public class DBManager {
         updateVersion();
         return true;
     }
+
     public String verifyUserLogin(ArrayList<String> parameters){
         try{
             Statement statement = dbConn.createStatement();

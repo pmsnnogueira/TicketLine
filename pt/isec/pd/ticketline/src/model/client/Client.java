@@ -165,12 +165,14 @@ public class Client {
         return dbHelper;
     }
     //Function to send information with new queries
-    public DBHelper addDBHelper(int id, String operation, String table, int option){
+    public DBHelper addDBHelper(int id, String operation, String table, int option, ArrayList<String> parameters){
         DBHelper dbHelper = new DBHelper();
         dbHelper.setOperation(operation);
         dbHelper.setTable(table);
         dbHelper.setId(id);
         dbHelper.setOption(option);
+        if(parameters != null)
+            dbHelper.setInsertParams(parameters);
         return dbHelper;
     }
 
@@ -270,9 +272,13 @@ public class Client {
     }
 
     //Function to send new queries SELECT
-    public void createDBHelper(int id,String operation, String table , int option) {
-        dbHelper = addDBHelper(id,operation, table,  option);
-        hasNewRequest.set(true);
+    public void createDBHelper(int id,String operation, String table , int option,String parameters) {
+            ArrayList<String> aux = null;
+            if(parameters != null)
+                aux.add(parameters);
+
+            dbHelper = addDBHelper(id,operation, table,  option, aux);
+            hasNewRequest.set(true);
     }
 
     public boolean insertUser(DBHelper dbHelper,ArrayList<String> parameters){

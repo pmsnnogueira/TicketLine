@@ -53,6 +53,10 @@ public class Data {
 
     public String listEmptySeatsDayBefore(Integer showID){return this.resourcesManager.listEmptySeatsDayBefore(showID);}
 
+    public String listNotOrPaidReservations(Integer showID , ArrayList<String> parameters){return this.resourcesManager.listNotOrPaidReservations(showID,parameters);}
+
+
+
     public String listReservations(Integer reservationID){
         return this.resourcesManager.listReservations(reservationID);
     }

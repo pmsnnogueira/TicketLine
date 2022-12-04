@@ -49,6 +49,9 @@ public class ResourcesManager {
     }
 
     public String listEmptySeatsDayBefore(Integer showID){return this.dbManager.listEmptySeatsDayBefore(showID);}
+
+    public String listNotOrPaidReservations(Integer showID , ArrayList<String> parameters){return this.dbManager.listNotOrPaidReservations(showID,parameters);}
+
     public String listReservations(Integer reservationID){
         return this.dbManager.listReservations(reservationID);
     }

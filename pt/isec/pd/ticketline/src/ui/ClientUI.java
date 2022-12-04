@@ -90,7 +90,7 @@ public class ClientUI {
 
 
     private void listInformation(){
-        int input = InputProtection.chooseOption(null, "List reservations","List seats","List shows with empty seats");
+        int input = InputProtection.chooseOption(null, "List reservations","List seats","List shows with empty seats","Show unpaid reservations","Show paid reservations");
         ArrayList<String> empty = new ArrayList<>();
         switch (input){
             case 1 ->{
@@ -104,7 +104,17 @@ public class ClientUI {
                 //System.out.println(this.data.listSeats(id == -1 ? null : id));
             }
             case 3->{
-                this.client.createDBHelper(-1, "SELECT", "show",2);              //Show with empty seats(one day before)     -> OPTION 2
+                this.client.createDBHelper(-1, "SELECT", "show",2,null);              //Show with empty seats(one day before)     -> OPTION 2
+                System.out.println(client.waitToReceiveResultRequest());
+                //System.out.println(this.data.listReservations(id == -1 ? null : id));
+            }
+            case 4->{
+                this.client.createDBHelper(client.getClientID(), "SELECT", "reservation",3,"0");              //List unpaid reservartion     -> OPTION 3 parameter 0
+                System.out.println(client.waitToReceiveResultRequest());
+                //System.out.println(this.data.listReservations(id == -1 ? null : id));
+            }
+            case 5->{
+                this.client.createDBHelper(client.getClientID(), "SELECT", "reservation",3,"1");              //List paid reservartion     -> OPTION 3 parameter 1
                 System.out.println(client.waitToReceiveResultRequest());
                 //System.out.println(this.data.listReservations(id == -1 ? null : id));
             }
