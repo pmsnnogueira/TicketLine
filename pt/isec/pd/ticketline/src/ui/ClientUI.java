@@ -366,6 +366,7 @@ public class ClientUI {
         int idShow = InputProtection.readInt("ID of the show: ");
         this.client.createDBHelper("SELECT", "seat", null, idShow , null);
         System.out.println(client.waitToReceiveResultRequest());
+
         int idSeat = InputProtection.readInt("ID of the seat: ");
 
         //ADICONAR RESERVA
@@ -382,11 +383,7 @@ public class ClientUI {
 
         //Ele nao quer fazer isto
         //E na query do lado do dbmanager nao esta a verificar se existe o lugar no espetaculo e se existir ja nao esta reservado por outro
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+
         aux.clear();
         Collections.addAll(aux, idReservation, Integer.toString(idSeat));
         System.out.println("Fazer a reserva do lugar");

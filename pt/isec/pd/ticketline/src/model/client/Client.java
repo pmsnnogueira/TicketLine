@@ -201,7 +201,7 @@ public class Client {
 
         //parse information about the servers
         for (String sv : servers){
-            String[] s = servers.get(indexSV.get()).split("-");
+            String[] s = sv.split("-");
             try {
                 socketSr = new Socket(s[0], Integer.parseInt(s[1]));
                 os = socketSr.getOutputStream();
@@ -274,7 +274,6 @@ public class Client {
                             os.close();
                             is.close();
                             socketSr.close();
-                            isSocketNull.set(true);
 
                             //if the server fails to receive the client request
                             //and the client has sent a request to every
@@ -286,12 +285,14 @@ public class Client {
                                 connectToServer();
                                 return;
                             }
+                            hasNewRequest.set(false);
                             indexSV.set(indexSV.get()+1);
                             connectToServer();
                             return;
                         }
                     } catch (IOException | ClassNotFoundException e) {
                         indexSV.set(0);
+                        hasNewRequest.set(false);
                         connectToServer();
                         return;
                     }

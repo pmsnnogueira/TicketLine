@@ -899,7 +899,7 @@ public class Server {
                     os.write(s.getBytes(), 0, s.length());
 
                     if(prepare.get()){
-                        clientSocket.close();
+                        throw new IOException();
                     }
 
                     if(oos == null){
@@ -932,16 +932,6 @@ public class Server {
                     clients.remove(this);
                     listClientHandles.remove(this.handle);
                     heartBeat.setNumberOfConnections(clients.size());
-                    try {
-                        oos.close();
-                        ois.close();
-                        os.close();
-                        is.close();
-                        clientSocket.close();
-                    } catch (IOException ex) {
-                        return;
-                    }
-
                     return;
                 }
             }

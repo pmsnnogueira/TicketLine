@@ -438,12 +438,19 @@ public class DBManager {
         try{
             statement.executeUpdate(sqlQuery , statement.RETURN_GENERATED_KEYS);
             ResultSet rs = statement.getGeneratedKeys();
-            statement.close();
             addShowQuery = sqlQuery;
             updateVersion();
             return (rs.getInt(1));
         }catch (SQLException e){
             return (-1);
+        }finally {
+            try{
+                if(statement != null){
+                    statement.close();
+                }
+            }catch (SQLException e){
+
+            }
         }
 
     }
@@ -475,10 +482,17 @@ public class DBManager {
                 i++;
                 contador = 0;
             }
-            statement.close();
             saveQuery(sb.toString());
         }catch (SQLException e){
             return false;
+        }finally {
+            try{
+                if(statement != null){
+                    statement.close();
+                }
+            }catch (SQLException e){
+
+            }
         }
         return true;
     }
@@ -500,18 +514,25 @@ public class DBManager {
             statement.executeUpdate(sqlQuery, statement.RETURN_GENERATED_KEYS);
             ResultSet rs = statement.getGeneratedKeys();
             saveQuery(sqlQuery);
-            statement.close();
             updateVersion();
             return Integer.toString(rs.getInt(1));
         }catch (SQLException e){
             e.printStackTrace();
             return null;
+        }finally {
+            try{
+                if(statement != null){
+                    statement.close();
+                }
+            }catch (SQLException e){
+
+            }
         }
 
     }
 
 
-    public String insertReservationSeat(ArrayList<String> parameters , Integer userId){
+    public String insertReservationSeat(ArrayList<String> parameters , Integer userId) {
         Statement statement;
         try{
             statement = dbConn.createStatement();
@@ -525,12 +546,19 @@ public class DBManager {
         try{
             statement.executeUpdate(sqlQuery);
             saveQuery(sqlQuery);
-            statement.close();
             updateVersion();
             return "Reserva de lugar realizada";
         }catch (SQLException e){
             e.printStackTrace();
             return "Reserva lugar nao realizada";
+        }finally {
+            try{
+                if(statement != null){
+                    statement.close();
+                }
+            }catch (SQLException e){
+
+            }
         }
 
     }
@@ -619,10 +647,15 @@ public class DBManager {
         try{
             statement.executeUpdate(sqlQuery);
             saveQuery(sqlQuery);
-            statement.close();
         }catch (SQLException e){
             e.printStackTrace();
             return false;
+        }finally {
+            try{
+                statement.close();
+            }catch (SQLException e){
+
+            }
         }
         updateVersion();
         return true;
