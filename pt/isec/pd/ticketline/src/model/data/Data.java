@@ -46,9 +46,15 @@ public class Data {
     }
 
     public String verifyUserLogin(ArrayList<String> parameters){return this.resourcesManager.verifyUserLogin(parameters);}
+
     public String listShows(Integer showID){
         return this.resourcesManager.listShows(showID);
     }
+
+    public String listEmptySeatsDayBefore(Integer showID){return this.resourcesManager.listEmptySeatsDayBefore(showID);}
+
+
+    public String listNotOrPaidReservations(Integer showID , ArrayList<String> parameters){return this.resourcesManager.listNotOrPaidReservations(showID,parameters);}
 
     public String listReservations(Integer reservationID){
         return this.resourcesManager.listReservations(reservationID);
@@ -70,8 +76,12 @@ public class Data {
         return this.resourcesManager.insertSeat(parameters , numShow);
     }
 
-    public boolean insertReservation(ArrayList<String> parameters){
+    public String insertReservation(ArrayList<String> parameters){
         return this.resourcesManager.insertReservation(parameters);
+    }
+
+    public String insertReservationSeat(ArrayList<String> parameters ,Integer userId){
+        return this.resourcesManager.insertReservationSeat(parameters , userId);
     }
 
     public boolean insertUser(ArrayList<String> parameters){
@@ -172,6 +182,8 @@ public class Data {
     public boolean deleteSeat(int id){return this.resourcesManager.deleteSeat(id);}
 
     public boolean deleteUsers(int id){return this.resourcesManager.deleteUsers(id);}
+
+    public boolean deleteUnPaidReservation(int idReservation , ArrayList<String> parameters){return this.resourcesManager.deleteUnPaidReservation(idReservation,parameters);}
 
     public boolean updateShows(int id, HashMap<String, String> newData){
         return this.resourcesManager.updateShows(id, newData);

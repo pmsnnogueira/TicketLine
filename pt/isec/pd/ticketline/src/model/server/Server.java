@@ -561,6 +561,9 @@ public class Server {
                                     case "reservation" ->{
                                         requestResult = String.valueOf(data.insertReservation(dbHelper.getInsertParams()));
                                     }
+                                    case "reservation_seat" ->{
+                                        requestResult = String.valueOf(data.insertReservationSeat(dbHelper.getInsertParams() , dbHelper.getId()));
+                                    }
                                     case "user" ->{
                                         requestResult = String.valueOf(data.insertUser(dbHelper.getInsertParams()));
                                     }
@@ -569,13 +572,24 @@ public class Server {
                             case "SELECT"->{
                                 switch (dbHelper.getTable()){
                                     case "show" ->{
-                                        requestResult = data.listShows(dbHelper.getId());
+                                        if(dbHelper.getOption() != null){
+                                            switch (dbHelper.getOption()){
+                                                case 2 ->{
+                                                     requestResult = data.listEmptySeatsDayBefore(dbHelper.getId());
+                                                }
+                                            }
+                                        }else
+                                            requestResult = data.listShows(dbHelper.getId());
                                     }
                                     case "seat" ->{
                                         requestResult = data.listSeats(dbHelper.getId());
                                     }
                                     case "reservation" ->{
-                                        requestResult = data.listReservations(dbHelper.getId());
+                                        if(dbHelper.getOption() != null){
+                                           if(dbHelper.getOption() == 3 || dbHelper.getOption() == 4)
+                                                    requestResult = data.listNotOrPaidReservations(dbHelper.getId(),dbHelper.getInsertParams());
+                                        }else
+                                            requestResult = data.listReservations(dbHelper.getId());
                                     }
                                     case "user" ->{
                                         if(dbHelper.getverifyUsername() != null){
@@ -612,7 +626,11 @@ public class Server {
                                         requestResult = String.valueOf(data.deleteSeat(dbHelper.getId()));
                                     }
                                     case "reservation" ->{
-                                        requestResult = String.valueOf(data.deleteReservations(dbHelper.getId()));
+                                        if(dbHelper.getOption() != null)
+                                            if(dbHelper.getOption() == 1) {
+                                                requestResult = data.listNotOrPaidReservations(dbHelper.getId(), dbHelper.getInsertParams());    // IdReserva , IdUser
+                                                requestResult = String.valueOf(data.deleteReservations(dbHelper.getId()));
+                                            }
                                     }
                                     case "user" ->{
                                         requestResult = String.valueOf(data.deleteUsers(dbHelper.getId()));

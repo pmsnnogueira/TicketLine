@@ -48,6 +48,10 @@ public class ResourcesManager {
         return this.dbManager.listShows(showID);
     }
 
+    public String listEmptySeatsDayBefore(Integer showID){return this.dbManager.listEmptySeatsDayBefore(showID);}
+
+    public String listNotOrPaidReservations(Integer showID , ArrayList<String> parameters){return this.dbManager.listNotOrPaidReservations(showID,parameters);}
+
     public String listReservations(Integer reservationID){
         return this.dbManager.listReservations(reservationID);
     }
@@ -68,9 +72,15 @@ public class ResourcesManager {
         return this.dbManager.insertSeat(parameters , numShow);
     }
 
-    public boolean insertReservation(ArrayList<String> parameters){
+    public String insertReservation(ArrayList<String> parameters){
         return this.dbManager.insertReservation(parameters);
     }
+
+
+    public String insertReservationSeat(ArrayList<String> parameters , Integer userId){
+        return this.dbManager.insertReservationSeat(parameters ,userId);
+    }
+
 
     public boolean insertUser(ArrayList<String> parameters){
         return this.dbManager.insertUser(parameters);
@@ -79,6 +89,8 @@ public class ResourcesManager {
     public boolean deleteShow(int id){return this.dbManager.deleteShow(id);}
 
     public boolean deleteReservations(int id){return this.dbManager.deleteReservations(id);}
+
+    public boolean deleteUnPaidReservation(int idReservation , ArrayList<String> parameters){return this.dbManager.deleteUnPaidReservation(idReservation,parameters);}
 
     public boolean deleteSeat(int id){return this.dbManager.deleteSeat(id);}
 

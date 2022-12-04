@@ -3,10 +3,8 @@ package pt.isec.pd.ticketline.src.ui;
 import pt.isec.pd.ticketline.src.model.client.Client;
 import pt.isec.pd.ticketline.src.ui.util.InputProtection;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Scanner;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 public class ClientUI {
 
@@ -83,6 +81,12 @@ public class ClientUI {
             }
             if(out.contains("\nAdmin:1"))
                 admin = 1;
+
+            out = out.replaceAll(" ", "");
+            String[] splitted = out.split("\n");
+            String[] id = splitted[0].split(":");
+
+            client.setClientID(Integer.parseInt(id[1]));
             return true;
         }while (true);
     }
@@ -90,18 +94,44 @@ public class ClientUI {
 
 
     private void listInformation(){
-        int input = InputProtection.chooseOption(null, "List reservations","List seats");
+        System.out.println("List Menu");
+        int input = InputProtection.chooseOption(null, "List shows","List reservations","List seats","List shows with empty seats","Show unpaid reservations","Show paid reservations");
         ArrayList<String> empty = new ArrayList<>();
         switch (input){
             case 1 ->{
+                int id = InputProtection.readInt("Show ID (-1 for all shows): ");
+                this.client.createDBHelper("SELECT", "show", null, id , null);
+                System.out.println(client.waitToReceiveResultRequest());
+            }
+            case 2 ->{
                 int id = InputProtection.readInt("Reservation ID (-1 for all reservations): ");
-                this.client.createDBHelper("SELECT", "reservation", empty, id , null);
+                this.client.createDBHelper("SELECT", "reservation", null, id , null);
                 System.out.println(client.waitToReceiveResultRequest());
                 //System.out.println(this.data.listReservations(id == -1 ? null : id));
             }
-            case 2 ->{
-                int id = InputProtection.readInt("Seats ID (-1 for all seats): ");
-                //System.out.println(this.data.listSeats(id == -1 ? null : id));
+            case 3 ->{
+                int id = InputProtection.readInt("Show ID (-1 for all shows): ");
+                this.client.createDBHelper("SELECT", "show", null, id , null);
+                System.out.println(client.waitToReceiveResultRequest());
+
+                int idShow = InputProtection.readInt("ID of the show: ");
+                this.client.createDBHelper("SELECT", "seat", null, idShow , null);
+                System.out.println(client.waitToReceiveResultRequest());
+            }
+            case 4->{
+                this.client.createDBHelper(-1, "SELECT", "show",2,null);              //Show with empty seats(one day before)     -> OPTION 2
+                System.out.println(client.waitToReceiveResultRequest());
+                //System.out.println(this.data.listReservations(id == -1 ? null : id));
+            }
+            case 5->{
+                this.client.createDBHelper(client.getClientID(), "SELECT", "reservation",3,"0");              //List unpaid reservartion     -> OPTION 3 parameter 0
+                System.out.println(client.waitToReceiveResultRequest());
+                //System.out.println(this.data.listReservations(id == -1 ? null : id));
+            }
+            case 6->{
+                this.client.createDBHelper(client.getClientID(), "SELECT", "reservation",3,"1");              //List paid reservartion     -> OPTION 3 parameter 1
+                System.out.println(client.waitToReceiveResultRequest());
+                //System.out.println(this.data.listReservations(id == -1 ? null : id));
             }
             default -> {
                 System.out.println("Not a valid option! Try again!");
@@ -157,32 +187,45 @@ public class ClientUI {
     }
 
     private void deleteData() {
-        int input = InputProtection.chooseOption(null, "Delete show", "Delete seat", "Delete reservation", "Delete user");
-
-        switch (input){
+        int input = InputProtection.chooseOption(null, "Delete unpaid reservation","Back to main menu");
+        //int input = InputProtection.chooseOption(null, "Delete show", "Delete seat", "Delete reservation", "Delete user");
+        switch (input){/*
             case 1 -> {
                 int id = InputProtection.readInt("Show ID: ");
                 /*if (!this.data.deleteShow(id)){
                     System.out.println("Could not delete show");
                 }*/
-            }
+            /*}
             case 2 -> {
                 int id = InputProtection.readInt("Seat ID: ");
                /* if (!this.data.deleteSeat(id)){
                     System.out.println("Could not delete seat");
                 }*/
-            }
+            /*}
             case 3 -> {
                 int id = InputProtection.readInt("Reservation ID: ");
                 /*if (!this.data.deleteReservations(id)){
                     System.out.println("Could not delete reservation");
                 }*/
-            }
+            /*}
             case 4 -> {
                 int id = InputProtection.readInt("User ID: ");
                 /*if (!this.data.deleteUsers(id)){
                     System.out.println("Could not delete user");
                 }*/
+           // }
+            case 1 -> {
+                this.client.createDBHelper(client.getClientID(), "SELECT", "reservation",3,"0");              //List unpaid reservartion     -> OPTION 3 parameter 0
+                System.out.println(client.waitToReceiveResultRequest());
+
+                int reservationId = InputProtection.readInt("Reservation ID: ");
+                this.client.createDBHelper(reservationId, "DELETE", "reservation",1, Integer.toString(client.getClientID()));              //List unpaid reservartion     -> OPTION 3 parameter 0
+                /*if (!this.data.deleteUsers(id)){
+                    System.out.println("Could not delete user");
+                }*/
+            }
+            case 2->{
+                return;
             }
             default -> {
                 System.out.println("Not a valid option");
@@ -317,34 +360,78 @@ public class ClientUI {
     public void makeReservation(){
         //show all the available shows
         int id = InputProtection.readInt("Show ID (-1 for all shows): ");
-        this.client.createDBHelper("SELECT", "show", null, id,null);
+        this.client.createDBHelper("SELECT", "show", null, id , null);
         System.out.println(client.waitToReceiveResultRequest());
 
-        int showID = InputProtection.readInt("ID of the show: ");
+        int idShow = InputProtection.readInt("ID of the show: ");
+        this.client.createDBHelper("SELECT", "seat", null, idShow , null);
+        System.out.println(client.waitToReceiveResultRequest());
+        int idSeat = InputProtection.readInt("ID of the seat: ");
 
+        //ADICONAR RESERVA
+        Date dataHoraAtual = new Date();
+        String dataHora = new SimpleDateFormat("dd:MM:yyyy").format(dataHoraAtual) + "-";
+        dataHora += new SimpleDateFormat("HH:mm").format(dataHoraAtual);
+
+
+        ArrayList<String> aux = new ArrayList<>();
+        Collections.addAll(aux,dataHora, "0" ,Integer.toString(client.getClientID()),Integer.toString(idShow));
+        this.client.createDBHelper("INSERT", "reservation", aux, client.getClientID(), null);
+        String idReservation = client.waitToReceiveResultRequest();
+
+
+        //Ele nao quer fazer isto
+        //E na query do lado do dbmanager nao esta a verificar se existe o lugar no espetaculo e se existir ja nao esta reservado por outro
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        aux.clear();
+        Collections.addAll(aux, idReservation, Integer.toString(idSeat));
+        System.out.println("Fazer a reserva do lugar");
+        this.client.createDBHelper("INSERT", "reservation_seat", aux, client.getClientID(), null);          //AUX = idReserva and id_lugar        o user Id   e null pois nao precisamos de enviar nada para o login
+        System.out.println("Depois de fazer a reserva do lugar");
+        System.out.println(client.waitToReceiveResultRequest());
     }
 
+    public void payReservation(){                                                                                                   //Workingee
+        //show user non paid reservations
+        this.client.createDBHelper(client.getClientID(), "SELECT", "reservation",3,"0");              //List unpaid reservartion     -> OPTION 3 parameter 0
+        System.out.println(client.waitToReceiveResultRequest());
+
+        int idReservation = InputProtection.readInt("Reservation Id: ");
+        HashMap<String,String> aux = new HashMap<>();
+        aux.put("pago","1");
+
+        this.client.createDBHelper(idReservation,"UPDATE", "reservation",aux);
+        System.out.println(client.waitToReceiveResultRequest());
+    }
     public void clientMenu(){
         while(true){
             try{
                 Thread.sleep(500);
             }catch (InterruptedException ignored){
             }
-            System.out.println("Main Menu");
-            int input = InputProtection.chooseOption("Choose an action:",  "List shows","Make a reservation",
+            System.out.print("\nMain Menu");
+            /*int input = InputProtection.chooseOption("Choose an action:",  "List shows","Make a reservation",
                     "Insert data","Delete data",
-                    "Update data", "List available servers","Exit");
+                    "Update data", "List available servers","Exit");*/
+            int input = InputProtection.chooseOption("Choose an action:",  "List data", "Make a reservation",
+                    "Insert data","Delete data",
+                    "Update data","Exit");
 
             switch (input){
                 case 1 ->{
-                    int id = InputProtection.readInt("Show ID (-1 for all shows): ");
+                    listInformation();
+                   /* int id = InputProtection.readInt("Show ID (-1 for all shows): ");
                     this.client.createDBHelper("SELECT", "show", null, id,null);
-                    System.out.println(client.waitToReceiveResultRequest());
+                    System.out.println(client.waitToReceiveResultRequest());*/
                 }
-                case 2 -> listInformation();
+                case 2 -> makeReservation();
                 case 3 -> insertData();
                 case 4 -> deleteData();
-                case 5 -> updateData();
+                case 5 -> payReservation();
                 case 6 -> {
                     client.closeClient();
                     return;

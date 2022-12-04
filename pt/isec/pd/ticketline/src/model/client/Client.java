@@ -34,6 +34,7 @@ public class Client {
     private static final String SEAT = "seat";
     private static final String RESERVATION = "reservation";
 
+    private static final String RESERVATION_SEAT = "reservation_seat";
     private static final String CONFIRMED = "CONFIRMED";
 
     public String serverIP;
@@ -120,24 +121,28 @@ public class Client {
 
     public DBHelper addDBHelper(String operation, String table, ArrayList<String> insertParams, int id , ArrayList<String> userLogin) {
         DBHelper dbHelper = new DBHelper();
-        if (operation.equals("INSERT")) {
-            if (table.equals("user")) {
+        if (operation.equals(INSERT)) {
+            if (table.equals(USER)) {
                 insertParams.add("0");
                 insertParams.add("0");
                 insertUser(dbHelper,insertParams);
                 return dbHelper;
             }
-            if (table.equals("show")) {
+            if (table.equals(SHOW)) {
                 insertShow(dbHelper);
                 return dbHelper;
             }
-            if (table.equals("reservation")) {
+            if (table.equals(RESERVATION)) {
                 insertReservation(dbHelper,insertParams);
                 return dbHelper;
             }
+            if (table.equals(RESERVATION_SEAT)) {
+                insertReservationSeat(dbHelper,insertParams , id);
+                return dbHelper;
+            }
         }
-        if(operation.equals("SELECT")){
-            if(table.equals("user")){
+        if(operation.equals(SELECT)){
+            if(table.equals(USER)){
                 if(userLogin != null){
                     verifyUserLogin(dbHelper,userLogin);
                     return dbHelper;
@@ -145,12 +150,16 @@ public class Client {
                 listUsers(dbHelper , id);
                 return dbHelper;
             }
-            if(table.equals("show")){
+            if(table.equals(SHOW)){
                 listShows(dbHelper , id);
                 return dbHelper;
             }
-            if(table.equals("reservation")){
+            if(table.equals(RESERVATION)){
                 listReservations(dbHelper , id);
+                return dbHelper;
+            }
+            if(table.equals(SEAT)){
+                listSeats(dbHelper , id);
                 return dbHelper;
             }
         }
@@ -163,6 +172,17 @@ public class Client {
         dbHelper.setTable(table);
         dbHelper.setId(id);
         dbHelper.setUpdateParams(newData);
+        return dbHelper;
+    }
+    //Function to send information with new queries
+    public DBHelper addDBHelper(int id, String operation, String table, int option, ArrayList<String> parameters){
+        DBHelper dbHelper = new DBHelper();
+        dbHelper.setOperation(operation);
+        dbHelper.setTable(table);
+        dbHelper.setId(id);
+        dbHelper.setOption(option);
+        if(parameters != null)
+            dbHelper.setInsertParams(parameters);
         return dbHelper;
     }
 
@@ -293,6 +313,17 @@ public class Client {
         hasNewRequest.set(true);
     }
 
+    //Function to send new queries SELECT
+    public void createDBHelper(int id,String operation, String table , int option,String parameters) {
+            ArrayList<String> aux = null;
+            if(parameters != null) {
+                aux = new ArrayList<>();
+                aux.add(parameters);
+            }
+
+            dbHelper = addDBHelper(id,operation, table,  option, aux);
+            hasNewRequest.set(true);
+    }
     public boolean insertUser(DBHelper dbHelper,ArrayList<String> parameters){
         dbHelper.setOperation(INSERT);
         dbHelper.setTable(USER);
@@ -309,6 +340,14 @@ public class Client {
         dbHelper.setOperation(INSERT);
         dbHelper.setTable(RESERVATION);
         dbHelper.setInsertParams(parameters);
+        return true;
+    }
+
+    public boolean insertReservationSeat(DBHelper dbHelper ,ArrayList<String> parameters , Integer clientID){
+        dbHelper.setOperation(INSERT);
+        dbHelper.setTable(RESERVATION_SEAT);
+        dbHelper.setInsertParams(parameters);
+        dbHelper.setId(clientID);
         return true;
     }
 
@@ -333,6 +372,13 @@ public class Client {
         return "";
     }
 
+    public String listSeats(DBHelper dbHelper, Integer showID){
+        dbHelper.setId(showID);
+        dbHelper.setOperation(SELECT);
+        dbHelper.setTable(SEAT);
+
+        return "";
+    }
     public String verifyUserLogin(DBHelper dbHelper ,ArrayList<String> parameters){
         dbHelper.setOperation(SELECT);
         dbHelper.setTable(USER);
