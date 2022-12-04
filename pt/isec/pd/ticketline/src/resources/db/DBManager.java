@@ -99,28 +99,49 @@ public class DBManager {
             return -1;
         }
         int versao=0;
+        Statement statement = null;
+        ResultSet resultSet = null;
         try
         {
-            Statement statement = testConnection.createStatement();
+            statement = testConnection.createStatement();
             String sqlQuery = "SELECT versao FROM configuracoes";
-            ResultSet resultSet = statement.executeQuery(sqlQuery);
+            resultSet = statement.executeQuery(sqlQuery);
             versao = resultSet.getInt("versao");
         }catch(SQLException sqle){
             sqle.printStackTrace();
+        }
+        finally {
+            try{
+                if(statement != null){
+                    statement.close();
+                }
+                resultSet.close();
+            }catch (SQLException e){
+
+            }
         }
         return versao;
     }
 
     public void processNewQuerie(String newQuerie){
         String[] queries = newQuerie.split("\\|");
+        Statement statement = null;
         try{
             for (String str : queries){
-                Statement statement = this.dbConn.createStatement();
+                statement = this.dbConn.createStatement();
                 statement.executeUpdate(str);
-                statement.close();
             }
         }catch (SQLException e){
             e.printStackTrace();
+        }
+        finally {
+            try{
+                if(statement != null){
+                    statement.close();
+                }
+            }catch (SQLException e){
+
+            }
         }
         updateVersion();
     }
@@ -130,8 +151,10 @@ public class DBManager {
     }
 
     public String listShows(Integer showID){
+        Statement statement = null;
+        ResultSet resultSet = null;
         try{
-            Statement statement = dbConn.createStatement();
+            statement = dbConn.createStatement();
 
             String sqlQuery = "SELECT id, descricao, tipo, data_hora, duracao, local, localidade, " +
                     "pais, classificacao_etaria FROM espetaculo";
@@ -139,7 +162,7 @@ public class DBManager {
             if (showID != null)
                 sqlQuery += " WHERE id like '%" + showID + "%'";
 
-            ResultSet resultSet = statement.executeQuery(sqlQuery);
+            resultSet = statement.executeQuery(sqlQuery);
 
             StringBuilder str = new StringBuilder();
             str.append("\n-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
@@ -161,25 +184,34 @@ public class DBManager {
                 str.append("\n-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
             }
 
-            resultSet.close();
-            statement.close();
-
             return str.toString();
         }catch(SQLException e){
             return "Could not list shows";
         }
+        finally {
+            try{
+                if(statement != null){
+                    statement.close();
+                }
+                resultSet.close();
+            }catch (SQLException e){
+
+            }
+        }
     }
 
     public String listSeats(Integer showID){
+        Statement statement = null;
+        ResultSet resultSet = null;
         try{
-            Statement statement = dbConn.createStatement();
+            statement = dbConn.createStatement();
 
             String sqlQuery = "SELECT id, fila, assento, preco, espetaculo_id FROM lugar";
 
             if (showID != null)
                 sqlQuery += " WHERE espetaculo_id like '%" + showID + "%'";
 
-            ResultSet resultSet = statement.executeQuery(sqlQuery);
+            resultSet = statement.executeQuery(sqlQuery);
 
             StringBuilder str = new StringBuilder();
             str.append("\n---------------------------------------------------------\n");
@@ -197,25 +229,36 @@ public class DBManager {
                 str.append(String.format("|%-4s|%-10s|%-10s|%-13s|%-14s|", id , fila, assento, preco, espetaculo_id));
                 str.append("\n---------------------------------------------------------\n");
             }
-            resultSet.close();
-            statement.close();
 
             return str.toString();
         }catch (SQLException e){
             return "Could not list seats";
         }
+        finally {
+            try{
+                if(statement != null){
+                    statement.close();
+                }
+                resultSet.close();
+            }catch (SQLException e){
+
+            }
+        }
+        
     }
 
     public String listReservations(Integer reservationID){
+        Statement statement = null;
+        ResultSet resultSet = null;
         try{
-            Statement statement = dbConn.createStatement();
+            statement = dbConn.createStatement();
 
             String sqlQuery = "SELECT id, data_hora, pago, id_utilizador, id_espetaculo FROM reserva";
 
             if (reservationID != null)
                 sqlQuery += " WHERE id like '%" + reservationID + "%'";
 
-            ResultSet resultSet = statement.executeQuery(sqlQuery);
+            resultSet = statement.executeQuery(sqlQuery);
 
             StringBuilder str = new StringBuilder();
             str.append("\n-----------------------------------------------------------------\n");
@@ -232,25 +275,35 @@ public class DBManager {
                 str.append(String.format("|%-4s|%-17s|%-10s|%-14s|%-14s|", id , data_hora, pago, id_utilizador, id_espetaculo));
                 str.append("\n-----------------------------------------------------------------\n");
             }
-            resultSet.close();
-            statement.close();
 
             return str.toString();
         }catch (SQLException e){
             return "Could not list reservations";
         }
+        finally {
+            try{
+                if(statement != null){
+                    statement.close();
+                }
+                resultSet.close();
+            }catch (SQLException e){
+
+            }
+        }
     }
 
     public String listUsers(Integer userID){
+        Statement statement = null;
+        ResultSet resultSet = null;
         try{
-            Statement statement = dbConn.createStatement();
+            statement = dbConn.createStatement();
 
             String sqlQuery = "SELECT * FROM utilizador";
 
             if (userID != null)
                 sqlQuery += " WHERE id like '%" + userID + "%'";
 
-            ResultSet resultSet = statement.executeQuery(sqlQuery);
+            resultSet = statement.executeQuery(sqlQuery);
 
             StringBuilder str = new StringBuilder();
             str.append("\n---------------------------------------------------------------------------------------------\n");
@@ -266,21 +319,33 @@ public class DBManager {
                 int autenticado = resultSet.getInt("autenticado");
 
                 str.append(String.format("|%-4s|%-19s|%-30s|%-22s|%-12s|", id , username, nome, administrador, autenticado));
-                str.append("\n---------------------------------------------------------------------------------------------\n");       }
-            resultSet.close();
-            statement.close();
+                str.append("\n---------------------------------------------------------------------------------------------\n");       
+            }
+
             return str.toString();
         }catch (SQLException e){
             return "Could not list user";
         }
+        finally {
+            try{
+                if(statement != null){
+                    statement.close();
+                }
+                resultSet.close();
+            }catch (SQLException e){
+
+            }
+        }
     }
 
     public String listNotOrPaidReservations(Integer userID,  ArrayList<String>parameters){
+        Statement statement = null;
+        ResultSet resultSet = null;
         try{
-            Statement statement = dbConn.createStatement();
+            statement = dbConn.createStatement();
 
             String sqlQuery = "SELECT id , data_hora , id_espetaculo FROM reserva WHERE pago = "+ parameters.get(0) +" and id_utilizador = '" + userID + "'";
-            ResultSet resultSet = statement.executeQuery(sqlQuery);
+            resultSet = statement.executeQuery(sqlQuery);
             StringBuilder str = new StringBuilder();
 
             str.append("\n------------------------------------------------\n");
@@ -293,20 +358,30 @@ public class DBManager {
                 str.append(String.format("|%-11s|%-20s|%-25s|", id , dataHora, id_espetaculo));
                 str.append("\n---------------------------------------\n");
             }
-            resultSet.close();
-             statement.close();
 
             return str.toString();
         }catch (SQLException e){
             e.printStackTrace();
             return "Could not list any reservation";
         }
+        finally {
+            try{
+                if(statement != null){
+                    statement.close();
+                }
+                resultSet.close();
+            }catch (SQLException e){
+
+            }
+        }
 
     }
 
     public String listEmptySeatsDayBefore(Integer showID){
+        Statement statement = null;
+        ResultSet resultSet = null;
         try{
-            Statement statement = dbConn.createStatement();
+            statement = dbConn.createStatement();
 
             String sqlQuery = "SELECT l.id as id_bilhete, l.fila as fila, l.assento as assento, l.preco as preco, e.id as id_espetaculo, e.descricao as descricao, e.data_hora as datahora FROM lugar l ,espetaculo  e " +
                     "WHERE e.data_hora <= datetime('now','-1 day') and l.id NOT IN (SELECT id_lugar FROM reserva_lugar and l.espetaculo_id = e.id";
@@ -314,7 +389,7 @@ public class DBManager {
             if (showID != null)
                 sqlQuery += " and id like '%" + showID + "%'";
 
-            ResultSet resultSet = statement.executeQuery(sqlQuery);
+            resultSet = statement.executeQuery(sqlQuery);
             StringBuilder str = new StringBuilder();
             str.append("\n---------------------------------------------------------------------------------------------\n");
             str.append(String.format("|%-4s|%-19s|%-30s|%-22s|%-12s|%-24s|", "id_bilhete", "fila", "assento", "preco", "id_espetaculo" , "descricao" , "dataHora"));
@@ -333,38 +408,57 @@ public class DBManager {
                 str.append(String.format("|%-4s|%-19s|%-30s|%-22s|%-12s|%-24s|", id , username, nome, administrador, id_espetaculo , descricao , dataHora));
                 str.append("\n---------------------------------------------------------------------------------------------\n");
             }
-            resultSet.close();
-            statement.close();
 
             return str.toString();
         }catch (SQLException e){
             e.printStackTrace();
             return "Could not list any empty seats for a show";
         }
+        finally {
+            try{
+                if(statement != null){
+                    statement.close();
+                }
+                resultSet.close();
+            }catch (SQLException e){
+
+            }
+        }
 
     }
 
     public boolean deleteUnPaidReservation(int idReservation , ArrayList<String> parameters){
+        Statement statement = null;
         try{
-            Statement statement = dbConn.createStatement();
+            statement = dbConn.createStatement();
             String sqlQuery = "DELETE FROM reserva WHERE id = " + idReservation + " and pago = 0 and id_utilizador = " + parameters.get(0) +"";
             statement.executeUpdate(sqlQuery);
-            statement.close();
             saveQuery(sqlQuery);
         }catch(SQLException e){
             return false;
+        }
+        finally {
+            try{
+                if(statement != null){
+                    statement.close();
+                }
+            }catch (SQLException e){
+
+            }
         }
         updateVersion();
         return true;
     }
 
     public String verifyUserLogin(ArrayList<String> parameters){
+        Statement statement = null;
+        ResultSet resultSet = null;
         try{
-            Statement statement = dbConn.createStatement();
+            statement = dbConn.createStatement();
 
             String sqlQuery = "SELECT id,username,nome,password,administrador,autenticado FROM utilizador WHERE lower(username) = lower('" + parameters.get(0) + "') and password = '" + parameters.get(1) + "'";
 
-            ResultSet resultSet = statement.executeQuery(sqlQuery);
+            resultSet = statement.executeQuery(sqlQuery);
             StringBuilder str = new StringBuilder();
 
             while(resultSet.next()){
@@ -375,8 +469,6 @@ public class DBManager {
                         .append("\nAdmin:" + resultSet.getInt("administrador"))
                         .append("\nAuthenthicated:" + resultSet.getInt("autenticado"));
             }
-            resultSet.close();
-            statement.close();
 
             if(str.toString().isEmpty() || str.toString().isBlank())
                 return "User doesnt exist!";
@@ -385,6 +477,16 @@ public class DBManager {
         }catch (SQLException e){
             e.printStackTrace();
             return "User doesnt exist!";
+        }
+        finally {
+            try{
+                if(statement != null){
+                    statement.close();
+                }
+                resultSet.close();
+            }catch (SQLException e){
+
+            }
         }
 
     }
@@ -532,8 +634,8 @@ public class DBManager {
     }
 
 
-    public String insertReservationSeat(ArrayList<String> parameters) {
-        Statement statement;
+    public String insertReservationSeat(ArrayList<String> parameters , Integer userId) {
+        Statement statement = null;
         try{
             statement = dbConn.createStatement();
         }catch (SQLException e){
@@ -580,20 +682,30 @@ public class DBManager {
 
     public int getDatabaseVersion(){
         int versao=0;
+        Statement statement = null;
         try
         {
-            Statement statement = dbConn.createStatement();
+            statement = dbConn.createStatement();
             String sqlQuery = "SELECT versao FROM configuracoes";
             ResultSet resultSet = statement.executeQuery(sqlQuery);
             versao = resultSet.getInt("versao");
         }catch(SQLException sqle){
             sqle.printStackTrace();
         }
+        finally {
+            try{
+                if(statement != null){
+                    statement.close();
+                }
+                }catch (SQLException e){
+
+                }
+        }
         return versao;
     }
 
     public boolean insertVersion(){
-        Statement statement;
+        Statement statement = null;
         try
         {
             statement = this.dbConn.createStatement();
@@ -605,32 +717,43 @@ public class DBManager {
         String sqlQuery = "INSERT INTO configuracoes VALUES(NULL, '" + 1 + "')";
         try{
             statement.executeUpdate(sqlQuery);
-            statement.close();
         }
         catch(SQLException sqle){
             return false;
+        }
+        finally {
+            try{
+                statement.close();
+            }catch (SQLException e){
+
+            }
         }
         return true;
     }
 
     public boolean updateVersion()
     {
+        Statement statement = null;
         int version = getDatabaseVersion();
         try{
-            Statement statement = dbConn.createStatement();
+            statement = dbConn.createStatement();
             String sqlQuery = "UPDATE configuracoes SET versao='" + ++version + "'WHERE id=" + 1;
-
             statement.executeUpdate(sqlQuery);
-
-            statement.close();
         }catch(SQLException e){
             return false;
+        }
+        finally {
+            try{
+                statement.close();
+            }catch (SQLException e){
+
+            }
         }
         return true;
     }
 
     public boolean insertUser(ArrayList<String> parameters){
-        Statement statement;
+        Statement statement = null;
         try{
             statement = dbConn.createStatement();
         }catch (SQLException e){
@@ -645,12 +768,18 @@ public class DBManager {
 
             int contador = resultSet.getInt("contador");
             if(contador > 0){
-                statement.close();
                 return false;
             }
 
         }catch (SQLException e){
             e.printStackTrace();
+        }
+        finally {
+            try{
+                statement.close();
+            }catch (SQLException e){
+
+            }
         }
 
 
@@ -677,15 +806,24 @@ public class DBManager {
 
     public boolean deleteShow(int id)
     {
+        Statement statement = null;
         try{
-            Statement statement = dbConn.createStatement();
+            statement = dbConn.createStatement();
 
             String sqlQuery = "DELETE FROM espetaculo WHERE id=" + id;
             statement.executeUpdate(sqlQuery);
-            statement.close();
             saveQuery(sqlQuery);
         }catch(SQLException e){
             return false;
+        }
+        finally {
+            try{
+                if(statement != null){
+                    statement.close();
+                }
+                }catch (SQLException e){
+
+                }
         }
         updateVersion();
         return true;
@@ -693,15 +831,24 @@ public class DBManager {
 
     public boolean deleteSeat(int id)
     {
+        Statement statement = null;
         try{
-            Statement statement = dbConn.createStatement();
+            statement = dbConn.createStatement();
 
             String sqlQuery = "DELETE FROM lugar WHERE id=" + id;
             statement.executeUpdate(sqlQuery);
-            statement.close();
             saveQuery(sqlQuery);
         }catch(SQLException e){
             return false;
+        }
+        finally {
+            try{
+                if(statement != null){
+                    statement.close();
+                }
+                }catch (SQLException e){
+
+                }
         }
         updateVersion();
         return true;
@@ -709,15 +856,23 @@ public class DBManager {
 
     public boolean deleteReservations(int id)
     {
+        Statement statement = null;
         try{
-            Statement statement = dbConn.createStatement();
-
+            statement = dbConn.createStatement();
             String sqlQuery = "DELETE FROM reserva WHERE id=" + id;
             statement.executeUpdate(sqlQuery);
-            statement.close();
             saveQuery(sqlQuery);
         }catch(SQLException e){
             return false;
+        }
+        finally {
+            try{
+                if(statement != null){
+                    statement.close();
+                }
+                }catch (SQLException e){
+
+                }
         }
         updateVersion();
         return true;
@@ -725,23 +880,33 @@ public class DBManager {
 
     public boolean deleteUsers(int id)
     {
+        Statement statement = null;
         try{
-            Statement statement = dbConn.createStatement();
+            statement = dbConn.createStatement();
 
             String sqlQuery = "DELETE FROM utilizador WHERE id=" + id;
             statement.executeUpdate(sqlQuery);
-            statement.close();
             saveQuery(sqlQuery);
         }catch(SQLException e){
             return false;
+        }
+        finally {
+            try{
+                if(statement != null){
+                    statement.close();
+                }
+                }catch (SQLException e){
+
+                }
         }
         updateVersion();
         return true;
     }
 
     public boolean updateShows(int id, HashMap<String, String> newData){
+        Statement statement = null;
         try{
-            Statement statement = dbConn.createStatement();
+            statement = dbConn.createStatement();
             String sqlQuery = new String();
 
             for(Map.Entry<String, String> entry : newData.entrySet()){
@@ -774,18 +939,26 @@ public class DBManager {
                 statement.executeUpdate(sqlQuery);
                 saveQuery(sqlQuery);
             }
-
-            statement.close();
         }catch(SQLException e){
             return false;
+        }
+        finally {
+            try{
+                if(statement != null){
+                    statement.close();
+                }
+                }catch (SQLException e){
+
+                }
         }
         updateVersion();
         return true;
     }
 
     public boolean updateSeats(int id, HashMap<String, String> newData){
+        Statement statement = null;
         try{
-            Statement statement = dbConn.createStatement();
+            statement = dbConn.createStatement();
             String sqlQuery = new String();
 
             for(Map.Entry<String, String> entry : newData.entrySet()){
@@ -806,10 +979,17 @@ public class DBManager {
                 statement.executeUpdate(sqlQuery);
                 saveQuery(sqlQuery);
             }
-
-            statement.close();
         }catch(SQLException e){
             return false;
+        }
+        finally {
+            try{
+                if(statement != null){
+                    statement.close();
+                }
+                }catch (SQLException e){
+
+                }
         }
         updateVersion();
         return true;
@@ -818,8 +998,9 @@ public class DBManager {
 
                                                         //ACABAR ESTE POIS SO O PROPRIO USER É QUE PODE MUDAR OS SEUS PAGAMENTOS
     public boolean updateReservation(int id, HashMap<String, String> newData){
+        Statement statement = null;
         try{
-            Statement statement = dbConn.createStatement();
+            statement = dbConn.createStatement();
             String sqlQuery = new String();
 
             for(Map.Entry<String, String> entry : newData.entrySet()){
@@ -840,18 +1021,26 @@ public class DBManager {
                 statement.executeUpdate(sqlQuery);
                 saveQuery(sqlQuery);
             }
-
-            statement.close();
         }catch(SQLException e){
             return false;
+        }
+        finally {
+            try{
+                if(statement != null){
+                    statement.close();
+                }
+                }catch (SQLException e){
+
+                }
         }
         updateVersion();
         return true;
     }
 
     public boolean updateUser(int id, HashMap<String, String> newData){
+        Statement statement = null;
         try{
-            Statement statement = dbConn.createStatement();
+            statement = dbConn.createStatement();
             String sqlQuery = new String();
 
             for(Map.Entry<String, String> entry : newData.entrySet()){
@@ -875,10 +1064,17 @@ public class DBManager {
                 statement.executeUpdate(sqlQuery);
                 saveQuery(sqlQuery);
             }
-
-            statement.close();
         }catch(SQLException e){
             return false;
+        }
+        finally {
+            try{
+                if(statement != null){
+                    statement.close();
+                }
+                }catch (SQLException e){
+
+                }
         }
         updateVersion();
         return true;

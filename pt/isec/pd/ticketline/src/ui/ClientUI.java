@@ -139,6 +139,12 @@ public class ClientUI {
         }
     }
 
+    public void listUsers(){
+        int id = InputProtection.readInt("User ID(-1 for all users):");
+        this.client.createDBHelper("SELECT", "user", null, id, null);
+        System.out.println(client.waitToReceiveResultRequest());
+    }
+
     public void insertData(){
         int input = InputProtection.chooseOption(null, "Insert a reservation", "Insert an user");
 
@@ -243,6 +249,11 @@ public class ClientUI {
         this.client.createDBHelper(id, "UPDATE", "show", newData);
     }
 
+    private void deleteUser(){
+        int userID = InputProtection.readInt("User ID: ");
+        this.client.createDBHelper(userID, "DELETE", "user", null);
+    }
+
 
     private void updateData() {
         int input = InputProtection.chooseOption(null, "Update show", "Update seat", "Update reservation", "Update user");
@@ -340,16 +351,14 @@ public class ClientUI {
             }
             System.out.println("Admin Menu");
             int input = InputProtection.chooseOption("Choose an action:", "Insert show",
-                    "Make show visible","Delete non payed show"
-                    ,"Exit");
+                    "Make show visible","Delete non payed show", "List users", "Edit users",
+                    "Delete users", "Exit");
 
             switch(input){
                 case 1 -> this.client.createDBHelper("INSERT", "show", null, -1 , null);
                 case 2 -> changeShowVisibility();
-                case 4 -> {
-                    client.closeClient();
-                    return;
-                }
+                case 4 -> listUsers();
+                case 6 -> deleteUser();
                 default -> {
                     System.out.println("Not a valid option.");
                 }
