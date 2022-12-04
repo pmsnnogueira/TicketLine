@@ -612,33 +612,21 @@ public class Server {
                                 }
                             }
                         }
-                        try{
+                        dbHelper.setRequestResult(requestResult);
+                        dbHelper.setAlreadyProcessed(true);
 
-                            ObjectOutputStream oos = dbHelper.getOos();
+                        //if the operation did not alter the DB
+                        //there's no need to update the version nor
+                        //to star the synchronization process
+                        if(!dbHelper.getOperation().equals("SELECT")){
+                            updateDBVersion();
+                            sendPrepare();
+                        }
 
-                            System.out.println("vou fazer o pedido");
-
-                            oos.writeObject(requestResult);
-
-                            System.out.println("pedido feito");
-
-                            dbHelper.setAlreadyProcessed(true);
-
-                            //if the operation did not alter the DB
-                            //there's no need to update the version nor
-                            //to star the synchronization process
-                            if(!dbHelper.getOperation().equals("SELECT")){
-                                updateDBVersion();
-                                sendPrepare();
-                            }
-
-                            //if the operation was a mere select
-                            //we can automatically remove it from the list
-                            if(dbHelper.getOperation().equals("SELECT")){
-                                listDbHelper.pop();
-                            }
-                        }catch (IOException e){
-                            e.printStackTrace();
+                        //if the operation was a mere select
+                        //we can automatically remove it from the list
+                        if(dbHelper.getOperation().equals("SELECT")){
+                            listDbHelper.pop();
                         }
                     }else {
                         sendPrepare();
@@ -856,6 +844,7 @@ public class Server {
         private InputStream is;
         private ObjectOutputStream oos;
         private ObjectInputStream ois;
+        private DBHelper dbHelper;
 
         public ClientHandler(Socket clientSocket, AtomicReference<Boolean> handle,
                              OutputStream os, InputStream is){
@@ -865,6 +854,7 @@ public class Server {
             this.is = is;
             this.oos = null;
             this.ois = null;
+            this.dbHelper = new DBHelper();
         }
 
         @Override
@@ -873,6 +863,14 @@ public class Server {
 
             while (handle.get()){
                 try {
+                    byte[] msg = new byte[1024];
+                    int nBytes = is.read(msg);
+                    String msgReceived = new String(msg, 0, nBytes);
+
+                    if(!msgReceived.equals("NEW REQUEST")){
+                        continue;
+                    }
+
                     String s = prepare.get() ? "SERVER IS UPDATING - PLEASE TRY AGAIN" : "CONFIRMED";
                     os.write(s.getBytes(), 0, s.length());
 
@@ -890,15 +888,21 @@ public class Server {
                         ois = new ObjectInputStream(clientSocket.getInputStream());
                     }
 
-                    dbHelper = null;
+                    this.dbHelper = null;
                     try{
-                        dbHelper = (DBHelper) ois.readObject();
-                        dbHelper.setSocketClient(clientSocket);
-                        dbHelper.setOos(oos);
-                        listDbHelper.add(dbHelper);
+                        this.dbHelper = (DBHelper) ois.readObject();
+                        listDbHelper.add(this.dbHelper);
                         System.out.println("pedido adicionado");
                     }catch (ClassNotFoundException  e){
                         e.printStackTrace();
+                    }
+
+                    while(true){
+                        if(!this.dbHelper.getRequestResult().equals("")){
+                            oos.writeObject(this.dbHelper.getRequestResult());
+                            this.dbHelper.setRequestResult("");
+                            break;
+                        }
                     }
 
                 }catch (IOException e){

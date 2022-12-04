@@ -70,8 +70,7 @@ public class Client {
             throw new IOException();
         }
 
-        this.sr = new ConnectToServer();
-        sr.start();
+        connectToServer();
     }
 
     public boolean clientInit() {
@@ -175,6 +174,32 @@ public class Client {
         }
     }
 
+    public void connectToServer(){
+        Socket socketSr;
+        OutputStream os = null;
+        InputStream is = null;
+
+        //parse information about the servers
+        for (String sv : servers){
+            String[] s = servers.get(indexSV.get()).split("-");
+            try {
+                socketSr = new Socket(s[0], Integer.parseInt(s[1]));
+                os = socketSr.getOutputStream();
+                is = socketSr.getInputStream();
+
+                String client = "CLIENT";
+                os.write(client.getBytes(), 0, client.length());
+
+                this.sr = new ConnectToServer(socketSr, os, is);
+                sr.start();
+                return;
+            } catch (IOException e) {
+                indexSV.set(indexSV.get()+1 > servers.size()-1? 0 : indexSV.get()+1);
+                continue;
+            }
+        }
+    }
+
     class ConnectToServer extends Thread{
         private Socket socketSr;
         private OutputStream os;
@@ -182,10 +207,10 @@ public class Client {
         private ObjectOutputStream oos;
         private ObjectInputStream ois;
 
-        public ConnectToServer(){
-            this.socketSr = null;
-            this.is = null;
-            this.os = null;
+        public ConnectToServer(Socket socketSr, OutputStream os, InputStream is){
+            this.socketSr = socketSr;
+            this.is = is;
+            this.os = os;
             this.oos = null;
             this.ois = null;
         }
@@ -196,26 +221,8 @@ public class Client {
                 if(hasNewRequest.get()){
                     requestResult.set("");
                     try {
-                        if(isSocketNull.get()){
-                            //parse information about the servers
-                            String[] s = servers.get(indexSV.get()).split("-");
-                            try {
-                                System.out.println("vai criar socket");
-                                socketSr = new Socket(s[0], Integer.parseInt(s[1]));
-                                os = socketSr.getOutputStream();
-                                is = socketSr.getInputStream();
-
-                                isSocketNull.set(false);
-                            } catch (IOException e) {
-                                System.out.println("deu exception");
-                                indexSV.set(indexSV.get()+1 > servers.size()-1? 0 : indexSV.get()+1);
-                                continue;
-                            }
-                        }
-
-                        String client = "CLIENT";
-                        os.write(client.getBytes(), 0, client.length());
-                        System.out.println("escreveu CLIENT");
+                        String n = "NEW REQUEST";
+                        os.write(n.getBytes(), 0, n.length());
 
                         byte[] m = new byte[512];
                         int nBytes = is.read(m);
@@ -248,8 +255,6 @@ public class Client {
                             System.out.println("Esta a espera para ler");
                             requestResult.set((String) ois.readObject());
                             System.out.println("ja leu");
-
-                            continue;
                         }
                         if(msgReceived.equals("SERVER IS UPDATING - PLEASE TRY AGAIN")){
                             os.close();

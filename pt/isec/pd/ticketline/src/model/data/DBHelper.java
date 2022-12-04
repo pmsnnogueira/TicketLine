@@ -6,6 +6,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class DBHelper implements Serializable {
 
@@ -15,11 +16,14 @@ public class DBHelper implements Serializable {
     private ArrayList<ArrayList<String>> seatParams;
     private ArrayList<String> insertParams;
     private HashMap<String, String> updateParams;
-    private Socket socketClient;
-    private ObjectOutputStream oos;
     private ArrayList<String> verifyUsername;
     private boolean alreadyProcessed;
+    
+    private AtomicReference<String> requestResult;
 
+    public DBHelper(){
+        this.requestResult = new AtomicReference<>("");
+    }
 
     public void reset(){
         this.id = null;
@@ -28,18 +32,17 @@ public class DBHelper implements Serializable {
         this.seatParams = null;
         this.insertParams = null;
         this.updateParams = null;
-        this.socketClient = null;
         this.verifyUsername = null;
-        this.oos = null;
         this.alreadyProcessed = false;
+        this.requestResult = new AtomicReference<>("");
     }
 
-    public void setSocketClient(Socket socket){
-        this.socketClient = socket;
+    public String getRequestResult() {
+        return requestResult.get();
     }
 
-    public Socket getSocketClient(){
-        return this.socketClient;
+    public void setRequestResult(String requestResult) {
+        this.requestResult.set(requestResult);
     }
 
     public Integer getId() {
@@ -98,10 +101,6 @@ public class DBHelper implements Serializable {
         return verifyUsername;
     }
 
-    public ObjectOutputStream getOos() {
-        return oos;
-    }
-
     public boolean isAlreadyProcessed() {
         return alreadyProcessed;
     }
@@ -110,7 +109,4 @@ public class DBHelper implements Serializable {
         this.alreadyProcessed = alreadyProcessed;
     }
 
-    public void setOos(ObjectOutputStream oos) {
-        this.oos = oos;
-    }
 }
