@@ -7,6 +7,7 @@ import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -153,6 +154,15 @@ public class Client {
         return null;
     }
 
+    public DBHelper addDBHelper(int id, String operation, String table, HashMap<String,String> newData){
+        DBHelper dbHelper = new DBHelper();
+        dbHelper.setOperation(operation);
+        dbHelper.setTable(table);
+        dbHelper.setId(id);
+        dbHelper.setUpdateParams(newData);
+        return dbHelper;
+    }
+
     public String waitToReceiveResultRequest(){
         while(true){
             if(!requestResult.get().equals("")){
@@ -221,6 +231,11 @@ public class Client {
 
     public void createDBHelper(String operation, String table, ArrayList<String> insertParams , int id,  ArrayList<String> userLogin) {
         dbHelper = addDBHelper(operation, table, insertParams, id , userLogin);
+        hasNewRequest.set(true);
+    }
+
+    public void createDBHelper(int id, String operation, String table, HashMap<String,String> newData){
+        dbHelper = addDBHelper(id, operation, table, newData);
         hasNewRequest.set(true);
     }
 

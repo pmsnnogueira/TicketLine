@@ -229,9 +229,18 @@ public class ClientUI {
         }
     }
 
+    private void changeShowVisibility(){
+        HashMap<String, String> newData = new HashMap<>();
+        int id = InputProtection.readInt("Show ID: ");
+        String parameter = "visivel";
+        String newValue = InputProtection.readString("New data(1 or 0): ", true);
+        newData.put(parameter, newValue);
+        this.client.createDBHelper(id, "UPDATE", "show", newData);
+    }
+
 
     private void updateData() {
-        int input =InputProtection.chooseOption(null, "Update show", "Update seat", "Update reservation", "Update user");
+        int input = InputProtection.chooseOption(null, "Update show", "Update seat", "Update reservation", "Update user");
 
         switch (input){
             case 1->{
@@ -246,6 +255,7 @@ public class ClientUI {
                     }
                     String newValue = InputProtection.readString("New data: ", false);
                     newData.put(parameter, newValue);
+                    this.client.createDBHelper(id, "UPDATE", "show", newData);
                 }
 
                 /*if (!this.data.updateShows(id, newData)){
@@ -341,6 +351,7 @@ public class ClientUI {
                 
                 switch(input){
                     case 1 -> this.client.createDBHelper("INSERT", "show", null, -1 , null);
+                    case 2 -> changeShowVisibility();
                     case 4 -> {return;}
                     default -> {
                         System.out.println("Not a valid option.");
