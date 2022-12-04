@@ -62,8 +62,6 @@ public class Server {
     private AtomicReference<Boolean> HBHandle;
     private UDPHandler udpHandler;
     private AtomicReference<Boolean> UDPHandle;
-    private String clientIP;
-    private int clientPort;
     private AtomicReference<Boolean> prepare;
     private AtomicReference<Boolean> masterSV;
     private AtomicReference<Integer> proceed;
@@ -71,6 +69,9 @@ public class Server {
     private ScheduledFuture<?> serverLifeCheckExecutor;
     private AtomicReference<Boolean> tcpHandle;
     private int confirmations;
+
+    private ArrayList<AtomicReference<Boolean>> listClientHandles;
+    private ArrayList<ClientHandler> clients;
 
     public Server(int port, String DBDirectory) throws SQLException, IOException, InterruptedException {
         this.prepare = new AtomicReference<>(false);
@@ -96,7 +97,7 @@ public class Server {
         // server initiaton phase
         si = new ServerInit();
         si.start();
-        Thread.sleep(30000);
+        Thread.sleep(10000);
         serverInitContinue.set(false);
         si.join(1000);
         si.interrupt();
@@ -140,6 +141,10 @@ public class Server {
         this.UDPHandle = new AtomicReference<>(true);
         this.udpHandler = new UDPHandler();
         this.udpHandler.start();
+
+        //lists for clients
+        this.listClientHandles = new ArrayList<>();
+        this.clients = new ArrayList<>();
     }
 
     public String listUsers(Integer userID){
@@ -608,17 +613,14 @@ public class Server {
                             }
                         }
                         try{
-                            Socket socket = dbHelper.getSocketClient();
 
                             ObjectOutputStream oos = dbHelper.getOos();
 
+                            System.out.println("vou fazer o pedido");
+
                             oos.writeObject(requestResult);
 
-                            oos.close();
-
-                            socket.close();
-
-                            heartBeat.setNumberOfConnections(heartBeat.getNumberOfConnections()-1);
+                            System.out.println("pedido feito");
 
                             dbHelper.setAlreadyProcessed(true);
 
@@ -775,33 +777,16 @@ public class Server {
                     }
 
                     if(msgReceived.equals("CLIENT")){// when the server receives a new request from a client
+                        //start a new thread to take care of the new client
+                        AtomicReference<Boolean> nHandle = new AtomicReference<>(true);
+                        ClientHandler c = new ClientHandler(socket, nHandle, os, is);
+                        c.start();
 
-                        String s = prepare.get() ? "SERVER IS UPDATING - PLEASE TRY AGAIN" : "CONFIRMED";
-                        os.write(s.getBytes(), 0, s.length());
+                        clients.add(c);
+                        listClientHandles.add(nHandle);
 
-                        if(prepare.get()){
-                            socket.close();
-                        }
-
-                        ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
-
-                        oos.writeObject(data.getOrderedServers());
-
-                        ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
-                        dbHelper = null;
-                        try{
-                            dbHelper = (DBHelper) ois.readObject();
-                            dbHelper.setSocketClient(socket);
-                            dbHelper.setOos(oos);
-                            listDbHelper.add(dbHelper);
-                            heartBeat.setNumberOfConnections(heartBeat.getNumberOfConnections()+1);
-                        }catch (ClassNotFoundException e){
-                            e.printStackTrace();
-                        }
-                        if(dbHelper == null)
-                            System.out.println("DbHelper null");
+                        heartBeat.setNumberOfConnections(clients.size());
                     }
-
 
                 } catch (IOException e) {
                     break;
@@ -859,6 +844,78 @@ public class Server {
                     socketUDP.send(packetToSend);
                 }catch (IOException e){
                     continue;
+                }
+            }
+        }
+    }
+
+    class ClientHandler extends Thread{
+        private Socket clientSocket;
+        private AtomicReference<Boolean> handle;
+        private OutputStream os;
+        private InputStream is;
+        private ObjectOutputStream oos;
+        private ObjectInputStream ois;
+
+        public ClientHandler(Socket clientSocket, AtomicReference<Boolean> handle,
+                             OutputStream os, InputStream is){
+            this.clientSocket = clientSocket;
+            this.handle = handle;
+            this.os = os;
+            this.is = is;
+            this.oos = null;
+            this.ois = null;
+        }
+
+        @Override
+        public void run() {
+            System.out.println("NEW CLIENT THREAD");
+
+            while (handle.get()){
+                try {
+                    String s = prepare.get() ? "SERVER IS UPDATING - PLEASE TRY AGAIN" : "CONFIRMED";
+                    os.write(s.getBytes(), 0, s.length());
+
+                    if(prepare.get()){
+                        clientSocket.close();
+                    }
+
+                    if(oos == null){
+                        oos = new ObjectOutputStream(clientSocket.getOutputStream());
+                    }
+
+                    oos.writeObject(data.getOrderedServers());
+
+                    if(ois == null){
+                        ois = new ObjectInputStream(clientSocket.getInputStream());
+                    }
+
+                    dbHelper = null;
+                    try{
+                        dbHelper = (DBHelper) ois.readObject();
+                        dbHelper.setSocketClient(clientSocket);
+                        dbHelper.setOos(oos);
+                        listDbHelper.add(dbHelper);
+                        System.out.println("pedido adicionado");
+                    }catch (ClassNotFoundException  e){
+                        e.printStackTrace();
+                    }
+
+                }catch (IOException e){
+                    clients.remove(this);
+                    listClientHandles.remove(this.handle);
+                    heartBeat.setNumberOfConnections(clients.size());
+                    try {
+                        oos.close();
+                        ois.close();
+                        os.close();
+                        is.close();
+                        clientSocket.close();
+                    } catch (IOException ex) {
+                        return;
+                    }
+
+                    return;
                 }
             }
         }

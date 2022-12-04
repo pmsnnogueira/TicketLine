@@ -48,8 +48,8 @@ public class Client {
 
     public AtomicInteger indexSV;
     public AtomicReference<String> requestResult;
-
     public int clientID;
+    private AtomicReference<Boolean> isSocketNull;
 
     public Client(String serverIP, int serverPort) throws IOException {
         this.serverIP = serverIP;
@@ -63,6 +63,8 @@ public class Client {
         this.requestResult = new AtomicReference<>("");
 
         this.servers = new ArrayList<>();
+
+        this.isSocketNull = new AtomicReference<>(true);
 
         if (!clientInit()) {
             throw new IOException();
@@ -174,55 +176,87 @@ public class Client {
     }
 
     class ConnectToServer extends Thread{
+        private Socket socketSr;
+        private OutputStream os;
+        private InputStream is;
+        private ObjectOutputStream oos;
+        private ObjectInputStream ois;
+
+        public ConnectToServer(){
+            this.socketSr = null;
+            this.is = null;
+            this.os = null;
+            this.oos = null;
+            this.ois = null;
+        }
+
         @Override
         public void run() {
             while(srHandle.get()) {
                 if(hasNewRequest.get()){
                     requestResult.set("");
                     try {
-                        String[] s = servers.get(indexSV.get()).split("-");
-                        Socket socketSr = null;
-                        try {
-                            socketSr = new Socket(s[0], Integer.parseInt(s[1]));
-                        } catch (IOException e) {
-                            indexSV.set(indexSV.get()+1 > servers.size()-1? 0 : indexSV.get()+1);
-                            continue;
-                        }
+                        if(isSocketNull.get()){
+                            //parse information about the servers
+                            String[] s = servers.get(indexSV.get()).split("-");
+                            try {
+                                System.out.println("vai criar socket");
+                                socketSr = new Socket(s[0], Integer.parseInt(s[1]));
+                                os = socketSr.getOutputStream();
+                                is = socketSr.getInputStream();
 
-                        OutputStream os = socketSr.getOutputStream();
-                        InputStream is = socketSr.getInputStream();
+                                isSocketNull.set(false);
+                            } catch (IOException e) {
+                                System.out.println("deu exception");
+                                indexSV.set(indexSV.get()+1 > servers.size()-1? 0 : indexSV.get()+1);
+                                continue;
+                            }
+                        }
 
                         String client = "CLIENT";
                         os.write(client.getBytes(), 0, client.length());
+                        System.out.println("escreveu CLIENT");
 
                         byte[] m = new byte[512];
                         int nBytes = is.read(m);
                         String msgReceived = new String(m, 0, nBytes);
 
-
+                        System.out.println("MSG: " + msgReceived);
 
                         if(msgReceived.equals("CONFIRMED")){
-                            ObjectInputStream ois = new ObjectInputStream(socketSr.getInputStream());
-
+                            if(ois == null){
+                                System.out.println("vai criar ois");
+                                ois = new ObjectInputStream(socketSr.getInputStream());
+                            }
                             //get updated list of servers
                             String newServers = (String) ois.readObject();
                             String[] strings = newServers.split("\\|");
                             servers.clear();
                             servers.addAll(Arrays.asList(strings));
+                            System.out.println(servers);
 
                             //reset index
                             indexSV.set(0);
 
-                            ObjectOutputStream oos = new ObjectOutputStream(socketSr.getOutputStream());
+                            if(oos == null){
+                                System.out.println("vai criar oos");
+                                oos = new ObjectOutputStream(socketSr.getOutputStream());
+                            }
 
                             oos.writeObject(dbHelper);
 
+                            System.out.println("Esta a espera para ler");
                             requestResult.set((String) ois.readObject());
+                            System.out.println("ja leu");
 
-                            oos.close();
-                            ois.close();
+                            continue;
                         }
                         if(msgReceived.equals("SERVER IS UPDATING - PLEASE TRY AGAIN")){
+                            os.close();
+                            is.close();
+                            socketSr.close();
+                            isSocketNull.set(true);
+
                             //if the server fails to receive the client request
                             //and the client has sent a request to every
                             if(indexSV.get()==servers.size()){
@@ -235,10 +269,6 @@ public class Client {
                             indexSV.set(indexSV.get()+1);
                             continue;
                         }
-
-                        os.close();
-                        is.close();
-                        socketSr.close();
                     } catch (IOException | ClassNotFoundException e) {
                         e.printStackTrace();
                     }
