@@ -228,11 +228,8 @@ public class Client {
                         int nBytes = is.read(m);
                         String msgReceived = new String(m, 0, nBytes);
 
-                        System.out.println("MSG: " + msgReceived);
-
                         if(msgReceived.equals("CONFIRMED")){
                             if(ois == null){
-                                System.out.println("vai criar ois");
                                 ois = new ObjectInputStream(socketSr.getInputStream());
                             }
                             //get updated list of servers
@@ -246,15 +243,12 @@ public class Client {
                             indexSV.set(0);
 
                             if(oos == null){
-                                System.out.println("vai criar oos");
                                 oos = new ObjectOutputStream(socketSr.getOutputStream());
                             }
 
                             oos.writeObject(dbHelper);
 
-                            System.out.println("Esta a espera para ler");
                             requestResult.set((String) ois.readObject());
-                            System.out.println("ja leu");
                         }
                         if(msgReceived.equals("SERVER IS UPDATING - PLEASE TRY AGAIN")){
                             os.close();
@@ -269,13 +263,17 @@ public class Client {
                                 indexSV.set(0);
                                 dbHelper = null;
                                 hasNewRequest.set(false);
-                                continue;
+                                connectToServer();
+                                return;
                             }
                             indexSV.set(indexSV.get()+1);
-                            continue;
+                            connectToServer();
+                            return;
                         }
                     } catch (IOException | ClassNotFoundException e) {
-                        e.printStackTrace();
+                        indexSV.set(0);
+                        connectToServer();
+                        return;
                     }
 
                     hasNewRequest.set(false);

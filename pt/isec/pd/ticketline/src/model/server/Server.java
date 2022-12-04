@@ -343,15 +343,23 @@ public class Server {
         oos.writeObject(heartBeat);
         byte[] buffer = baos.toByteArray();
         DatagramPacket dp = new DatagramPacket(buffer, buffer.length,
-                InetAddress.getByName(MULTICAST.getValue(0)),Integer.parseInt( MULTICAST.getValue(1)));
+                InetAddress.getByName(MULTICAST.getValue(0)),Integer.parseInt(MULTICAST.getValue(1)));
         mcs.send(dp);
+
+        for(AtomicReference<Boolean> b : listClientHandles){
+            b.set(false);
+        }
+
+        for(ClientHandler ch : clients){
+            ch.join(3000);
+            ch.interrupt();
+        }
 
         this.handleDB.set(false);
         this.dbHandler.join(5000);
         this.dbHandler.interrupt();
 
         this.data.closeDB();
-
 
         tcpHandle.set(false);
         tcpHandler.join(5000);
@@ -859,8 +867,6 @@ public class Server {
 
         @Override
         public void run() {
-            System.out.println("NEW CLIENT THREAD");
-
             while (handle.get()){
                 try {
                     byte[] msg = new byte[1024];
@@ -892,7 +898,6 @@ public class Server {
                     try{
                         this.dbHelper = (DBHelper) ois.readObject();
                         listDbHelper.add(this.dbHelper);
-                        System.out.println("pedido adicionado");
                     }catch (ClassNotFoundException  e){
                         e.printStackTrace();
                     }
