@@ -93,7 +93,7 @@ public class Server {
         // server initiaton phase
         si = new ServerInit();
         si.start();
-        si.join(3);
+        si.join(30000);
         this.serverInitContinue = false;
 
         transferDatabase(dbCopyHeartBeat);
@@ -377,7 +377,6 @@ public class Server {
 
             listDbHelper.pop();
         }catch (IOException e){
-            System.out.println("sendCommit");
             sendAbort();
             return;
         }
@@ -554,7 +553,7 @@ public class Server {
                                         }
                                         else {
                                             requestResult = data.listUsers(dbHelper.getId());
-                                        } //System.out.println(requestResult);
+                                        }
                                     }
                                 }
                             }
@@ -785,7 +784,6 @@ public class Server {
                         }
                         if(dbHelper == null)
                             System.out.println("DbHelper null");
-
                     }
 
 

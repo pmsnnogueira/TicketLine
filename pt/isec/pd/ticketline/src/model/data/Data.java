@@ -85,7 +85,6 @@ public class Data {
     public void addShow()
     {
         List<String> information = FileOpener.openFile("pt/isec/pd/ticketline/src/resources/files/teste.txt");
-        System.out.println(information);
         ArrayList<String> parameters = new ArrayList<>();
         ArrayList<ArrayList<String>> arraySeats = new ArrayList<>();
         String dateHour = "";
