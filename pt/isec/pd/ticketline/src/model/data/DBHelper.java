@@ -18,6 +18,7 @@ public class DBHelper implements Serializable {
     private Socket socketClient;
     private ObjectOutputStream oos;
     private ArrayList<String> verifyUsername;
+    private boolean alreadyProcessed;
 
 
     public void reset(){
@@ -30,6 +31,7 @@ public class DBHelper implements Serializable {
         this.socketClient = null;
         this.verifyUsername = null;
         this.oos = null;
+        this.alreadyProcessed = false;
     }
 
     public void setSocketClient(Socket socket){
@@ -98,6 +100,14 @@ public class DBHelper implements Serializable {
 
     public ObjectOutputStream getOos() {
         return oos;
+    }
+
+    public boolean isAlreadyProcessed() {
+        return alreadyProcessed;
+    }
+
+    public void setAlreadyProcessed(boolean alreadyProcessed) {
+        this.alreadyProcessed = alreadyProcessed;
     }
 
     public void setOos(ObjectOutputStream oos) {

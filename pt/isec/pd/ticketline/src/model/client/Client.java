@@ -193,13 +193,14 @@ public class Client {
                         if(msgReceived.equals("CONFIRMED")){
                             ObjectInputStream ois = new ObjectInputStream(socketSr.getInputStream());
 
+                            //get updated list of servers
                             String newServers = (String) ois.readObject();
-
                             String[] strings = newServers.split("\\|");
                             servers.clear();
                             servers.addAll(Arrays.asList(strings));
 
-                            System.out.println(servers);
+                            //reset index
+                            indexSV.set(0);
 
                             ObjectOutputStream oos = new ObjectOutputStream(socketSr.getOutputStream());
 
@@ -211,7 +212,16 @@ public class Client {
                             ois.close();
                         }
                         if(msgReceived.equals("SERVER IS UPDATING - PLEASE TRY AGAIN")){
-                            indexSV.set(indexSV.get()+1 > servers.size()-1? 0 : indexSV.get()+1);
+                            //if the server fails to receive the client request
+                            //and the client has sent a request to every
+                            if(indexSV.get()==servers.size()){
+                                requestResult.set(msgReceived);
+                                indexSV.set(0);
+                                dbHelper = null;
+                                hasNewRequest.set(false);
+                                continue;
+                            }
+                            indexSV.set(indexSV.get()+1);
                             continue;
                         }
 

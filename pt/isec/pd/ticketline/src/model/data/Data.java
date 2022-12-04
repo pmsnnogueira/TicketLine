@@ -14,8 +14,8 @@ public class Data {
     private ArrayList<HeartBeat> heartBeatsReceived;
     private HeartBeat serverHeartBeat;
 
-    public Data(MulticastSocket mcs) throws SQLException {
-        this.resourcesManager = new ResourcesManager(mcs);
+    public Data() throws SQLException {
+        this.resourcesManager = new ResourcesManager();
         this.heartBeatsReceived = new ArrayList<>();
     }
 

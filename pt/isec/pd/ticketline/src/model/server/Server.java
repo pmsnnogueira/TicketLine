@@ -52,6 +52,7 @@ public class Server {
     private int clientPort;
     private AtomicReference<Boolean> prepare;
     private AtomicReference<Boolean> masterSV;
+    private AtomicReference<Integer> proceed;
 
     private int confirmations;
     public static void main(String[] args)
@@ -84,7 +85,7 @@ public class Server {
         this.ni = NetworkInterface.getByIndex(0);
         this.mcs.joinGroup(sa, ni);
 
-        this.data = new Data(this.mcs);
+        this.data = new Data();
         //START SERVER
 
         this.scheduler = Executors.newScheduledThreadPool(2);
@@ -116,7 +117,8 @@ public class Server {
         //to every other on-line server
         scheduler.scheduleAtFixedRate(new ExecutorSendHeartBeat(heartBeat, mcs),
                 0, 10, TimeUnit.SECONDS);
-        //Every 35 seconds, the server will check if there is any server who hasn't
+        //Every 35 seconds, the server will check if there is any server
+        //who hasn't sent a heartbeat in the last 35 secs
         scheduler.scheduleAtFixedRate(new ServerLifeCheck(this.data), 0, 35, TimeUnit.SECONDS);
 
         //start thread to receive the heartbeats
@@ -124,11 +126,11 @@ public class Server {
         hbh = new HeartBeatReceiver();
         hbh.start();
 
-        //start database prpovider thread to pro
+        //start thread to handle tcp connections
         dbProv = new TCPHandler();
         dbProv.start();
 
-        //start client handler thread
+        //start thread to handle udp connections
         this.UDPHandle = true;
         this.ch = new UDPHandler();
         this.ch.start();
@@ -372,6 +374,8 @@ public class Server {
             this.heartBeat.setMessage("");
             prepare.set(false);
             masterSV.set(false);
+
+            listDbHelper.pop();
         }catch (IOException e){
             System.out.println("sendCommit");
             sendAbort();
@@ -428,6 +432,11 @@ public class Server {
         int nTimeouts = 0;
 
         while(true){
+            if(nTimeouts >= 10){
+                sendAbort();
+                break;
+            }
+
             DatagramPacket packet = new DatagramPacket(new byte[256], 256);
 
             String messageReceived = "";
@@ -437,6 +446,7 @@ public class Server {
             }catch (SocketTimeoutException e){
                 ++nTimeouts;
             }catch (IOException e){
+                sendAbort();
                 break;
             }
 
@@ -479,6 +489,8 @@ public class Server {
             }
 
             while(handleDB){
+                //If it is during the synchronization phase
+                //this thread will not do anything
                 if (prepare.get()){
                     continue;
                 }
@@ -489,105 +501,128 @@ public class Server {
                     throw new RuntimeException(e);
                 }
 
+                //if it has received the command to COMMIT changes to DB
+                //gets the heartbeat that sent said command and gets its
+                //most recent query to update de DB
                 if(hbWithHighestVersion != null){
                     updateDB(hbWithHighestVersion);
                     hbWithHighestVersion = null;
                     updateDBVersion();
                 }
 
+                //if it has pending request
                 if (listDbHelper.size() > 0 ){
                     String requestResult = null;
-                    DBHelper dbHelper = listDbHelper.pop();
-                    switch (dbHelper.getOperation()){
-                        case "INSERT"->{
-                            switch (dbHelper.getTable()){
-                                case "show" ->{
-                                    data.addShow();
-                                    requestResult = String.valueOf("Show Inserted");
-                                }
-                                case "seat" ->{
-                                    requestResult = String.valueOf(data.insertSeat(dbHelper.getSeatParams(), dbHelper.getId()));
-                                }
-                                case "reservation" ->{
-                                    requestResult = String.valueOf(data.insertReservation(dbHelper.getInsertParams()));
-                                }
-                                case "user" ->{
-                                    requestResult = String.valueOf(data.insertUser(dbHelper.getInsertParams()));
-                                }
-                            }
-                        }
-                        case "SELECT"->{
-                            switch (dbHelper.getTable()){
-                                case "show" ->{
-                                    requestResult = data.listShows(dbHelper.getId());
-                                }
-                                case "seat" ->{
-                                    requestResult = data.listSeats(dbHelper.getId());
-                                }
-                                case "reservation" ->{
-                                    requestResult = data.listReservations(dbHelper.getId());
-                                }
-                                case "user" ->{
-                                    if(dbHelper.getverifyUsername() != null){
-                                        requestResult = data.verifyUserLogin(dbHelper.getverifyUsername());
+                    DBHelper dbHelper = listDbHelper.get(0);
+
+                    //if the request has already been processed
+                    //it means that the synchronization must have gone wrong,
+                    //so it will start the process again
+                    if(!dbHelper.isAlreadyProcessed()){
+                        switch (dbHelper.getOperation()){
+                            case "INSERT"->{
+                                switch (dbHelper.getTable()){
+                                    case "show" ->{
+                                        data.addShow();
+                                        requestResult = String.valueOf("Show Inserted");
                                     }
-                                    else {
-                                        requestResult = data.listUsers(dbHelper.getId());
-                                    } //System.out.println(requestResult);
+                                    case "seat" ->{
+                                        requestResult = String.valueOf(data.insertSeat(dbHelper.getSeatParams(), dbHelper.getId()));
+                                    }
+                                    case "reservation" ->{
+                                        requestResult = String.valueOf(data.insertReservation(dbHelper.getInsertParams()));
+                                    }
+                                    case "user" ->{
+                                        requestResult = String.valueOf(data.insertUser(dbHelper.getInsertParams()));
+                                    }
+                                }
+                            }
+                            case "SELECT"->{
+                                switch (dbHelper.getTable()){
+                                    case "show" ->{
+                                        requestResult = data.listShows(dbHelper.getId());
+                                    }
+                                    case "seat" ->{
+                                        requestResult = data.listSeats(dbHelper.getId());
+                                    }
+                                    case "reservation" ->{
+                                        requestResult = data.listReservations(dbHelper.getId());
+                                    }
+                                    case "user" ->{
+                                        if(dbHelper.getverifyUsername() != null){
+                                            requestResult = data.verifyUserLogin(dbHelper.getverifyUsername());
+                                        }
+                                        else {
+                                            requestResult = data.listUsers(dbHelper.getId());
+                                        } //System.out.println(requestResult);
+                                    }
+                                }
+                            }
+                            case "UPDATE"->{
+                                switch (dbHelper.getTable()){
+                                    case "show" ->{
+                                        requestResult = String.valueOf(data.updateShows(dbHelper.getId(),dbHelper.getUpdateParams()));
+                                    }
+                                    case "seat" ->{
+                                        requestResult = String.valueOf(data.updateSeats(dbHelper.getId(), dbHelper.getUpdateParams()));
+                                    }
+                                    case "reservation" ->{
+                                        requestResult = String.valueOf(data.updateReservation(dbHelper.getId(), dbHelper.getUpdateParams()));
+                                    }
+                                    case "user" ->{
+                                        requestResult = String.valueOf(data.updateUser(dbHelper.getId(), dbHelper.getUpdateParams()));
+                                    }
+                                }
+                            }
+                            case "DELETE"->{
+                                switch (dbHelper.getTable()){
+                                    case "show" ->{
+                                        requestResult = String.valueOf(data.deleteShow(dbHelper.getId()));
+                                    }
+                                    case "seat" ->{
+                                        requestResult = String.valueOf(data.deleteSeat(dbHelper.getId()));
+                                    }
+                                    case "reservation" ->{
+                                        requestResult = String.valueOf(data.deleteReservations(dbHelper.getId()));
+                                    }
+                                    case "user" ->{
+                                        requestResult = String.valueOf(data.deleteUsers(dbHelper.getId()));
+                                    }
                                 }
                             }
                         }
-                        case "UPDATE"->{
-                            switch (dbHelper.getTable()){
-                                case "show" ->{
-                                    requestResult = String.valueOf(data.updateShows(dbHelper.getId(),dbHelper.getUpdateParams()));
-                                }
-                                case "seat" ->{
-                                    requestResult = String.valueOf(data.updateSeats(dbHelper.getId(), dbHelper.getUpdateParams()));
-                                }
-                                case "reservation" ->{
-                                    requestResult = String.valueOf(data.updateReservation(dbHelper.getId(), dbHelper.getUpdateParams()));
-                                }
-                                case "user" ->{
-                                    requestResult = String.valueOf(data.updateUser(dbHelper.getId(), dbHelper.getUpdateParams()));
-                                }
+                        try{
+                            Socket socket = dbHelper.getSocketClient();
+
+                            ObjectOutputStream oos = dbHelper.getOos();
+
+                            oos.writeObject(requestResult);
+
+                            oos.close();
+
+                            socket.close();
+
+                            heartBeat.setNumberOfConnections(heartBeat.getNumberOfConnections()-1);
+
+                            dbHelper.setAlreadyProcessed(true);
+
+                            //if the operation did not alter the DB
+                            //there's no need to update the version nor
+                            //to star the synchronization process
+                            if(!dbHelper.getOperation().equals("SELECT")){
+                                updateDBVersion();
+                                sendPrepare();
                             }
-                        }
-                        case "DELETE"->{
-                            switch (dbHelper.getTable()){
-                                case "show" ->{
-                                    requestResult = String.valueOf(data.deleteShow(dbHelper.getId()));
-                                }
-                                case "seat" ->{
-                                    requestResult = String.valueOf(data.deleteSeat(dbHelper.getId()));
-                                }
-                                case "reservation" ->{
-                                    requestResult = String.valueOf(data.deleteReservations(dbHelper.getId()));
-                                }
-                                case "user" ->{
-                                    requestResult = String.valueOf(data.deleteUsers(dbHelper.getId()));
-                                }
+
+                            //if the operation was a mere select
+                            //we can automatically remove it from the list
+                            if(dbHelper.getOperation().equals("SELECT")){
+                                listDbHelper.pop();
                             }
+                        }catch (IOException e){
+                            e.printStackTrace();
                         }
-                    }
-                    try{
-                        Socket socket = dbHelper.getSocketClient();
-
-                        ObjectOutputStream oos = dbHelper.getOos();
-
-                        oos.writeObject(requestResult);
-
-                        oos.close();
-
-                        socket.close();
-
-                        heartBeat.setNumberOfConnections(heartBeat.getNumberOfConnections()-1);
-                    }catch (IOException e){
-                        e.printStackTrace();
-                    }
-
-                    if(!dbHelper.getOperation().equals("SELECT")){
-                        updateDBVersion();
+                    }else {
                         sendPrepare();
                     }
                 }
