@@ -523,13 +523,14 @@ public class DBManager {
         String sqlQuery = "INSERT INTO reserva_lugar VALUES (" + parameters.get(i++) + " , " + parameters.get(i) + ")";
 
         try{
+            statement.executeUpdate(sqlQuery);
             saveQuery(sqlQuery);
             statement.close();
             updateVersion();
             return "Reserva de lugar realizada";
         }catch (SQLException e){
             e.printStackTrace();
-            return null;
+            return "Reserva lugar nao realizada";
         }
 
     }
@@ -767,6 +768,8 @@ public class DBManager {
         return true;
     }
 
+
+                                                        //ACABAR ESTE POIS SO O PROPRIO USER É QUE PODE MUDAR OS SEUS PAGAMENTOS
     public boolean updateReservation(int id, HashMap<String, String> newData){
         try{
             Statement statement = dbConn.createStatement();

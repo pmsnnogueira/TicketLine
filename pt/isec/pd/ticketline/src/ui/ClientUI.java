@@ -368,7 +368,7 @@ public class ClientUI {
         System.out.println(client.waitToReceiveResultRequest());
         int idSeat = InputProtection.readInt("ID of the seat: ");
 
-        //ADICONAR RESERVA\
+        //ADICONAR RESERVA
         Date dataHoraAtual = new Date();
         String dataHora = new SimpleDateFormat("dd:MM:yyyy").format(dataHoraAtual) + "-";
         dataHora += new SimpleDateFormat("HH:mm").format(dataHoraAtual);
@@ -382,15 +382,20 @@ public class ClientUI {
 
         //Ele nao quer fazer isto
         //E na query do lado do dbmanager nao esta a verificar se existe o lugar no espetaculo e se existir ja nao esta reservado por outro
-       /* aux.clear();
-        Collections.addAll(aux, idReservation,Integer.toString(idSeat));
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        aux.clear();
+        Collections.addAll(aux, idReservation, Integer.toString(idSeat));
         System.out.println("Fazer a reserva do lugar");
         this.client.createDBHelper("INSERT", "reservation_seat", aux, client.getClientID(), null);          //AUX = idReserva and id_lugar        o user Id   e null pois nao precisamos de enviar nada para o login
         System.out.println("Depois de fazer a reserva do lugar");
-        System.out.println(client.waitToReceiveResultRequest());*/
+        System.out.println(client.waitToReceiveResultRequest());
     }
 
-    public void payReservation(){
+    public void payReservation(){                                                                                                   //Workingee
         //show user non paid reservations
         this.client.createDBHelper(client.getClientID(), "SELECT", "reservation",3,"0");              //List unpaid reservartion     -> OPTION 3 parameter 0
         System.out.println(client.waitToReceiveResultRequest());
