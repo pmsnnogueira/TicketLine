@@ -46,9 +46,12 @@ public class Data {
     }
 
     public String verifyUserLogin(ArrayList<String> parameters){return this.resourcesManager.verifyUserLogin(parameters);}
+
     public String listShows(Integer showID){
         return this.resourcesManager.listShows(showID);
     }
+
+    public String listEmptySeatsDayBefore(Integer showID){return this.resourcesManager.listEmptySeatsDayBefore(showID);}
 
     public String listReservations(Integer reservationID){
         return this.resourcesManager.listReservations(reservationID);

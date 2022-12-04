@@ -50,7 +50,7 @@ public class DBManager {
 
         FileInputStream fis;
         try{
-             fis = new FileInputStream(file);
+            fis = new FileInputStream(file);
         }catch (FileNotFoundException e){
             return false;
         }
@@ -81,7 +81,7 @@ public class DBManager {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        
+
         try {
             this.dbConn = DriverManager.getConnection("jdbc:sqlite:" + DBDirectory + "/PD-2022-23-TP-" + port + ".db");
         } catch (SQLException e) {
@@ -231,7 +231,7 @@ public class DBManager {
 
                 str.append(String.format("|%-4s|%-17s|%-10s|%-14s|%-14s|", id , data_hora, pago, id_utilizador, id_espetaculo));
                 str.append("\n-----------------------------------------------------------------\n");
-           }
+            }
             resultSet.close();
             statement.close();
 
@@ -256,7 +256,7 @@ public class DBManager {
             str.append("\n---------------------------------------------------------------------------------------------\n");
             str.append(String.format("|%-4s|%-19s|%-30s|%-22s|%-12s|", "ID", "Username", "Nome", "Administrador", "Autenticado"));
             str.append("\n---------------------------------------------------------------------------------------------\n");
-    
+
 
             while(resultSet.next()){
                 int id = resultSet.getInt("id");
@@ -275,6 +275,90 @@ public class DBManager {
         }
     }
 
+    public String listNotOrPaidReservations(Integer userID,ArrayList<String>parameters){
+        try{
+            Statement statement = dbConn.createStatement();
+
+            String sqlQuery = "SELECT id AS Id , data_hora AS dataHora, id_espetaculo AS id_espetaculo FROM reserva WHERE pago = "+ parameters.get(0) +" and id_utilizador = '" + userID + "'";
+            ResultSet resultSet = statement.executeQuery(sqlQuery);
+            StringBuilder str = new StringBuilder();
+            str.append("\n---------------------------------------------------------------------------------------------\n");
+            str.append(String.format("|%-4s|%-19s|%-30s|", "Id_Reserva", "Data Hora", "Id_espetaculo"));
+            str.append("\n---------------------------------------------------------------------------------------------\n");
+
+
+            while(resultSet.next()){
+                int id = resultSet.getInt("Id");
+                String dataHora = resultSet.getString("dataHora");
+                int id_espetaculo = resultSet.getInt("id_espetaculo");
+
+                str.append(String.format("|%-4s|%-19s|%-30s|", id , dataHora, id_espetaculo));
+                str.append("\n---------------------------------------------------------------------------------------------\n");
+            }
+            resultSet.close();
+            statement.close();
+
+            return str.toString();
+        }catch (SQLException e){
+            e.printStackTrace();
+            return "Could not list any reservation";
+        }
+
+    }
+
+    public String listEmptySeatsDayBefore(Integer showID){
+        try{
+            Statement statement = dbConn.createStatement();
+
+            String sqlQuery = "SELECT l.id as id_bilhete, l.fila as fila, l.assento as assento, l.preco as preco, e.id as id_espetaculo, e.descricao as descricao, e.data_hora as datahora FROM lugar l ,espetaculo  e " +
+                    "WHERE e.data_hora <= datetime('now','-1 day') and l.id NOT IN (SELECT id_lugar FROM reserva_lugar and l.espetaculo_id = e.id";
+
+            if (showID != null)
+                sqlQuery += " and id like '%" + showID + "%'";
+
+            ResultSet resultSet = statement.executeQuery(sqlQuery);
+            StringBuilder str = new StringBuilder();
+            str.append("\n---------------------------------------------------------------------------------------------\n");
+            str.append(String.format("|%-4s|%-19s|%-30s|%-22s|%-12s|%-24s|", "id_bilhete", "fila", "assento", "preco", "id_espetaculo" , "descricao" , "dataHora"));
+            str.append("\n---------------------------------------------------------------------------------------------\n");
+
+
+            while(resultSet.next()){
+                int id = resultSet.getInt("id_bilhete");
+                String username = resultSet.getString("fila");
+                String nome = resultSet.getString("assento");
+                int administrador = resultSet.getInt("preco");
+                int id_espetaculo = resultSet.getInt("id_espetaculo");
+                String descricao = resultSet.getString( "descricao");
+                String dataHora = resultSet.getString("dataHora");
+
+                str.append(String.format("|%-4s|%-19s|%-30s|%-22s|%-12s|%-24s|", id , username, nome, administrador, id_espetaculo , descricao , dataHora));
+                str.append("\n---------------------------------------------------------------------------------------------\n");
+            }
+            resultSet.close();
+            statement.close();
+
+            return str.toString();
+        }catch (SQLException e){
+            e.printStackTrace();
+            return "Could not list any empty seats for a show";
+        }
+
+    }
+
+    public boolean deleteUnPaidReservation(int idReservation , ArrayList<String> parameters){
+        try{
+            Statement statement = dbConn.createStatement();
+            String sqlQuery = "DELETE FROM reserva WHERE id = " + idReservation + " and pago = 0 and id_utilizador = " + parameters.get(0) +"";
+            statement.executeUpdate(sqlQuery);
+            statement.close();
+            saveQuery(sqlQuery);
+        }catch(SQLException e){
+            return false;
+        }
+        updateVersion();
+        return true;
+    }
     public String verifyUserLogin(ArrayList<String> parameters){
         try{
             Statement statement = dbConn.createStatement();
@@ -286,18 +370,18 @@ public class DBManager {
 
             while(resultSet.next()){
                 str.append("ID: " + resultSet.getInt("id"))
-                .append("\nUsername:" + resultSet.getString("username"))
-                .append("\nName:" + resultSet.getString("nome"))
-                .append("\nPassword:" + resultSet.getString("password"))
-                .append("\nAdmin:" + resultSet.getInt("administrador"))
-                .append("\nAuthenthicated:" + resultSet.getInt("autenticado"));
+                        .append("\nUsername:" + resultSet.getString("username"))
+                        .append("\nName:" + resultSet.getString("nome"))
+                        .append("\nPassword:" + resultSet.getString("password"))
+                        .append("\nAdmin:" + resultSet.getInt("administrador"))
+                        .append("\nAuthenthicated:" + resultSet.getInt("autenticado"));
             }
             resultSet.close();
             statement.close();
 
             if(str.toString().isEmpty() || str.toString().isBlank())
                 return "User doesnt exist!";
-                
+
             return str.toString();
         }catch (SQLException e){
             e.printStackTrace();
@@ -347,10 +431,10 @@ public class DBManager {
 
         int i = 0;
         String sqlQuery = "INSERT INTO espetaculo VALUES (NULL, '" + parameters.get(i++) + "' , '" +
-                            parameters.get(i++) + "' , '" + parameters.get(i++) + "' , '" +
-                            parameters.get(i++) + "' , '" + parameters.get(i++) + "' , '" +
-                            parameters.get(i++) + "' , '" + parameters.get(i++) + "' , '" +
-                            parameters.get(i) + "' , '" + "0" + "')";
+                parameters.get(i++) + "' , '" + parameters.get(i++) + "' , '" +
+                parameters.get(i++) + "' , '" + parameters.get(i++) + "' , '" +
+                parameters.get(i++) + "' , '" + parameters.get(i++) + "' , '" +
+                parameters.get(i) + "' , '" + "0" + "')";
 
         try{
             statement.executeUpdate(sqlQuery , statement.RETURN_GENERATED_KEYS);
@@ -385,13 +469,13 @@ public class DBManager {
             int i = 0;
             while(i < parameters.size()){
                 String sqlQuery = "INSERT INTO lugar VALUES (NULL, '" + parameters.get(i).get(contador++) + "' , '" +
-                    parameters.get(i).get(contador++) + "' , '" + parameters.get(i).get(contador) + "' , '" +
-                    numShow + "')";
-                    statement.executeUpdate(sqlQuery);
+                        parameters.get(i).get(contador++) + "' , '" + parameters.get(i).get(contador) + "' , '" +
+                        numShow + "')";
+                statement.executeUpdate(sqlQuery);
                 sb.append(sqlQuery).append("|");
                 i++;
                 contador = 0;
-            }        
+            }
             statement.close();
             saveQuery(sb.toString());
         }catch (SQLException e){
@@ -503,7 +587,7 @@ public class DBManager {
         String sqlQuery = "INSERT INTO utilizador VALUES (NULL, '" + parameters.get(i++) + "' , '" +
                 parameters.get(i++) + "' , '" + parameters.get(i++) + "' , '" +
                 parameters.get(i++) + "' , '" + parameters.get(i++) + "')";
-            
+
         try{
             statement.executeUpdate(sqlQuery);
             saveQuery(sqlQuery);

@@ -164,6 +164,15 @@ public class Client {
         dbHelper.setUpdateParams(newData);
         return dbHelper;
     }
+    //Function to send information with new queries
+    public DBHelper addDBHelper(int id, String operation, String table, int option){
+        DBHelper dbHelper = new DBHelper();
+        dbHelper.setOperation(operation);
+        dbHelper.setTable(table);
+        dbHelper.setId(id);
+        dbHelper.setOption(option);
+        return dbHelper;
+    }
 
     public String waitToReceiveResultRequest(){
         while(true){
@@ -257,6 +266,12 @@ public class Client {
 
     public void createDBHelper(int id, String operation, String table, HashMap<String,String> newData){
         dbHelper = addDBHelper(id, operation, table, newData);
+        hasNewRequest.set(true);
+    }
+
+    //Function to send new queries SELECT
+    public void createDBHelper(int id,String operation, String table , int option) {
+        dbHelper = addDBHelper(id,operation, table,  option);
         hasNewRequest.set(true);
     }
 

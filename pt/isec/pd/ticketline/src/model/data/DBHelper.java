@@ -12,6 +12,8 @@ public class DBHelper implements Serializable {
     private Integer id;
     private String operation;
     private String table;
+
+    private Integer option;
     private ArrayList<ArrayList<String>> seatParams;
     private ArrayList<String> insertParams;
     private HashMap<String, String> updateParams;
@@ -25,6 +27,7 @@ public class DBHelper implements Serializable {
         this.id = null;
         this.operation = null;
         this.table = null;
+        this.option = null;
         this.seatParams = null;
         this.insertParams = null;
         this.updateParams = null;
@@ -50,6 +53,7 @@ public class DBHelper implements Serializable {
         this.id = id;
     }
 
+
     public String getOperation() {
         return operation;
     }
@@ -64,6 +68,15 @@ public class DBHelper implements Serializable {
 
     public void setTable(String table) {
         this.table = table;
+    }
+
+
+    public Integer getOption() {
+        return option;
+    }
+
+    public void setOption(Integer option) {
+        this.option = option;
     }
 
     public ArrayList<ArrayList<String>> getSeatParams() {

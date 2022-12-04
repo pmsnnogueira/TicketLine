@@ -90,7 +90,7 @@ public class ClientUI {
 
 
     private void listInformation(){
-        int input = InputProtection.chooseOption(null, "List reservations","List seats");
+        int input = InputProtection.chooseOption(null, "List reservations","List seats","List shows with empty seats");
         ArrayList<String> empty = new ArrayList<>();
         switch (input){
             case 1 ->{
@@ -102,6 +102,11 @@ public class ClientUI {
             case 2 ->{
                 int id = InputProtection.readInt("Seats ID (-1 for all seats): ");
                 //System.out.println(this.data.listSeats(id == -1 ? null : id));
+            }
+            case 3->{
+                this.client.createDBHelper(-1, "SELECT", "show",2);              //Show with empty seats(one day before)     -> OPTION 2
+                System.out.println(client.waitToReceiveResultRequest());
+                //System.out.println(this.data.listReservations(id == -1 ? null : id));
             }
             default -> {
                 System.out.println("Not a valid option! Try again!");

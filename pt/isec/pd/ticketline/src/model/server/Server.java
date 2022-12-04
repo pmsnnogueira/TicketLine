@@ -556,7 +556,14 @@ public class Server {
                             case "SELECT"->{
                                 switch (dbHelper.getTable()){
                                     case "show" ->{
-                                        requestResult = data.listShows(dbHelper.getId());
+                                        if(dbHelper.getOption() != null){
+                                            switch (dbHelper.getOption()){
+                                                case 2 ->{
+                                                     requestResult = data.listEmptySeatsDayBefore(dbHelper.getId());
+                                                }
+                                            }
+                                        }else
+                                            requestResult = data.listShows(dbHelper.getId());
                                     }
                                     case "seat" ->{
                                         requestResult = data.listSeats(dbHelper.getId());
