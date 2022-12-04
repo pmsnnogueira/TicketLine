@@ -491,6 +491,9 @@ public class Server {
     }
 
     public synchronized void sendPrepare(){
+        if(data.getNumberOfServersConnected() <= 1)
+            return;
+
         try{
             this.heartBeat.setMessage("PREPARE");
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -562,7 +565,7 @@ public class Server {
                                         requestResult = String.valueOf(data.insertReservation(dbHelper.getInsertParams()));
                                     }
                                     case "reservation_seat" ->{
-                                        requestResult = String.valueOf(data.insertReservationSeat(dbHelper.getInsertParams() , dbHelper.getId()));
+                                        requestResult = String.valueOf(data.insertReservationSeat(dbHelper.getInsertParams()));
                                     }
                                     case "user" ->{
                                         requestResult = String.valueOf(data.insertUser(dbHelper.getInsertParams()));
@@ -653,6 +656,7 @@ public class Server {
                         //we can automatically remove it from the list
                         if(dbHelper.getOperation().equals("SELECT")){
                             listDbHelper.pop();
+
                         }
                     }else {
                         sendPrepare();
@@ -919,7 +923,7 @@ public class Server {
                     }catch (ClassNotFoundException  e){
                         e.printStackTrace();
                     }
-
+                    //Trava depois aqui
                     while(true){
                         if(!this.dbHelper.getRequestResult().equals("")){
                             oos.writeObject(this.dbHelper.getRequestResult());

@@ -375,19 +375,12 @@ public class ClientUI {
         dataHora += new SimpleDateFormat("HH:mm").format(dataHoraAtual);
 
 
+        //Preciso de mandar tudo
+        //INSERT, reservation_seat, clientID , datas_hora, id_show, lugar escolhido
         ArrayList<String> aux = new ArrayList<>();
-        Collections.addAll(aux,dataHora, "0" ,Integer.toString(client.getClientID()),Integer.toString(idShow));
-        this.client.createDBHelper("INSERT", "reservation", aux, client.getClientID(), null);
-        String idReservation = client.waitToReceiveResultRequest();
-
-
-        //Ele nao quer fazer isto
-        //E na query do lado do dbmanager nao esta a verificar se existe o lugar no espetaculo e se existir ja nao esta reservado por outro
-
-        aux.clear();
-        Collections.addAll(aux, idReservation, Integer.toString(idSeat));
         System.out.println("Fazer a reserva do lugar");
-        this.client.createDBHelper("INSERT", "reservation_seat", aux, client.getClientID(), null);          //AUX = idReserva and id_lugar        o user Id   e null pois nao precisamos de enviar nada para o login
+        Collections.addAll(aux,Integer.toString(client.getClientID()),dataHora ,Integer.toString(idShow),Integer.toString(idSeat));
+        this.client.createDBHelper("INSERT", "reservation_seat", aux, -1, null);
         System.out.println("Depois de fazer a reserva do lugar");
         System.out.println(client.waitToReceiveResultRequest());
     }

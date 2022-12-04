@@ -532,7 +532,7 @@ public class DBManager {
     }
 
 
-    public String insertReservationSeat(ArrayList<String> parameters , Integer userId) {
+    public String insertReservationSeat(ArrayList<String> parameters) {
         Statement statement;
         try{
             statement = dbConn.createStatement();
@@ -541,10 +541,24 @@ public class DBManager {
         }
 
         int i = 0;
-        String sqlQuery = "INSERT INTO reserva_lugar VALUES (" + parameters.get(i++) + " , " + parameters.get(i) + ")";
+        //RECEBIDO -> clientID , datas_hora, id_show, lugar escolhido
+        String sqlQuery = "INSERT INTO reserva VALUES (NULL, '" + parameters.get(1) + "' , 0 ,'" + parameters.get(0) + "', '" + parameters.get(2) + "')";
+
+
 
         try{
-            statement.executeUpdate(sqlQuery);
+            statement.executeUpdate(sqlQuery, statement.RETURN_GENERATED_KEYS);
+            ResultSet rs = statement.getGeneratedKeys();
+            int idReserva = rs.getInt(1);
+
+
+            //sqlQuery = "INSERT INTO reserva_lugar VALUES (" + idReserva + " , " + parameters.get(3) + ")";
+
+
+
+
+
+
             saveQuery(sqlQuery);
             updateVersion();
             return "Reserva de lugar realizada";
