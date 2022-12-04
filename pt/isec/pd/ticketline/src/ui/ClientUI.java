@@ -172,7 +172,7 @@ public class ClientUI {
     }
 
     private void deleteData() {
-        int input = InputProtection.chooseOption(null, "Delete show", "Delete seat", "Delete reservation", "Delete user");
+        int input = InputProtection.chooseOption(null, "Delete show", "Delete seat", "Delete reservation", "Delete user","Delete unpaid reservation");
 
         switch (input){
             case 1 -> {
@@ -195,6 +195,13 @@ public class ClientUI {
             }
             case 4 -> {
                 int id = InputProtection.readInt("User ID: ");
+                /*if (!this.data.deleteUsers(id)){
+                    System.out.println("Could not delete user");
+                }*/
+            }
+            case 5 -> {
+                int reservationId = InputProtection.readInt("Reservation ID: ");
+                this.client.createDBHelper(reservationId, "DELETE", "reservation",1, Integer.toString(client.getClientID()));              //List unpaid reservartion     -> OPTION 3 parameter 0
                 /*if (!this.data.deleteUsers(id)){
                     System.out.println("Could not delete user");
                 }*/

@@ -53,9 +53,8 @@ public class Data {
 
     public String listEmptySeatsDayBefore(Integer showID){return this.resourcesManager.listEmptySeatsDayBefore(showID);}
 
+
     public String listNotOrPaidReservations(Integer showID , ArrayList<String> parameters){return this.resourcesManager.listNotOrPaidReservations(showID,parameters);}
-
-
 
     public String listReservations(Integer reservationID){
         return this.resourcesManager.listReservations(reservationID);
@@ -179,6 +178,8 @@ public class Data {
     public boolean deleteSeat(int id){return this.resourcesManager.deleteSeat(id);}
 
     public boolean deleteUsers(int id){return this.resourcesManager.deleteUsers(id);}
+
+    public boolean deleteUnPaidReservation(int idReservation , ArrayList<String> parameters){return this.resourcesManager.deleteUnPaidReservation(idReservation,parameters);}
 
     public boolean updateShows(int id, HashMap<String, String> newData){
         return this.resourcesManager.updateShows(id, newData);

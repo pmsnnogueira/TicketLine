@@ -610,7 +610,11 @@ public class Server {
                                         requestResult = String.valueOf(data.deleteSeat(dbHelper.getId()));
                                     }
                                     case "reservation" ->{
-                                        requestResult = String.valueOf(data.deleteReservations(dbHelper.getId()));
+                                        if(dbHelper.getOption() != null){
+                                            if(dbHelper.getOption() == 1)
+                                                requestResult = data.listNotOrPaidReservations(dbHelper.getId(),dbHelper.getInsertParams());    // IdReserva , IdUser
+                                        }else
+                                            requestResult = String.valueOf(data.deleteReservations(dbHelper.getId()));
                                     }
                                     case "user" ->{
                                         requestResult = String.valueOf(data.deleteUsers(dbHelper.getId()));
