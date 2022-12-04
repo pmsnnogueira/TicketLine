@@ -49,6 +49,8 @@ public class Client {
     public AtomicInteger indexSV;
     public AtomicReference<String> requestResult;
 
+    public int clientID;
+
     public Client(String serverIP, int serverPort) throws IOException {
         this.serverIP = serverIP;
         this.serverPort = serverPort;
@@ -307,5 +309,13 @@ public class Client {
 
     public void closeClient(){
         srHandle.set(false);
+    }
+
+    public int getClientID() {
+        return clientID;
+    }
+
+    public void setClientID(int clientID) {
+        this.clientID = clientID;
     }
 }

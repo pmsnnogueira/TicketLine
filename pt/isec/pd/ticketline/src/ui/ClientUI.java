@@ -282,12 +282,7 @@ public class ClientUI {
         }
     }
 
-    private void listAllAvailableServers() {
-        //System.out.println(this.data.listAllAvailableServers());
-    }
-
     public void verifyLogin(String username,String password){
-
         ArrayList<String> aux= new ArrayList<>();
         aux.add(username);
         aux.add(password);
@@ -308,12 +303,25 @@ public class ClientUI {
             switch(input){
                 case 1 -> this.client.createDBHelper("INSERT", "show", null, -1 , null);
                 case 2 -> changeShowVisibility();
-                case 4 -> {return;}
+                case 4 -> {
+                    client.closeClient();
+                    return;
+                }
                 default -> {
                     System.out.println("Not a valid option.");
                 }
             }
         }
+    }
+
+    public void makeReservation(){
+        //show all the available shows
+        int id = InputProtection.readInt("Show ID (-1 for all shows): ");
+        this.client.createDBHelper("SELECT", "show", null, id,null);
+        System.out.println(client.waitToReceiveResultRequest());
+
+        int showID = InputProtection.readInt("ID of the show: ");
+
     }
 
     public void clientMenu(){
@@ -323,7 +331,7 @@ public class ClientUI {
             }catch (InterruptedException ignored){
             }
             System.out.println("Main Menu");
-            int input = InputProtection.chooseOption("Choose an action:",  "List shows","List information",
+            int input = InputProtection.chooseOption("Choose an action:",  "List shows","Make a reservation",
                     "Insert data","Delete data",
                     "Update data", "List available servers","Exit");
 
@@ -337,8 +345,7 @@ public class ClientUI {
                 case 3 -> insertData();
                 case 4 -> deleteData();
                 case 5 -> updateData();
-                case 6 -> listAllAvailableServers();
-                case 7 -> {
+                case 6 -> {
                     client.closeClient();
                     return;
                 }

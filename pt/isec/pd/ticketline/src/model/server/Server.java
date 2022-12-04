@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -47,10 +48,10 @@ public class Server {
     private LinkedList<DBHelper> listDbHelper;
     private int serverPort;
     private ServerInit si;
-    private TCPHandler dbProv;
+    private TCPHandler tcpHandler;
 
-    private boolean serverInitContinue;
-    private boolean handleDB;
+    private AtomicReference<Boolean> serverInitContinue;
+    private AtomicReference<Boolean> handleDB;
 
     private MulticastSocket mcs;
 
@@ -58,15 +59,17 @@ public class Server {
     private SocketAddress sa;
     private NetworkInterface ni;
     private ScheduledExecutorService scheduler;
-    private boolean HBHandle;
-    private UDPHandler ch;
-    private boolean UDPHandle;
+    private AtomicReference<Boolean> HBHandle;
+    private UDPHandler udpHandler;
+    private AtomicReference<Boolean> UDPHandle;
     private String clientIP;
     private int clientPort;
     private AtomicReference<Boolean> prepare;
     private AtomicReference<Boolean> masterSV;
     private AtomicReference<Integer> proceed;
-
+    private ScheduledFuture<?> sendHeartBeatExecutor;
+    private ScheduledFuture<?> serverLifeCheckExecutor;
+    private AtomicReference<Boolean> tcpHandle;
     private int confirmations;
 
     public Server(int port, String DBDirectory) throws SQLException, IOException, InterruptedException {
@@ -78,7 +81,7 @@ public class Server {
         this.dbCopyHeartBeat = null;
         this.DBDirectory = DBDirectory;
         this.serverPort = port;
-        this.serverInitContinue = true;
+        this.serverInitContinue = new AtomicReference<>(true);
         this.mcs = new MulticastSocket(Integer.parseInt(MULTICAST.getValue(1)));
         this.ipGroup = InetAddress.getByName( MULTICAST.getValue(0));
         this.sa = new InetSocketAddress(ipGroup, Integer.parseInt( MULTICAST.getValue(1)));
@@ -93,14 +96,16 @@ public class Server {
         // server initiaton phase
         si = new ServerInit();
         si.start();
-        si.join(30000);
-        this.serverInitContinue = false;
+        Thread.sleep(30000);
+        serverInitContinue.set(false);
+        si.join(1000);
+        si.interrupt();
 
         transferDatabase(dbCopyHeartBeat);
 
         //start thread to handle the DB operations
         this.hbWithHighestVersion = null;
-        this.handleDB = true;
+        this.handleDB = new AtomicReference<>(true);
         dbHelper = null;
         listDbHelper = new LinkedList<>();
 
@@ -115,25 +120,26 @@ public class Server {
 
         //Every 10 seconds, the server will send a heart beat through multicast
         //to every other on-line server
-        scheduler.scheduleAtFixedRate(new ExecutorSendHeartBeat(heartBeat, mcs),
+        sendHeartBeatExecutor = scheduler.scheduleAtFixedRate(new ExecutorSendHeartBeat(heartBeat, mcs),
                 0, 10, TimeUnit.SECONDS);
         //Every 35 seconds, the server will check if there is any server
         //who hasn't sent a heartbeat in the last 35 secs
-        scheduler.scheduleAtFixedRate(new ServerLifeCheck(this.data), 0, 35, TimeUnit.SECONDS);
+        serverLifeCheckExecutor = scheduler.scheduleAtFixedRate(new ServerLifeCheck(this.data), 0, 35, TimeUnit.SECONDS);
 
         //start thread to receive the heartbeats
-        this.HBHandle = true;
+        this.HBHandle = new AtomicReference<>(true);
         hbh = new HeartBeatReceiver();
         hbh.start();
 
         //start thread to handle tcp connections
-        dbProv = new TCPHandler();
-        dbProv.start();
+        this.tcpHandle = new AtomicReference<>(true);
+        tcpHandler = new TCPHandler();
+        tcpHandler.start();
 
         //start thread to handle udp connections
-        this.UDPHandle = true;
-        this.ch = new UDPHandler();
-        this.ch.start();
+        this.UDPHandle = new AtomicReference<>(true);
+        this.udpHandler = new UDPHandler();
+        this.udpHandler.start();
     }
 
     public String listUsers(Integer userID){
@@ -325,14 +331,6 @@ public class Server {
     }
 
     public synchronized void closeServer() throws InterruptedException, IOException, SQLException {
-        mcs.leaveGroup(sa, ni);
-        mcs.close();
-        this.data.closeDB();
-
-        this.handleDB = false;
-        this.dbHandler.join(1000);
-        this.dbHandler.interrupt();
-
         heartBeat.setAvailable(false);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ObjectOutputStream oos = new ObjectOutputStream(baos);
@@ -343,11 +341,30 @@ public class Server {
                 InetAddress.getByName(MULTICAST.getValue(0)),Integer.parseInt( MULTICAST.getValue(1)));
         mcs.send(dp);
 
-        HBHandle = false;
-        hbh.join(10000);
+        this.handleDB.set(false);
+        this.dbHandler.join(5000);
+        this.dbHandler.interrupt();
+
+        this.data.closeDB();
+
+
+        tcpHandle.set(false);
+        tcpHandler.join(5000);
+        tcpHandler.interrupt();
+
+        UDPHandle.set(false);
+        udpHandler.join(5000);
+        udpHandler.interrupt();
+
+        HBHandle.set(false);
+        hbh.join(5000);
         hbh.interrupt();
 
-        scheduler.shutdownNow();
+        sendHeartBeatExecutor.cancel(true);
+        serverLifeCheckExecutor.cancel(true);
+
+        mcs.leaveGroup(sa, ni);
+        mcs.close();
     }
 
     private synchronized void updateDB(HeartBeat hBeat) {
@@ -487,7 +504,7 @@ public class Server {
                 return;
             }
 
-            while(handleDB){
+            while(handleDB.get()){
                 //If it is during the synchronization phase
                 //this thread will not do anything
                 if (prepare.get()){
@@ -629,11 +646,10 @@ public class Server {
         }
     }
 
-
     class HeartBeatReceiver extends Thread{
         @Override
         public void run() {
-            while(HBHandle)
+            while(HBHandle.get())
             {
                 if (mcs.isClosed()){
                     break;
@@ -682,7 +698,7 @@ public class Server {
         @Override
         public void run() {
             HeartBeat heartBeat;
-            while(serverInitContinue)
+            while(serverInitContinue.get())
             {
                 if (mcs.isClosed()){
                     break;
@@ -729,7 +745,7 @@ public class Server {
                 return;
             }
             Socket socket = null;
-            while(true)
+            while(tcpHandle.get())
             {
                 try {
                     socket = serverSocket.accept();
@@ -814,7 +830,7 @@ public class Server {
         }
         @Override
         public void run() {
-            while(UDPHandle){
+            while(UDPHandle.get()){
                 if(prepare.get() && masterSV.get()){
                     getServersConfirmation(socketUDP);
                     continue;
