@@ -274,8 +274,10 @@ public class Client {
     //Function to send new queries SELECT
     public void createDBHelper(int id,String operation, String table , int option,String parameters) {
             ArrayList<String> aux = null;
-            if(parameters != null)
+            if(parameters != null) {
+                aux = new ArrayList<>();
                 aux.add(parameters);
+            }
 
             dbHelper = addDBHelper(id,operation, table,  option, aux);
             hasNewRequest.set(true);

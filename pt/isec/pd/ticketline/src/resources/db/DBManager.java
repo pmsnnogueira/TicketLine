@@ -282,18 +282,25 @@ public class DBManager {
             String sqlQuery = "SELECT id AS Id , data_hora AS dataHora, id_espetaculo AS id_espetaculo FROM reserva WHERE pago = "+ parameters.get(0) +" and id_utilizador = '" + userID + "'";
             ResultSet resultSet = statement.executeQuery(sqlQuery);
             StringBuilder str = new StringBuilder();
-            str.append("\n---------------------------------------------------------------------------------------------\n");
-            str.append(String.format("|%-4s|%-19s|%-30s|", "Id_Reserva", "Data Hora", "Id_espetaculo"));
-            str.append("\n---------------------------------------------------------------------------------------------\n");
 
+            str.append("\n------------------------------------------------\n");
+            str.append(String.format("|%-11s|%-20s|%-2s|", "Id_Reserva", "Data_Hora", "Id_Espetaculo"));
+            str.append("\n------------------------------------------------\n");
+
+            if(!resultSet.next()){
+                resultSet.close();
+                statement.close();
+                if(parameters.get(0).equals("0"))
+                    return ("You dont have any unpaid reservation");
+                return ("You dont have any paid reservation");
+            }
 
             while(resultSet.next()){
                 int id = resultSet.getInt("Id");
                 String dataHora = resultSet.getString("dataHora");
                 int id_espetaculo = resultSet.getInt("id_espetaculo");
-
-                str.append(String.format("|%-4s|%-19s|%-30s|", id , dataHora, id_espetaculo));
-                str.append("\n---------------------------------------------------------------------------------------------\n");
+                str.append(String.format("|%-11s|%-20s|%-2s|", id , dataHora, id_espetaculo));
+                str.append("\n---------------------------------------\n");
             }
             resultSet.close();
             statement.close();

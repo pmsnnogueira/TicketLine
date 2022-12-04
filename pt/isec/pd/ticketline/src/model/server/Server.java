@@ -96,7 +96,7 @@ public class Server {
         // server initiaton phase
         si = new ServerInit();
         si.start();
-        Thread.sleep(30000);
+        Thread.sleep(30);
         serverInitContinue.set(false);
         si.join(1000);
         si.interrupt();
