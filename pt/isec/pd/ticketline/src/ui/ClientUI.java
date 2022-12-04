@@ -26,67 +26,42 @@ public class ClientUI {
                    |_|  |_____\\_____|_|\\_\\______|  |_|  |______|_____|_| \\_|______|  \\_____|______|_____|______|_| \\_|  |_|  \s  """);
     }
 
-    public int menuInicial(){
-        Scanner sc = new Scanner(System.in);
-        int opcao = 0;
-
-        do {
-            System.out.println("# 1 - Login");
-            System.out.println("# 2 - Register");
-            System.out.println("# 3 - Exit");
-            System.out.print("Option: ");
-            opcao = sc.nextInt();
-        } while(opcao < 0 || opcao > 3);
-
-        return (opcao);
-    }
     public boolean loginRegister(){
-        int opcao = -1;
-        boolean res = false;
+        int option = InputProtection.chooseOption("Choose a menu: " , "Login","Register","Exit");
 
-        System.out.println(art());
-        opcao = InputProtection.chooseOption("Choose a menu: " , "Login","Register","Exit");
-        do {
-            if (opcao == 1) {
-                res = login();
+        switch (option){
+            case 1 -> {
+                return login();
             }
-            if (opcao == 2) {
-                res = registerUser();
+            case 2 ->{
+                return registerUser();
             }
-            if (opcao == 3) {
-                //Sair
+            default -> {
                 return false;
             }
-        }while (!res);
-        return true;
+        }
     }
 
 
     public boolean registerUser(){
-        Scanner sc = new Scanner(System.in);
-        String nome, username, password;
-
-        nome = InputProtection.readString("Name: ", false);
-        username = InputProtection.readString("Username: ", false);
-
-        password = InputProtection.readString("Password: ", false);
-
-        int administrador = 0;
-        int autenticado = 1;
+        String nome = InputProtection.readString("Name: ", false);
+        String username = InputProtection.readString("Username(no spaces): ", true);
+        String password = InputProtection.readString("Password: ", false);
 
         ArrayList<String> parameters = new ArrayList<>();
         parameters.add(username);
         parameters.add(nome);
         parameters.add(password);
-        parameters.add(Integer.toString(administrador));
-        parameters.add(Integer.toString(autenticado));
 
         //Send information to server
         this.client.createDBHelper("INSERT","user" , parameters,-1 ,null);
-        System.out.println(client.waitToReceiveResultRequest());
-        //adicionar user à db
-        //System.out.println((connDB.insertUser(nome , username , password))?
-          //      "Utilizador Inserido com sucesso":"Nome de Utilizador já em uso");
+
+        if(client.waitToReceiveResultRequest().equals("false")){
+            System.out.println("Could not create a new user! Try again!");
+            return false;
+        }
+
+        System.out.println("New user created! Welcome!");
         return true;
     }
     public boolean login(){
@@ -94,9 +69,9 @@ public class ClientUI {
         String username, password;
         System.out.println("\nLogin");
         do {
-            username = InputProtection.readString("\tUsername: ", true);
+            username = InputProtection.readString("\tUsername: ", false);
 
-            password = InputProtection.readString("\tPassword: ", true);
+            password = InputProtection.readString("\tPassword: ", false);
 
             verifyLogin(username, password);
             String out = client.waitToReceiveResultRequest();
@@ -115,34 +90,21 @@ public class ClientUI {
 
 
     private void listInformation(){
-        int input = InputProtection.chooseOption(null, "List shows", "List reservations",
-                "List seats", "List users");
+        int input = InputProtection.chooseOption(null, "List reservations","List seats");
         ArrayList<String> empty = new ArrayList<>();
         switch (input){
-            case 1 -> {
-                int id = InputProtection.readInt("Show ID (-1 for all shows): ");
-                this.client.createDBHelper("SELECT", "show", empty, id,null);
-                System.out.println(client.waitToReceiveResultRequest());
-                /*System.out.println(this.data.listShows(id == -1 ? null : id));*/
-            }
-            case 2 ->{
+            case 1 ->{
                 int id = InputProtection.readInt("Reservation ID (-1 for all reservations): ");
                 this.client.createDBHelper("SELECT", "reservation", empty, id , null);
                 System.out.println(client.waitToReceiveResultRequest());
                 //System.out.println(this.data.listReservations(id == -1 ? null : id));
             }
-            case 3 ->{
+            case 2 ->{
                 int id = InputProtection.readInt("Seats ID (-1 for all seats): ");
                 //System.out.println(this.data.listSeats(id == -1 ? null : id));
             }
-            case 4 ->{
-                int id = InputProtection.readInt("User ID (-1 for all users): ");
-                this.client.createDBHelper("SELECT","user" , empty,id,null);
-                System.out.println(client.waitToReceiveResultRequest());
-            }
             default -> {
                 System.out.println("Not a valid option! Try again!");
-                //listInformation();
             }
         }
     }
@@ -332,52 +294,69 @@ public class ClientUI {
         this.client.createDBHelper("SELECT","user" ,  null,-1 ,aux);
     }
 
-    public void start(){
-
-        if(!loginRegister())
-            return;
-
-        while (true){
+    public void adminMenu(){
+        while(true){
             try{
                 Thread.sleep(500);
             }catch (InterruptedException ignored){
             }
-
-            if(admin == 1){
-                System.out.println("Admin Menu");
-                int input = InputProtection.chooseOption("Choose an action:", "Insert show",
+            System.out.println("Admin Menu");
+            int input = InputProtection.chooseOption("Choose an action:", "Insert show",
                     "Make show visible","Delete non payed show"
                     ,"Exit");
-                
-                switch(input){
-                    case 1 -> this.client.createDBHelper("INSERT", "show", null, -1 , null);
-                    case 2 -> changeShowVisibility();
-                    case 4 -> {return;}
-                    default -> {
-                        System.out.println("Not a valid option.");
-                    }
+
+            switch(input){
+                case 1 -> this.client.createDBHelper("INSERT", "show", null, -1 , null);
+                case 2 -> changeShowVisibility();
+                case 4 -> {return;}
+                default -> {
+                    System.out.println("Not a valid option.");
                 }
             }
-            else{
-                System.out.println("Main Menu");
-                int input = InputProtection.chooseOption("Choose an action:", "List information",
+        }
+    }
+
+    public void clientMenu(){
+        while(true){
+            try{
+                Thread.sleep(500);
+            }catch (InterruptedException ignored){
+            }
+            System.out.println("Main Menu");
+            int input = InputProtection.chooseOption("Choose an action:",  "List shows","List information",
                     "Insert data","Delete data",
                     "Update data", "List available servers","Exit");
 
-                switch (input){
-                    case 1 -> listInformation();
-                    case 2 -> insertData();
-                    case 3 -> deleteData();
-                    case 4 -> updateData();
-                    case 5 -> listAllAvailableServers();
-                    case 6 -> {
-                        /*try{
-                            this.data.closeServer();
-                        }catch (SQLException | IOException | InterruptedException ignored){}*/
-                        return;
-                    }
+            switch (input){
+                case 1 ->{
+                    int id = InputProtection.readInt("Show ID (-1 for all shows): ");
+                    this.client.createDBHelper("SELECT", "show", null, id,null);
+                    System.out.println(client.waitToReceiveResultRequest());
+                }
+                case 2 -> listInformation();
+                case 3 -> insertData();
+                case 4 -> deleteData();
+                case 5 -> updateData();
+                case 6 -> listAllAvailableServers();
+                case 7 -> {
+                    client.closeClient();
+                    return;
                 }
             }
+        }
+    }
+
+    public void start(){
+        System.out.println(art());
+
+        if(!loginRegister()){
+            System.out.println("Could not login");
+            return;
+        }
+
+        switch (admin){
+            case 0 -> clientMenu();
+            case 1 -> adminMenu();
         }
     }
 }

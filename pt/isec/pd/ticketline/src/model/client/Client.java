@@ -12,6 +12,18 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class Client {
+    public static void main(String[] args) {
+        ClientUI clientUI = null;
+        try {
+            Client client = new Client(args[0], Integer.parseInt(args[1]));
+            clientUI = new ClientUI(client);
+        } catch (IOException e) {
+            System.out.println("Could not initiate a client");
+            return;
+        }
+
+        clientUI.start();
+    }
 
     private static final String SELECT = "SELECT";
     private static final String INSERT = "INSERT";
@@ -23,18 +35,6 @@ public class Client {
     private static final String RESERVATION = "reservation";
 
     private static final String CONFIRMED = "CONFIRMED";
-    public static void main(String[] args) {
-        ClientUI clientUI = null;
-        try {
-            Client client = new Client(args[0], Integer.parseInt(args[1]));
-            clientUI = new ClientUI(client);
-        } catch (IOException e) {
-            System.out.println("Could not create a client (ERROR:" + e + ")");
-            return;
-        }
-
-        clientUI.start();
-    }
 
     public String serverIP;
     public int serverPort;
@@ -87,8 +87,6 @@ public class Client {
         try {
             socket.send(packetSent);
         } catch (IOException e) {
-            System.out.println("Error");
-
             return false;
         }
 
@@ -121,6 +119,8 @@ public class Client {
         DBHelper dbHelper = new DBHelper();
         if (operation.equals("INSERT")) {
             if (table.equals("user")) {
+                insertParams.add("0");
+                insertParams.add("0");
                 insertUser(dbHelper,insertParams);
                 return dbHelper;
             }
@@ -305,4 +305,7 @@ public class Client {
         return "";
     }
 
+    public void closeClient(){
+        srHandle.set(false);
+    }
 }

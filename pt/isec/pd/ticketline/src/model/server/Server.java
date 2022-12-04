@@ -20,6 +20,19 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class Server {
+    public static void main(String[] args){
+        ServerUI serverUI = null;
+        try{
+            ModelManager modelManager = new ModelManager(Integer.parseInt(args[0]), args[1]);
+            serverUI = new ServerUI(modelManager);
+        }catch (SQLException | IOException | InterruptedException e){
+            e.printStackTrace();
+        }
+
+        assert serverUI != null;
+        serverUI.start();
+    }
+
     private final Data data;
     private final String DBDirectory;
     private volatile boolean available;
@@ -55,19 +68,6 @@ public class Server {
     private AtomicReference<Integer> proceed;
 
     private int confirmations;
-    public static void main(String[] args)
-    {
-        ServerUI serverUI = null;
-        try{
-            ModelManager modelManager = new ModelManager(Integer.parseInt(args[0]), args[1]);
-            serverUI = new ServerUI(modelManager);
-        }catch (SQLException | IOException | InterruptedException e){
-            e.printStackTrace();
-        }
-
-        assert serverUI != null;
-        serverUI.start();
-    }
 
     public Server(int port, String DBDirectory) throws SQLException, IOException, InterruptedException {
         this.prepare = new AtomicReference<>(false);
