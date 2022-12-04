@@ -80,8 +80,8 @@ public class Data {
         return this.resourcesManager.insertReservation(parameters);
     }
 
-    public String insertReservationSeat(ArrayList<String> parameters){
-        return this.resourcesManager.insertReservationSeat(parameters);
+    public String insertReservationSeat(ArrayList<String> parameters ,Integer userId){
+        return this.resourcesManager.insertReservationSeat(parameters , userId);
     }
 
     public boolean insertUser(ArrayList<String> parameters){

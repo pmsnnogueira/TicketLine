@@ -136,7 +136,7 @@ public class Client {
                 return dbHelper;
             }
             if (table.equals(RESERVATION_SEAT)) {
-                insertReservationSeat(dbHelper,insertParams);
+                insertReservationSeat(dbHelper,insertParams , id);
                 return dbHelper;
             }
         }
@@ -310,10 +310,11 @@ public class Client {
         return true;
     }
 
-    public boolean insertReservationSeat(DBHelper dbHelper ,ArrayList<String> parameters){
+    public boolean insertReservationSeat(DBHelper dbHelper ,ArrayList<String> parameters , Integer clientID){
         dbHelper.setOperation(INSERT);
         dbHelper.setTable(RESERVATION_SEAT);
         dbHelper.setInsertParams(parameters);
+        dbHelper.setId(clientID);
         return true;
     }
 

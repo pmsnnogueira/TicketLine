@@ -279,31 +279,22 @@ public class DBManager {
         try{
             Statement statement = dbConn.createStatement();
 
-            String sqlQuery = "SELECT id AS Id , data_hora AS dataHora, id_espetaculo AS id_espetaculo FROM reserva WHERE pago = "+ parameters.get(0) +" and id_utilizador = '" + userID + "'";
+            String sqlQuery = "SELECT id , data_hora , id_espetaculo FROM reserva WHERE pago = "+ parameters.get(0) +" and id_utilizador = '" + userID + "'";
             ResultSet resultSet = statement.executeQuery(sqlQuery);
             StringBuilder str = new StringBuilder();
 
             str.append("\n------------------------------------------------\n");
-            str.append(String.format("|%-11s|%-20s|%-2s|", "Id_Reserva", "Data_Hora", "Id_Espetaculo"));
+            str.append(String.format("|%-11s|%-20s|%15s|", "Id_Reserva", "Data_Hora", "Id_Espetaculo"));
             str.append("\n------------------------------------------------\n");
-
-            if(!resultSet.next()){
-                resultSet.close();
-                statement.close();
-                if(parameters.get(0).equals("0"))
-                    return ("You dont have any unpaid reservation");
-                return ("You dont have any paid reservation");
-            }
-
             while(resultSet.next()){
-                int id = resultSet.getInt("Id");
-                String dataHora = resultSet.getString("dataHora");
+                int id = resultSet.getInt("id");
+                String dataHora = resultSet.getString("data_hora");
                 int id_espetaculo = resultSet.getInt("id_espetaculo");
-                str.append(String.format("|%-11s|%-20s|%-2s|", id , dataHora, id_espetaculo));
+                str.append(String.format("|%-11s|%-20s|%-25s|", id , dataHora, id_espetaculo));
                 str.append("\n---------------------------------------\n");
             }
             resultSet.close();
-            statement.close();
+             statement.close();
 
             return str.toString();
         }catch (SQLException e){
@@ -520,7 +511,7 @@ public class DBManager {
     }
 
 
-    public String insertReservationSeat(ArrayList<String> parameters){
+    public String insertReservationSeat(ArrayList<String> parameters , Integer userId){
         Statement statement;
         try{
             statement = dbConn.createStatement();
@@ -532,12 +523,10 @@ public class DBManager {
         String sqlQuery = "INSERT INTO reserva_lugar VALUES (" + parameters.get(i++) + " , " + parameters.get(i) + ")";
 
         try{
-            statement.executeUpdate(sqlQuery, statement.RETURN_GENERATED_KEYS);
-            ResultSet rs = statement.getGeneratedKeys();
             saveQuery(sqlQuery);
             statement.close();
             updateVersion();
-            return Integer.toString(rs.getInt(1));
+            return "Reserva de lugar realizada";
         }catch (SQLException e){
             e.printStackTrace();
             return null;

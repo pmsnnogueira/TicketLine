@@ -549,7 +549,7 @@ public class Server {
                                         requestResult = String.valueOf(data.insertReservation(dbHelper.getInsertParams()));
                                     }
                                     case "reservation_seat" ->{
-                                        requestResult = String.valueOf(data.insertReservationSeat(dbHelper.getInsertParams()));
+                                        requestResult = String.valueOf(data.insertReservationSeat(dbHelper.getInsertParams() , dbHelper.getId()));
                                     }
                                     case "user" ->{
                                         requestResult = String.valueOf(data.insertUser(dbHelper.getInsertParams()));
@@ -613,11 +613,11 @@ public class Server {
                                         requestResult = String.valueOf(data.deleteSeat(dbHelper.getId()));
                                     }
                                     case "reservation" ->{
-                                        if(dbHelper.getOption() != null){
-                                            if(dbHelper.getOption() == 1)
-                                                requestResult = data.listNotOrPaidReservations(dbHelper.getId(),dbHelper.getInsertParams());    // IdReserva , IdUser
-                                        }else
-                                            requestResult = String.valueOf(data.deleteReservations(dbHelper.getId()));
+                                        if(dbHelper.getOption() != null)
+                                            if(dbHelper.getOption() == 1) {
+                                                requestResult = data.listNotOrPaidReservations(dbHelper.getId(), dbHelper.getInsertParams());    // IdReserva , IdUser
+                                                requestResult = String.valueOf(data.deleteReservations(dbHelper.getId()));
+                                            }
                                     }
                                     case "user" ->{
                                         requestResult = String.valueOf(data.deleteUsers(dbHelper.getId()));

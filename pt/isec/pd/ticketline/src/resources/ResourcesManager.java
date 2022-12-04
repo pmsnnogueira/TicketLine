@@ -77,8 +77,8 @@ public class ResourcesManager {
     }
 
 
-    public String insertReservationSeat(ArrayList<String> parameters){
-        return this.dbManager.insertReservationSeat(parameters);
+    public String insertReservationSeat(ArrayList<String> parameters , Integer userId){
+        return this.dbManager.insertReservationSeat(parameters ,userId);
     }
 
 
