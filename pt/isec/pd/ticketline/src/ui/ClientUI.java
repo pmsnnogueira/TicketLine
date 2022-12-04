@@ -81,6 +81,12 @@ public class ClientUI {
             }
             if(out.contains("\nAdmin:1"))
                 admin = 1;
+
+            out = out.replaceAll(" ", "");
+            String[] splitted = out.split("\n");
+            String[] id = splitted[0].split(":");
+
+            client.setClientID(Integer.parseInt(id[1]));
             return true;
         }while (true);
     }
@@ -94,18 +100,23 @@ public class ClientUI {
         switch (input){
             case 1 ->{
                 int id = InputProtection.readInt("Show ID (-1 for all shows): ");
-                this.client.createDBHelper("SELECT", "show", empty, id , null);
+                this.client.createDBHelper("SELECT", "show", null, id , null);
                 System.out.println(client.waitToReceiveResultRequest());
             }
             case 2 ->{
                 int id = InputProtection.readInt("Reservation ID (-1 for all reservations): ");
-                this.client.createDBHelper("SELECT", "reservation", empty, id , null);
+                this.client.createDBHelper("SELECT", "reservation", null, id , null);
                 System.out.println(client.waitToReceiveResultRequest());
                 //System.out.println(this.data.listReservations(id == -1 ? null : id));
             }
             case 3 ->{
-                int id = InputProtection.readInt("Seats ID (-1 for all seats): ");
-                //System.out.println(this.data.listSeats(id == -1 ? null : id));
+                int id = InputProtection.readInt("Show ID (-1 for all shows): ");
+                this.client.createDBHelper("SELECT", "show", null, id , null);
+                System.out.println(client.waitToReceiveResultRequest());
+
+                int idShow = InputProtection.readInt("ID of the show: ");
+                this.client.createDBHelper("SELECT", "seat", null, idShow , null);
+                System.out.println(client.waitToReceiveResultRequest());
             }
             case 4->{
                 this.client.createDBHelper(-1, "SELECT", "show",2,null);              //Show with empty seats(one day before)     -> OPTION 2
@@ -349,21 +360,31 @@ public class ClientUI {
     public void makeReservation(){
         //show all the available shows
         int id = InputProtection.readInt("Show ID (-1 for all shows): ");
-        this.client.createDBHelper("SELECT", "show", null, id,null);
+        this.client.createDBHelper("SELECT", "show", null, id , null);
         System.out.println(client.waitToReceiveResultRequest());
 
+        int idShow = InputProtection.readInt("ID of the show: ");
+        this.client.createDBHelper("SELECT", "seat", null, idShow , null);
+        System.out.println(client.waitToReceiveResultRequest());
+        int idSeat = InputProtection.readInt("ID of the seat: ");
+
+        //ADICONAR RESERVA\
         Date dataHoraAtual = new Date();
         String dataHora = new SimpleDateFormat("dd:MM:yyyy").format(dataHoraAtual) + "-";
         dataHora += new SimpleDateFormat("HH:mm").format(dataHoraAtual);
-        System.out.println(dataHora);
 
 
-        int showID = InputProtection.readInt("ID of the show: ");
         ArrayList<String> aux = new ArrayList<>();
-        Collections.addAll(aux,dataHora, "0",Integer.toString(client.getClientID()),Integer.toString(showID));
+        Collections.addAll(aux,dataHora, "0" ,Integer.toString(client.getClientID()),Integer.toString(idShow));
         this.client.createDBHelper("INSERT", "reservation", aux, client.getClientID(), null);
-        System.out.println(client.waitToReceiveResultRequest());
+        String idReservation = client.waitToReceiveResultRequest();
 
+        aux.clear();
+        Collections.addAll(aux, idReservation,Integer.toString(idSeat));
+        System.out.println("Fazer a reserva do lugar");
+        this.client.createDBHelper("INSERT", "reservation_seat", aux, -1, null);          //AUX = idReserva and id_lugar
+        System.out.println("Depois de fazer a reserva do lugar");
+        System.out.println(client.waitToReceiveResultRequest());
     }
 
     public void payReservation(){

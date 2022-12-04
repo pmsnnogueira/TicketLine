@@ -548,6 +548,9 @@ public class Server {
                                     case "reservation" ->{
                                         requestResult = String.valueOf(data.insertReservation(dbHelper.getInsertParams()));
                                     }
+                                    case "reservation_seat" ->{
+                                        requestResult = String.valueOf(data.insertReservationSeat(dbHelper.getInsertParams()));
+                                    }
                                     case "user" ->{
                                         requestResult = String.valueOf(data.insertUser(dbHelper.getInsertParams()));
                                     }

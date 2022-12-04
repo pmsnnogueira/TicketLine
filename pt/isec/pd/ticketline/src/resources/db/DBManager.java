@@ -170,14 +170,14 @@ public class DBManager {
         }
     }
 
-    public String listSeats(Integer placeID){
+    public String listSeats(Integer showID){
         try{
             Statement statement = dbConn.createStatement();
 
             String sqlQuery = "SELECT id, fila, assento, preco, espetaculo_id FROM lugar";
 
-            if (placeID != null)
-                sqlQuery += " WHERE id like '%" + placeID + "%'";
+            if (showID != null)
+                sqlQuery += " WHERE espetaculo_id like '%" + showID + "%'";
 
             ResultSet resultSet = statement.executeQuery(sqlQuery);
 
@@ -492,12 +492,12 @@ public class DBManager {
         return true;
     }
 
-    public boolean insertReservation(ArrayList<String> parameters){
+    public String insertReservation(ArrayList<String> parameters){
         Statement statement;
         try{
             statement = dbConn.createStatement();
         }catch (SQLException e){
-            return false;
+            return null;
         }
 
         int i = 0;
@@ -506,15 +506,45 @@ public class DBManager {
                 parameters.get(i) + "')";
 
         try{
-            statement.executeUpdate(sqlQuery);
+            statement.executeUpdate(sqlQuery, statement.RETURN_GENERATED_KEYS);
+            ResultSet rs = statement.getGeneratedKeys();
             saveQuery(sqlQuery);
             statement.close();
+            updateVersion();
+            return Integer.toString(rs.getInt(1));
         }catch (SQLException e){
-            return false;
+            e.printStackTrace();
+            return null;
         }
-        updateVersion();
-        return true;
+
     }
+
+
+    public String insertReservationSeat(ArrayList<String> parameters){
+        Statement statement;
+        try{
+            statement = dbConn.createStatement();
+        }catch (SQLException e){
+            return null;
+        }
+
+        int i = 0;
+        String sqlQuery = "INSERT INTO reserva_lugar VALUES (" + parameters.get(i++) + " , " + parameters.get(i) + ")";
+
+        try{
+            statement.executeUpdate(sqlQuery, statement.RETURN_GENERATED_KEYS);
+            ResultSet rs = statement.getGeneratedKeys();
+            saveQuery(sqlQuery);
+            statement.close();
+            updateVersion();
+            return Integer.toString(rs.getInt(1));
+        }catch (SQLException e){
+            e.printStackTrace();
+            return null;
+        }
+
+    }
+
 
     public int getDatabaseVersion(){
         int versao=0;

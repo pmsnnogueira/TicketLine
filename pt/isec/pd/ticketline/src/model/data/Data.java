@@ -76,8 +76,12 @@ public class Data {
         return this.resourcesManager.insertSeat(parameters , numShow);
     }
 
-    public boolean insertReservation(ArrayList<String> parameters){
+    public String insertReservation(ArrayList<String> parameters){
         return this.resourcesManager.insertReservation(parameters);
+    }
+
+    public String insertReservationSeat(ArrayList<String> parameters){
+        return this.resourcesManager.insertReservationSeat(parameters);
     }
 
     public boolean insertUser(ArrayList<String> parameters){

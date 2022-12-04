@@ -72,9 +72,15 @@ public class ResourcesManager {
         return this.dbManager.insertSeat(parameters , numShow);
     }
 
-    public boolean insertReservation(ArrayList<String> parameters){
+    public String insertReservation(ArrayList<String> parameters){
         return this.dbManager.insertReservation(parameters);
     }
+
+
+    public String insertReservationSeat(ArrayList<String> parameters){
+        return this.dbManager.insertReservationSeat(parameters);
+    }
+
 
     public boolean insertUser(ArrayList<String> parameters){
         return this.dbManager.insertUser(parameters);
