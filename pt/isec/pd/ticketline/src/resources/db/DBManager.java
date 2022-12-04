@@ -1,6 +1,5 @@
 package pt.isec.pd.ticketline.src.resources.db;
 
-import pt.isec.pd.ticketline.src.model.server.MULTICAST;
 import pt.isec.pd.ticketline.src.model.server.heartbeat.HeartBeat;
 
 import java.io.*;
@@ -13,15 +12,14 @@ public class DBManager {
 
     private Connection dbConn;
     private Connection defaultDB;
-    private MulticastSocket mcs;
+
     private HeartBeat serverHB;
 
     private String addShowQuery;
 
-    public DBManager(MulticastSocket mcs) throws SQLException {
+    public DBManager() throws SQLException {
         this.dbConn = DriverManager.getConnection("jdbc:sqlite:pt/isec/pd/ticketline/src/resources/db/PD-2022-23-TP.db");
         this.defaultDB = DriverManager.getConnection("jdbc:sqlite:pt/isec/pd/ticketline/src/resources/db/PD-2022-23-TP.db");
-        this.mcs = mcs;
         this.addShowQuery = null;
     }
 
@@ -127,7 +125,7 @@ public class DBManager {
         updateVersion();
     }
 
-    public void multicastQuery(String newQuerie){
+    public void saveQuery(String newQuerie){
         this.serverHB.setQueries(newQuerie);
     }
 
@@ -395,7 +393,7 @@ public class DBManager {
                 contador = 0;
             }        
             statement.close();
-            multicastQuery(sb.toString());
+            saveQuery(sb.toString());
         }catch (SQLException e){
             return false;
         }
@@ -417,7 +415,7 @@ public class DBManager {
 
         try{
             statement.executeUpdate(sqlQuery);
-            multicastQuery(sqlQuery);
+            saveQuery(sqlQuery);
             statement.close();
         }catch (SQLException e){
             return false;
@@ -477,12 +475,6 @@ public class DBManager {
         return true;
     }
 
-    public void printParameters(ArrayList<String> parameters){
-        for(String a : parameters){
-            System.out.println(a);
-        }
-    }
-
     public boolean insertUser(ArrayList<String> parameters){
         Statement statement;
         try{
@@ -514,7 +506,7 @@ public class DBManager {
             
         try{
             statement.executeUpdate(sqlQuery);
-            multicastQuery(sqlQuery);
+            saveQuery(sqlQuery);
             statement.close();
         }catch (SQLException e){
             e.printStackTrace();
@@ -532,7 +524,7 @@ public class DBManager {
             String sqlQuery = "DELETE FROM espetaculo WHERE id=" + id;
             statement.executeUpdate(sqlQuery);
             statement.close();
-            multicastQuery(sqlQuery);
+            saveQuery(sqlQuery);
         }catch(SQLException e){
             return false;
         }
@@ -548,7 +540,7 @@ public class DBManager {
             String sqlQuery = "DELETE FROM lugar WHERE id=" + id;
             statement.executeUpdate(sqlQuery);
             statement.close();
-            multicastQuery(sqlQuery);
+            saveQuery(sqlQuery);
         }catch(SQLException e){
             return false;
         }
@@ -564,7 +556,7 @@ public class DBManager {
             String sqlQuery = "DELETE FROM reserva WHERE id=" + id;
             statement.executeUpdate(sqlQuery);
             statement.close();
-            multicastQuery(sqlQuery);
+            saveQuery(sqlQuery);
         }catch(SQLException e){
             return false;
         }
@@ -580,7 +572,7 @@ public class DBManager {
             String sqlQuery = "DELETE FROM utilizador WHERE id=" + id;
             statement.executeUpdate(sqlQuery);
             statement.close();
-            multicastQuery(sqlQuery);
+            saveQuery(sqlQuery);
         }catch(SQLException e){
             return false;
         }
@@ -621,7 +613,7 @@ public class DBManager {
                     }
                 }
                 statement.executeUpdate(sqlQuery);
-                multicastQuery(sqlQuery);
+                saveQuery(sqlQuery);
             }
 
             statement.close();
@@ -653,7 +645,7 @@ public class DBManager {
                     }
                 }
                 statement.executeUpdate(sqlQuery);
-                multicastQuery(sqlQuery);
+                saveQuery(sqlQuery);
             }
 
             statement.close();
@@ -685,7 +677,7 @@ public class DBManager {
                     }
                 }
                 statement.executeUpdate(sqlQuery);
-                multicastQuery(sqlQuery);
+                saveQuery(sqlQuery);
             }
 
             statement.close();
@@ -720,7 +712,7 @@ public class DBManager {
                     }
                 }
                 statement.executeUpdate(sqlQuery);
-                multicastQuery(sqlQuery);
+                saveQuery(sqlQuery);
             }
 
             statement.close();

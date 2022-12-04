@@ -11,8 +11,8 @@ import java.util.HashMap;
 public class ResourcesManager {
     private final DBManager dbManager;
 
-    public ResourcesManager(MulticastSocket mcs) throws SQLException {
-        this.dbManager = new DBManager(mcs);
+    public ResourcesManager() throws SQLException {
+        this.dbManager = new DBManager();
     }
 
     public boolean connectToDB(int port, String DBDirectory){

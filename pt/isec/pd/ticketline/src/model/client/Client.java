@@ -113,7 +113,7 @@ public class Client {
         servers.clear();
         servers.addAll(Arrays.asList(strings));
         System.out.println(servers);
-        socket.close(); 
+        socket.close();
         return true;
     }
 
@@ -200,11 +200,20 @@ public class Client {
 
 
                         if(msgReceived.equals("CONFIRMED")){
+                            ObjectInputStream ois = new ObjectInputStream(socketSr.getInputStream());
+
+                            //get updated list of servers
+                            String newServers = (String) ois.readObject();
+                            String[] strings = newServers.split("\\|");
+                            servers.clear();
+                            servers.addAll(Arrays.asList(strings));
+
+                            //reset index
+                            indexSV.set(0);
+
                             ObjectOutputStream oos = new ObjectOutputStream(socketSr.getOutputStream());
 
                             oos.writeObject(dbHelper);
-
-                            ObjectInputStream ois = new ObjectInputStream(socketSr.getInputStream());
 
                             requestResult.set((String) ois.readObject());
 
@@ -212,7 +221,17 @@ public class Client {
                             ois.close();
                         }
                         if(msgReceived.equals("SERVER IS UPDATING - PLEASE TRY AGAIN")){
-                            requestResult.set("SERVER IS UPDATING - PLEASE TRY AGAIN");
+                            //if the server fails to receive the client request
+                            //and the client has sent a request to every
+                            if(indexSV.get()==servers.size()){
+                                requestResult.set(msgReceived);
+                                indexSV.set(0);
+                                dbHelper = null;
+                                hasNewRequest.set(false);
+                                continue;
+                            }
+                            indexSV.set(indexSV.get()+1);
+                            continue;
                         }
 
                         os.close();
