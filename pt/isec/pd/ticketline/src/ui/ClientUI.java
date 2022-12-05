@@ -424,10 +424,8 @@ public class ClientUI {
         //Preciso de mandar tudo
         //INSERT, reservation_seat, clientID , datas_hora, id_show, lugar escolhido
         ArrayList<String> aux = new ArrayList<>();
-        System.out.println("Fazer a reserva do lugar");
         Collections.addAll(aux,Integer.toString(client.getClientID()),dataHora ,Integer.toString(idShow),Integer.toString(idSeat));
         this.client.createDBHelper("INSERT", "reservation_seat", aux, -1, null);
-        System.out.println("Depois de fazer a reserva do lugar");
         System.out.println(client.waitToReceiveResultRequest());
     }
 

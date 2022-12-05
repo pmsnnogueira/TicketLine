@@ -159,8 +159,6 @@ public class DBManager {
 
             String sqlQuery = null;
 
-            System.out.println("ID: " + parameters.get(0));
-
             if(parameters.get(0).equals("-2")){
                 sqlQuery = "SELECT distinct e.id FROM espetaculo e ,reserva r WHERE e.id = r.id_espetaculo and e.id" +
                         " NOT IN (SELECT  id_espetaculo FROM reserva r WHERE pago = 1) OR e.id NOT IN(SELECT id_espetaculo FROM reserva)";
