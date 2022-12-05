@@ -360,8 +360,7 @@ public class ClientUI {
             }
             System.out.println("Admin Menu");
             int input = InputProtection.chooseOption("Choose an action:", "List all shows", "Insert show",
-                    "Make show visible","Delete non payed show", "List users", "Edit users",
-                    "Delete users", "Exit");
+                    "Make show visible","Delete non payed show", "List users", "Delete users", "Exit");
 
             switch(input){
                 case 1 -> {
@@ -370,17 +369,34 @@ public class ClientUI {
                     aux.add("0");
                     this.client.createDBHelper("SELECT", "show", aux, -1 , null);
                     System.out.println(client.waitToReceiveResultRequest());
-
-                    this.client.createDBHelper("INSERT", "show", null, -1 , null);}
+                }
                 case 2 -> this.client.createDBHelper("INSERT", "show", null, -1 , null);
                 case 3 -> changeShowVisibility();
-                case 4 -> listUsers();
+                case 4 -> deleteNonPaidShows();
+                case 5 -> listUsers();
                 case 6 -> deleteUser();
+                case 7 -> {
+                    System.out.println("User Will ShutDown");
+                    client.closeClient();
+                    return;
+                }
                 default -> {
                     System.out.println("Not a valid option.");
                 }
             }
         }
+    }
+
+    private void deleteNonPaidShows() {
+        ArrayList<String> aux1 = new ArrayList<>();
+
+        aux1.add(Integer.toString(-2));
+        aux1.add("0");
+        this.client.createDBHelper("SELECT", "show", aux1, -2 , null);
+        System.out.println(client.waitToReceiveResultRequest());
+
+        int showID = InputProtection.readInt("Show ID: ");
+        this.client.createDBHelper(showID, "DELETE", "show", null);
     }
 
     public void makeReservation(){
