@@ -582,7 +582,7 @@ public class Server {
                                                 }
                                             }
                                         }else
-                                            requestResult = data.listShows(dbHelper.getId() , dbHelper.getInsertParams());
+                                            requestResult = data.listShows(dbHelper.getInsertParams());
                                     }
                                     case "seat" ->{
                                         requestResult = data.listSeats(dbHelper.getId());

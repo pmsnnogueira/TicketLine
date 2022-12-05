@@ -123,6 +123,8 @@ public class Client {
         DBHelper dbHelper = new DBHelper();
         if (operation.equals(INSERT)) {
             if (table.equals(USER)) {
+                insertParams.add("0");
+                insertParams.add("0");
                 insertUser(dbHelper,insertParams);
                 return dbHelper;
             }
@@ -149,7 +151,7 @@ public class Client {
                 return dbHelper;
             }
             if(table.equals(SHOW)){
-                listShows(dbHelper , id);
+                listShows(dbHelper , insertParams);
                 return dbHelper;
             }
             if(table.equals(RESERVATION)){
@@ -356,10 +358,10 @@ public class Client {
         return "";
     }
 
-    public String listShows(DBHelper dbHelper,Integer showID){
-        dbHelper.setId(showID == -1 ? null : showID);
+    public String listShows(DBHelper dbHelper,ArrayList<String> parameters){
         dbHelper.setOperation(SELECT);
         dbHelper.setTable(SHOW);
+        dbHelper.setInsertParams(parameters);
         return "";
     }
 

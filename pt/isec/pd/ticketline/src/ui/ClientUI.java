@@ -102,7 +102,7 @@ public class ClientUI {
                 int id = InputProtection.readInt("Show ID (-1 for all shows): ");
                 empty.add(Integer.toString(id));
                 empty.add("1");
-                this.client.createDBHelper("SELECT", "show", null, id , null);
+                this.client.createDBHelper("SELECT", "show", empty, id , null);
                 System.out.println(client.waitToReceiveResultRequest());
             }
             case 2 ->{
@@ -352,13 +352,21 @@ public class ClientUI {
             }catch (InterruptedException ignored){
             }
             System.out.println("Admin Menu");
-            int input = InputProtection.chooseOption("Choose an action:", "Insert show",
+            int input = InputProtection.chooseOption("Choose an action:", "List all shows", "Insert show",
                     "Make show visible","Delete non payed show", "List users", "Edit users",
                     "Delete users", "Exit");
 
             switch(input){
-                case 1 -> this.client.createDBHelper("INSERT", "show", null, -1 , null);
-                case 2 -> changeShowVisibility();
+                case 1 -> {
+                    ArrayList<String> aux = new ArrayList<>();
+                    aux.add("-1");
+                    aux.add("0");
+                    this.client.createDBHelper("SELECT", "show", aux, -1 , null);
+                    System.out.println(client.waitToReceiveResultRequest());
+
+                    this.client.createDBHelper("INSERT", "show", null, -1 , null);}
+                case 2 -> this.client.createDBHelper("INSERT", "show", null, -1 , null);
+                case 3 -> changeShowVisibility();
                 case 4 -> listUsers();
                 case 6 -> deleteUser();
                 default -> {

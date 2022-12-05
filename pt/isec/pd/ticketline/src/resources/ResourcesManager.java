@@ -44,8 +44,8 @@ public class ResourcesManager {
     }
 
     public String verifyUserLogin(ArrayList<String> parameters){return this.dbManager.verifyUserLogin(parameters);}
-    public String listShows(Integer showID, ArrayList<String> parameters){
-        return this.dbManager.listShows(showID ,parameters);
+    public String listShows(ArrayList<String> parameters){
+        return this.dbManager.listShows(parameters);
     }
 
     public String listEmptySeatsDayBefore(Integer showID){return this.dbManager.listEmptySeatsDayBefore(showID);}

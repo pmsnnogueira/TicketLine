@@ -151,7 +151,7 @@ public class DBManager {
     }
 
     //Parameters 0 -> ID            1 -> visivel
-    public String listShows(Integer showID , ArrayList<String> parameters){
+    public String listShows(ArrayList<String> parameters){
         Statement statement = null;
         ResultSet resultSet = null;
         try{
@@ -160,10 +160,10 @@ public class DBManager {
             String sqlQuery = "SELECT id, descricao, tipo, data_hora, duracao, local, localidade, " +
                     "pais, classificacao_etaria FROM espetaculo";
 
-            if (parameters != null) {
+            if (parameters != null && !parameters.get(1).equals("0")) {
                 sqlQuery += " WHERE visivel = " + parameters.get(1) + "";
-                if (parameters.get(0).equals("-1"))
-                    sqlQuery += " and id like '%" + showID + "%'";
+                if (!parameters.get(0).equals("-1"))
+                    sqlQuery += " and id like '%" + parameters.get(0) + "%'";
             }
 
             System.out.println(sqlQuery);
