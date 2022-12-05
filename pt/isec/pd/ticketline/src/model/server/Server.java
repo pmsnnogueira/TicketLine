@@ -34,7 +34,7 @@ public class Server {
         serverUI.start();
     }
 
-    private final static int SERVERTIMEINITIAL = 10000;
+    private final static int SERVERTIMEINITIAL = 30000;
 
     private final static String LOCALIP = "127.0.0.1";
     private final Data data;
