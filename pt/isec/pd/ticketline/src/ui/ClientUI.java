@@ -95,11 +95,12 @@ public class ClientUI {
         //So pode listar as reservas do proprio USER (na listagem normal falta isto)
     private void listInformation(){
         System.out.println("List Menu");
-        int input = InputProtection.chooseOption(null, "List shows","List seats","List shows with empty seats","List reservations","Show unpaid reservations","Show paid reservations","Back to main menu");
+        int input = InputProtection.chooseOption(null, "List shows","List seats","List shows with empty seats and at least 24 hours before","List reservations","Show unpaid reservations","Show paid reservations","Back to main menu");
         ArrayList<String> empty = new ArrayList<>();
         switch (input){
             case 1 ->{
                 int id = InputProtection.readInt("Show ID (-1 for all shows): ");
+                empty.clear();
                 empty.add(Integer.toString(id));
                 empty.add("1");
                 this.client.createDBHelper("SELECT", "show", empty, id , null);
@@ -121,8 +122,7 @@ public class ClientUI {
                 //System.out.println(this.data.listReservations(id == -1 ? null : id));
             }
             case 4 ->{
-                int id = InputProtection.readInt("Reservation ID (-1 for all reservations): ");
-                this.client.createDBHelper("SELECT", "reservation", null, id , null);
+                this.client.createDBHelper(client.getClientID(), "SELECT", "reservation",3,"-1") ;
                 System.out.println(client.waitToReceiveResultRequest());
                 //System.out.println(this.data.listReservations(id == -1 ? null : id));
             }

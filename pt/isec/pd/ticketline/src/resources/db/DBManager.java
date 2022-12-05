@@ -356,13 +356,18 @@ public class DBManager {
         }
     }
 
+    //Parameters -> 0(Pago)
     public String listNotOrPaidReservations(Integer userID,  ArrayList<String>parameters){
         Statement statement = null;
         ResultSet resultSet = null;
         try{
             statement = dbConn.createStatement();
 
-            String sqlQuery = "SELECT id , data_hora , id_espetaculo FROM reserva WHERE pago = "+ parameters.get(0) +" and id_utilizador = '" + userID + "'";
+            String sqlQuery = "SELECT id , data_hora , id_espetaculo FROM reserva WHERE id_utilizador = '" + userID + "'";
+
+            if(parameters != null && !parameters.get(0).equals("-1"))
+                sqlQuery += "and pago = "+ parameters.get(0) +"";
+
             resultSet = statement.executeQuery(sqlQuery);
             StringBuilder str = new StringBuilder();
 
