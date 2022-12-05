@@ -157,13 +157,22 @@ public class DBManager {
         try{
             statement = dbConn.createStatement();
 
-            String sqlQuery = "SELECT id, descricao, tipo, data_hora, duracao, local, localidade, " +
-                    "pais, classificacao_etaria FROM espetaculo";
+            String sqlQuery = null;
 
-            if (parameters != null && !parameters.get(1).equals("0")) {
-                sqlQuery += " WHERE visivel = " + parameters.get(1) + "";
-                if (!parameters.get(0).equals("-1"))
-                    sqlQuery += " and id like '%" + parameters.get(0) + "%'";
+            System.out.println("ID: " + parameters.get(0));
+
+            if(parameters.get(0).equals("-2")){
+                sqlQuery = "SELECT distinct e.id FROM espetaculo e ,reserva r WHERE e.id = r.id_espetaculo and e.id" +
+                        " NOT IN (SELECT  id_espetaculo FROM reserva r WHERE pago = 1) OR e.id NOT IN(SELECT id_espetaculo FROM reserva)";
+            }else{
+                sqlQuery = "SELECT id, descricao, tipo, data_hora, duracao, local, localidade, " +
+                        "pais, classificacao_etaria FROM espetaculo";
+
+                if (parameters != null && !parameters.get(1).equals("0")) {
+                    sqlQuery += " WHERE visivel = " + parameters.get(1) + "";
+                    if (!parameters.get(0).equals("-1"))
+                        sqlQuery += " and id like '%" + parameters.get(0) + "%'";
+                }
             }
 
             System.out.println(sqlQuery);
@@ -171,23 +180,28 @@ public class DBManager {
             resultSet = statement.executeQuery(sqlQuery);
 
             StringBuilder str = new StringBuilder();
-            str.append("\n-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
-            str.append(String.format("|%-4s|%-40s|%-12s|%-17s|%-7s|%-55s|%-11s|%-10s|%-13s|", "ID", "Descricao", "Tipo", "Data_Hora", "Duracao","Local","Localidade","Pais","Classe_Etaria"));
-            str.append("\n-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
 
-            while(resultSet.next()){
-                int id = resultSet.getInt("id");
-                String descricao = resultSet.getString("descricao");
-                String tipo = resultSet.getString("tipo");
-                String data_hora = resultSet.getString("data_hora");
-                int duracao = resultSet.getInt("duracao");
-                String local = resultSet.getString("local");
-                String localidade = resultSet.getString("localidade");
-                String pais = resultSet.getString("pais");
-                String classificacao_etaria = resultSet.getString("classificacao_etaria");
-
-                str.append(String.format("|%-4s|%-40s|%-12s|%-17s|%-7s|%-55s|%-11s|%-10s|%-13s|", id , descricao, tipo, data_hora, duracao,local,localidade,pais,classificacao_etaria));
+            if(parameters.get(0).equals("-2")){
+                str.append("ID: ").append(resultSet.getInt("id"));
+            }else{
                 str.append("\n-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+                str.append(String.format("|%-4s|%-40s|%-12s|%-17s|%-7s|%-55s|%-11s|%-10s|%-13s|", "ID", "Descricao", "Tipo", "Data_Hora", "Duracao","Local","Localidade","Pais","Classe_Etaria"));
+                str.append("\n-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+
+                while(resultSet.next()){
+                    int id = resultSet.getInt("id");
+                    String descricao = resultSet.getString("descricao");
+                    String tipo = resultSet.getString("tipo");
+                    String data_hora = resultSet.getString("data_hora");
+                    int duracao = resultSet.getInt("duracao");
+                    String local = resultSet.getString("local");
+                    String localidade = resultSet.getString("localidade");
+                    String pais = resultSet.getString("pais");
+                    String classificacao_etaria = resultSet.getString("classificacao_etaria");
+
+                    str.append(String.format("|%-4s|%-40s|%-12s|%-17s|%-7s|%-55s|%-11s|%-10s|%-13s|", id , descricao, tipo, data_hora, duracao,local,localidade,pais,classificacao_etaria));
+                    str.append("\n-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+                }
             }
 
             return str.toString();
