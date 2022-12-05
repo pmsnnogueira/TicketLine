@@ -34,6 +34,9 @@ public class Server {
         serverUI.start();
     }
 
+    private final static int SERVERTIMEINITIAL = 10000;
+
+    private final static String LOCALIP = "127.0.0.1";
     private final Data data;
     private final String DBDirectory;
     private volatile boolean available;
@@ -97,7 +100,7 @@ public class Server {
         // server initiaton phase
         si = new ServerInit();
         si.start();
-        Thread.sleep(10000);
+        Thread.sleep(SERVERTIMEINITIAL);
         serverInitContinue.set(false);
         si.join(1000);
         si.interrupt();
@@ -115,7 +118,7 @@ public class Server {
 
 
         heartBeat = new HeartBeat(port, available, this.data.getDatabaseVersion(),
-                numberOfConnections, DBDirectory, "127.0.0.1");
+                numberOfConnections, DBDirectory, LOCALIP);
 
         this.data.setServerHeartBeat(heartBeat);
 
@@ -146,134 +149,6 @@ public class Server {
         this.listClientHandles = new ArrayList<>();
         this.clients = new ArrayList<>();
     }
-
-    public String listUsers(Integer userID){
-        dbHelper = new DBHelper();
-        dbHelper.setId(userID);
-        this.dbHelper.setOperation("SELECT");
-        this.dbHelper.setTable("user");
-        listDbHelper.add(dbHelper);
-        return "";
-    }
-
-    public String listShows(Integer showID){
-        this.dbHelper.setId(showID);
-        this.dbHelper.setOperation("SELECT");
-        this.dbHelper.setTable("show");
-
-        return "";
-    }
-
-    public String listReservations(Integer reservationID){
-        this.dbHelper.setId(reservationID);
-        this.dbHelper.setOperation("SELECT");
-        this.dbHelper.setTable("reservation");
-
-        return "";
-    }
-
-    public String listSeats(Integer seatID){
-        this.dbHelper.setId(seatID);
-        this.dbHelper.setOperation("SELECT");
-        this.dbHelper.setTable("seat");
-
-        return "";
-    }
-
-    public void insertShow(){
-        this.dbHelper.setOperation("INSERT");
-        this.dbHelper.setTable("show");
-
-    }
-
-    public boolean insertSeat(ArrayList<ArrayList<String>> parameters , int numShow){
-        this.dbHelper.setOperation("INSERT");
-        this.dbHelper.setTable("seat");
-        this.dbHelper.setSeatParams(parameters);
-        this.dbHelper.setId(numShow);
-
-        return true;
-    }
-
-    public boolean insertReservation(ArrayList<String> parameters){
-        this.dbHelper.setOperation("INSERT");
-        this.dbHelper.setTable("reservation");
-        this.dbHelper.setInsertParams(parameters);
-
-        return true;
-    }
-
-    public boolean insertUser(ArrayList<String> parameters){
-        this.dbHelper.setOperation("INSERT");
-        this.dbHelper.setTable("user");
-        this.dbHelper.setInsertParams(parameters);
-
-        return true;
-    }
-
-    public boolean deleteShow(int id){
-        this.dbHelper.setOperation("DELETE");
-        this.dbHelper.setTable("show");
-        this.dbHelper.setId(id);
-
-        return true;
-    }
-
-    public boolean deleteReservations(int id){
-        this.dbHelper.setOperation("DELETE");
-        this.dbHelper.setTable("reservation");
-        this.dbHelper.setId(id);
-
-        return true;
-    }
-
-    public boolean deleteSeat(int id){
-        this.dbHelper.setOperation("DELETE");
-        this.dbHelper.setTable("seat");
-        this.dbHelper.setId(id);
-
-        return true;
-    }
-
-    public boolean deleteUsers(int id){
-        this.dbHelper.setOperation("DELETE");
-        this.dbHelper.setTable("user");
-        this.dbHelper.setId(id);
-
-        return true;
-    }
-
-    public boolean updateShows(int id, HashMap<String, String> newData){
-        this.dbHelper.setOperation("UPDATE");
-        this.dbHelper.setTable("show");
-        this.dbHelper.setId(id);
-        this.dbHelper.setUpdateParams(newData);
-
-        return true;
-    }
-    public boolean updateSeats(int id, HashMap<String, String> newData){
-        this.dbHelper.setOperation("UPDATE");
-        this.dbHelper.setTable("seat");
-        this.dbHelper.setId(id);
-        this.dbHelper.setUpdateParams(newData);
-
-        return true;
-    }
-    public boolean updateReservation(int id, HashMap<String, String> newData){
-        this.dbHelper.setOperation("UPDATE");
-        this.dbHelper.setTable("reservation");
-        this.dbHelper.setId(id);
-        this.dbHelper.setUpdateParams(newData);
-        return true;
-    }
-    public boolean updateUser(int id, HashMap<String, String> newData){
-        this.dbHelper.setOperation("UPDATE");
-        this.dbHelper.setTable("user");
-        this.dbHelper.setId(id);
-        this.dbHelper.setUpdateParams(newData);
-        return true;
-    }
-
     public synchronized void transferDatabase(HeartBeat dbHeartbeat){
         //if the server already has its own DB
         if((new File(DBDirectory + "/PD-2022-23-TP-" + serverPort + ".db")).exists()){
@@ -932,7 +807,7 @@ public class Server {
                     }catch (ClassNotFoundException  e){
                         e.printStackTrace();
                     }
-                    //Trava depois aqui
+
                     while(true){
                         if(!this.dbHelper.getRequestResult().equals("")){
                             oos.writeObject(this.dbHelper.getRequestResult());
