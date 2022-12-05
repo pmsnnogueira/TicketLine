@@ -392,6 +392,7 @@ public class Server {
     public synchronized void sendCommit(){
         try{
             this.heartBeat.setMessage("COMMIT");
+            System.out.println("COMMIT");
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ObjectOutputStream oos = new ObjectOutputStream(baos);
 
@@ -414,6 +415,7 @@ public class Server {
     public synchronized void sendAbort(){
         try{
             this.heartBeat.setMessage("ABORT");
+            System.out.println("ABORT");
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ObjectOutputStream oos = new ObjectOutputStream(baos);
 
@@ -495,6 +497,7 @@ public class Server {
             return;
 
         try{
+            System.out.println("\nPrepare was sent");
             this.heartBeat.setMessage("PREPARE");
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ObjectOutputStream oos = new ObjectOutputStream(baos);
@@ -684,6 +687,7 @@ public class Server {
                         HeartBeat hBeat = (HeartBeat)ois.readObject();
 
                         data.processANewHeartBeat(hBeat);
+                        System.out.println("\nServer received a new heartBeat from\n\tIP: " + dp.getAddress().getHostAddress()+ "\tPort: " + dp.getPort());
 
                         if(hBeat.getMessage().equals("PREPARE") && hBeat.getPortTcp() != heartBeat.getPortTcp()){
                             prepare .set(true);
@@ -777,6 +781,7 @@ public class Server {
                     String msgReceived = new String(msg, 0, nBytes);
 
                     if(msgReceived.equals("SERVER")){ // when server communicates with another server
+                        System.out.println("\nServer connected with\n\tIP: " + socket.getInetAddress().getHostAddress() + "\tPort: " + serverPort);
                         byte[] buffer = new byte[512];
                         int readBytes = 0;
                         FileInputStream fi = new FileInputStream(DBDirectory + "/PD-2022-23-TP-" + serverPort + ".db");
@@ -794,7 +799,8 @@ public class Server {
                         continue;
                     }
 
-                    if(msgReceived.equals("CLIENT")){// when the server receives a new request from a client
+                    if(msgReceived.equals("CLIENT")){
+                        System.out.println("\nClient connected with\n\tIP: " + socket.getInetAddress().getHostAddress() + "\tPort: " + socket.getPort());// when the server receives a new request from a client
                         //start a new thread to take care of the new client
                         AtomicReference<Boolean> nHandle = new AtomicReference<>(true);
                         ClientHandler c = new ClientHandler(socket, nHandle, os, is);
@@ -820,6 +826,7 @@ public class Server {
         }
     }
 
+    // send list with servers to client
     class UDPHandler extends Thread{
         private DatagramSocket socketUDP;
 
@@ -898,6 +905,8 @@ public class Server {
                     if(!msgReceived.equals("NEW REQUEST")){
                         continue;
                     }
+
+                    System.out.println("\nServer received a new request from Client with\n\tIP:" + clientSocket.getInetAddress().getHostAddress()+"\tPort: " + clientSocket.getPort());
 
                     String s = prepare.get() ? "SERVER IS UPDATING - PLEASE TRY AGAIN" : "CONFIRMED";
                     os.write(s.getBytes(), 0, s.length());

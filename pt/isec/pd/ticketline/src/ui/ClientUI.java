@@ -92,10 +92,10 @@ public class ClientUI {
     }
 
 
-
+        //So pode listar as reservas do proprio USER (na listagem normal falta isto)
     private void listInformation(){
         System.out.println("List Menu");
-        int input = InputProtection.chooseOption(null, "List shows","List reservations","List seats","List shows with empty seats","Show unpaid reservations","Show paid reservations");
+        int input = InputProtection.chooseOption(null, "List shows","List seats","List shows with empty seats","List reservations","Show unpaid reservations","Show paid reservations","Back to main menu");
         ArrayList<String> empty = new ArrayList<>();
         switch (input){
             case 1 ->{
@@ -105,13 +105,8 @@ public class ClientUI {
                 this.client.createDBHelper("SELECT", "show", empty, id , null);
                 System.out.println(client.waitToReceiveResultRequest());
             }
+
             case 2 ->{
-                int id = InputProtection.readInt("Reservation ID (-1 for all reservations): ");
-                this.client.createDBHelper("SELECT", "reservation", null, id , null);
-                System.out.println(client.waitToReceiveResultRequest());
-                //System.out.println(this.data.listReservations(id == -1 ? null : id));
-            }
-            case 3 ->{
                 int id = InputProtection.readInt("Show ID (-1 for all shows): ");
                 this.client.createDBHelper("SELECT", "show", null, id , null);
                 System.out.println(client.waitToReceiveResultRequest());
@@ -120,8 +115,14 @@ public class ClientUI {
                 this.client.createDBHelper("SELECT", "seat", null, idShow , null);
                 System.out.println(client.waitToReceiveResultRequest());
             }
-            case 4->{
+            case 3->{
                 this.client.createDBHelper(-1, "SELECT", "show",2,null);              //Show with empty seats(one day before)     -> OPTION 2
+                System.out.println(client.waitToReceiveResultRequest());
+                //System.out.println(this.data.listReservations(id == -1 ? null : id));
+            }
+            case 4 ->{
+                int id = InputProtection.readInt("Reservation ID (-1 for all reservations): ");
+                this.client.createDBHelper("SELECT", "reservation", null, id , null);
                 System.out.println(client.waitToReceiveResultRequest());
                 //System.out.println(this.data.listReservations(id == -1 ? null : id));
             }
@@ -134,6 +135,9 @@ public class ClientUI {
                 this.client.createDBHelper(client.getClientID(), "SELECT", "reservation",3,"1");              //List paid reservartion     -> OPTION 3 parameter 1
                 System.out.println(client.waitToReceiveResultRequest());
                 //System.out.println(this.data.listReservations(id == -1 ? null : id));
+            }
+            case 7->{
+                return;
             }
             default -> {
                 System.out.println("Not a valid option! Try again!");
@@ -148,7 +152,7 @@ public class ClientUI {
     }
 
     public void insertData(){
-        int input = InputProtection.chooseOption(null, "Insert a reservation", "Insert an user");
+        int input = InputProtection.chooseOption(null, "Insert a reservation", "Insert an user","Back to main menu");
 
         switch (input){
             case 1 ->{
@@ -186,6 +190,9 @@ public class ClientUI {
                 //Send information to server
                 this.client.createDBHelper("INSERT","user" , parameters,-1 ,null);
                 System.out.println(client.waitToReceiveResultRequest());
+            }
+            case 3->{
+                return;
             }
             default -> {
                 System.out.println("Not a valid option!");
@@ -431,8 +438,7 @@ public class ClientUI {
                     "Insert data","Delete data",
                     "Update data", "List available servers","Exit");*/
             int input = InputProtection.chooseOption("Choose an action:",  "List data", "Make a reservation",
-                    "Insert data","Delete data",
-                    "Update data","Exit");
+                    "Delete data", "Pay reservation","Exit");
 
             switch (input){
                 case 1 ->{
@@ -441,11 +447,11 @@ public class ClientUI {
                     this.client.createDBHelper("SELECT", "show", null, id,null);
                     System.out.println(client.waitToReceiveResultRequest());*/
                 }
-                case 2 -> makeReservation();
-                case 3 -> insertData();
-                case 4 -> deleteData();
-                case 5 -> payReservation();
-                case 6 -> {
+                case 2 -> makeReservation();                //Feito
+                //case 3 -> insertData();
+                case 3 -> deleteData();
+                case 4 -> payReservation();                 //Feito
+                case 5 -> {
                     client.closeClient();
                     return;
                 }

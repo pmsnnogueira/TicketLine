@@ -166,8 +166,6 @@ public class DBManager {
                     sqlQuery += " and id like '%" + parameters.get(0) + "%'";
             }
 
-            System.out.println(sqlQuery);
-
             resultSet = statement.executeQuery(sqlQuery);
 
             StringBuilder str = new StringBuilder();
@@ -354,15 +352,15 @@ public class DBManager {
             resultSet = statement.executeQuery(sqlQuery);
             StringBuilder str = new StringBuilder();
 
-            str.append("\n------------------------------------------------\n");
+            str.append("\n--------------------------------------------------\n");
             str.append(String.format("|%-11s|%-20s|%15s|", "Id_Reserva", "Data_Hora", "Id_Espetaculo"));
-            str.append("\n------------------------------------------------\n");
+            str.append("\n--------------------------------------------------\n");
             while(resultSet.next()){
                 int id = resultSet.getInt("id");
                 String dataHora = resultSet.getString("data_hora");
                 int id_espetaculo = resultSet.getInt("id_espetaculo");
-                str.append(String.format("|%-11s|%-20s|%-25s|", id , dataHora, id_espetaculo));
-                str.append("\n---------------------------------------\n");
+                str.append(String.format("|%-11s|%-20s|%-15s|", id , dataHora, id_espetaculo));
+                str.append("\n--------------------------------------------------\n");
             }
 
             return str.toString();
@@ -390,16 +388,16 @@ public class DBManager {
             statement = dbConn.createStatement();
 
             String sqlQuery = "SELECT l.id as id_bilhete, l.fila as fila, l.assento as assento, l.preco as preco, e.id as id_espetaculo, e.descricao as descricao, e.data_hora as datahora FROM lugar l ,espetaculo  e " +
-                    "WHERE e.data_hora <= datetime('now','-1 day') and l.id NOT IN (SELECT id_lugar FROM reserva_lugar and l.espetaculo_id = e.id";
+                    "WHERE e.data_hora <= datetime('now','-1 day') and l.id NOT IN (SELECT id_lugar FROM reserva_lugar) and l.espetaculo_id = e.id";
 
-            if (showID != null)
-                sqlQuery += " and id like '%" + showID + "%'";
+            /*if (showID != null)
+                sqlQuery += " and id like '%" + showID + "%'";*/
 
             resultSet = statement.executeQuery(sqlQuery);
             StringBuilder str = new StringBuilder();
-            str.append("\n---------------------------------------------------------------------------------------------\n");
-            str.append(String.format("|%-4s|%-19s|%-30s|%-22s|%-12s|%-24s|", "id_bilhete", "fila", "assento", "preco", "id_espetaculo" , "descricao" , "dataHora"));
-            str.append("\n---------------------------------------------------------------------------------------------\n");
+            str.append("\n-----------------------------------------------------------------------------------------------\n");
+            str.append(String.format("|%12s|%-5s|%-8s|%-7s|%-15s|%-40s|", "id_bilhete", "fila", "assento", "preco", "id_espetaculo" , "descricao" , "dataHora"));
+            str.append("\n-----------------------------------------------------------------------------------------------\n");
 
 
             while(resultSet.next()){
@@ -411,8 +409,8 @@ public class DBManager {
                 String descricao = resultSet.getString( "descricao");
                 String dataHora = resultSet.getString("dataHora");
 
-                str.append(String.format("|%-4s|%-19s|%-30s|%-22s|%-12s|%-24s|", id , username, nome, administrador, id_espetaculo , descricao , dataHora));
-                str.append("\n---------------------------------------------------------------------------------------------\n");
+                str.append(String.format("|%-12s|%-5s|%-8s|%-7s|%-15s|%-40s|", id , username, nome, administrador, id_espetaculo , descricao , dataHora));
+                str.append("\n-----------------------------------------------------------------------------------------------\n");
             }
 
             return str.toString();
