@@ -100,6 +100,8 @@ public class ClientUI {
         switch (input){
             case 1 ->{
                 int id = InputProtection.readInt("Show ID (-1 for all shows): ");
+                empty.add(Integer.toString(id));
+                empty.add("1");
                 this.client.createDBHelper("SELECT", "show", null, id , null);
                 System.out.println(client.waitToReceiveResultRequest());
             }
@@ -368,8 +370,12 @@ public class ClientUI {
 
     public void makeReservation(){
         //show all the available shows
+        ArrayList<String> aux1 = new ArrayList<>();
+
         int id = InputProtection.readInt("Show ID (-1 for all shows): ");
-        this.client.createDBHelper("SELECT", "show", null, id , null);
+        aux1.add(Integer.toString(id));
+        aux1.add("1");
+        this.client.createDBHelper("SELECT", "show", aux1, id , null);
         System.out.println(client.waitToReceiveResultRequest());
 
         int idShow = InputProtection.readInt("ID of the show: ");

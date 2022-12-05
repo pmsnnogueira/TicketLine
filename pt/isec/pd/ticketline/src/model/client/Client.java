@@ -123,8 +123,6 @@ public class Client {
         DBHelper dbHelper = new DBHelper();
         if (operation.equals(INSERT)) {
             if (table.equals(USER)) {
-                insertParams.add("0");
-                insertParams.add("0");
                 insertUser(dbHelper,insertParams);
                 return dbHelper;
             }
