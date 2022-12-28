@@ -1,16 +1,25 @@
 package pt.isec.pd.ticketline.src.model.server;
 
 import pt.isec.pd.ticketline.src.model.ModelManager;
+import pt.isec.pd.ticketline.src.model.client.rmi.TicketLineClientRemoteInterface;
 import pt.isec.pd.ticketline.src.model.data.DBHelper;
 import pt.isec.pd.ticketline.src.model.data.Data;
 import pt.isec.pd.ticketline.src.model.server.heartbeat.ExecutorSendHeartBeat;
 import pt.isec.pd.ticketline.src.model.server.heartbeat.HeartBeat;
 import pt.isec.pd.ticketline.src.model.server.heartbeat.ServerLifeCheck;
+import pt.isec.pd.ticketline.src.model.server.rmi.TicketLineServerRemoteInterface;
 import pt.isec.pd.ticketline.src.ui.ServerUI;
 
 import java.io.*;
 import java.net.*;
+import java.rmi.AlreadyBoundException;
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 import java.sql.SQLException;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -20,7 +29,9 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class Server {
+import static java.time.temporal.ChronoUnit.MINUTES;
+
+public class Server extends UnicastRemoteObject implements TicketLineServerRemoteInterface {
     public static void main(String[] args){
         ServerUI serverUI = null;
         try{
@@ -72,6 +83,7 @@ public class Server {
     private ScheduledFuture<?> serverLifeCheckExecutor;
     private AtomicReference<Boolean> tcpHandle;
     private int confirmations;
+
 
     private ArrayList<AtomicReference<Boolean>> listClientHandles;
     private ArrayList<ClientHandler> clients;
@@ -148,7 +160,20 @@ public class Server {
         //lists for clients
         this.listClientHandles = new ArrayList<>();
         this.clients = new ArrayList<>();
+
+
+        String service = REGISTRY_BIND_NAME + "[" + this.serverPort + "]";
+        //Criar o registo Rmi
+        Registry r = LocateRegistry.createRegistry(59152);
+
+        try {
+            //Associar o Rmi a este Servidor
+            r.bind(service , this);
+        } catch (AlreadyBoundException e) {
+            throw new RuntimeException(e);
+        }
     }
+
     public synchronized void transferDatabase(HeartBeat dbHeartbeat){
         //if the server already has its own DB
         if((new File(DBDirectory + "/PD-2022-23-TP-" + serverPort + ".db")).exists()){
@@ -564,6 +589,8 @@ public class Server {
                         data.processANewHeartBeat(hBeat);
                         System.out.println("\nServer received a new heartBeat from\n\tIP: " + dp.getAddress().getHostAddress()+ "\tPort: " + dp.getPort());
 
+                        heartBeat.setTimeOfLastHeartBeatReceived(hBeat.getTimeCreated());
+
                         if(hBeat.getMessage().equals("PREPARE") && hBeat.getPortTcp() != heartBeat.getPortTcp()){
                             prepare .set(true);
                             try{
@@ -823,6 +850,29 @@ public class Server {
                     return;
                 }
             }
+        }
+    }
+
+    @Override
+    public void listActiveServers(TicketLineClientRemoteInterface clientRef) {
+         ArrayList<HeartBeat> heartBeats = data.getHeartBeatsReceived();
+
+         StringBuilder sb = new StringBuilder();
+         int counter = 0;
+
+         for(HeartBeat hb : heartBeats){
+            sb.append("Server ").append(++counter).append("\n\t")
+                    .append("IP: ").append(hb.getIp()).append("\n")
+                    .append("Port-TCP: ").append(hb.getPortTcp()).append("\n")
+                    .append("Port-UDP: ").append(hb.getPortTcp()).append("\n")
+                    .append("Work Load: ").append(hb.getNumberOfConnections()).append("\n")
+                    .append("Time since last connection: ").append(MINUTES.between(hb.getTimeOfLastHeartBeatReceived(), LocalTime.now()))
+                    .append(" minutes").append("\n");
+         }
+
+        try{
+            clientRef.listActiveServers(sb.toString());
+        }catch (RemoteException ignored){
         }
     }
 }

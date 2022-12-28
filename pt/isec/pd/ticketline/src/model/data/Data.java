@@ -241,4 +241,8 @@ public class Data {
     public int getNumberOfServersConnected(){
         return heartBeatsReceived.size();
     }
+
+    public ArrayList<HeartBeat> getHeartBeatsReceived() {
+        return new ArrayList<>(heartBeatsReceived);
+    }
 }

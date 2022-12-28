@@ -18,6 +18,8 @@ public class HeartBeat implements Serializable{
     private LocalTime timeCreated;
     private String queries;
 
+    private LocalTime timeOfLastHeartBeatReceived;
+
     public HeartBeat(int portTcp, boolean available, int databaseVersion,
                      int numberOfConnections, String dbPath,
                      String ip)
@@ -76,6 +78,14 @@ public class HeartBeat implements Serializable{
 
     public void setNumberOfConnections(int numberOfConnections) {
         this.numberOfConnections = numberOfConnections;
+    }
+
+    public LocalTime getTimeOfLastHeartBeatReceived() {
+        return timeOfLastHeartBeatReceived;
+    }
+
+    public void setTimeOfLastHeartBeatReceived(LocalTime timeOfLastHeartBeatReceived) {
+        this.timeOfLastHeartBeatReceived = timeOfLastHeartBeatReceived;
     }
 
     @Override
