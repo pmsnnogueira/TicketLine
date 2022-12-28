@@ -22,6 +22,7 @@ public class ClientRMI extends UnicastRemoteObject implements TicketLineClientRe
 
     public static void main(String[] args) {
         ClientRMI_UI clientRMIUi = null;
+        TicketLineServerRemoteInterface remoteRef;
 
         if (args.length != 2) {
             System.out.println("The Ip address and Port is missing from the command line arguments.");
@@ -29,7 +30,13 @@ public class ClientRMI extends UnicastRemoteObject implements TicketLineClientRe
         }
 
         try {
-            ClientRMI clientRmi = new ClientRMI(args[0], Integer.parseInt(args[1]));
+            String remoteRmi = TicketLineServerRemoteInterface.REGISTRY_BIND_NAME + "[" + Integer.parseInt(args[1]) + "]";
+            //Localizar o servico de RMI com o ip da maquina e o porto de escuta UDP
+            Registry r = LocateRegistry.getRegistry(args[0] , Integer.parseInt(args[1]));
+            //Obter o servico remoto do servidor
+            remoteRef = (TicketLineServerRemoteInterface) r.lookup(remoteRmi);
+
+            ClientRMI clientRmi = new ClientRMI(args[0], Integer.parseInt(args[1]), remoteRef);
             clientRMIUi = new ClientRMI_UI(clientRmi);
         } catch (RemoteException | NotBoundException e) {
             System.out.println("Could not initiate ClientRmi");
@@ -45,15 +52,10 @@ public class ClientRMI extends UnicastRemoteObject implements TicketLineClientRe
     private final TicketLineServerRemoteInterface remoteRef;
 
 
-    public ClientRMI(String ipAddress , Integer port) throws RemoteException, NotBoundException {
+    public ClientRMI(String ipAddress , Integer port, TicketLineServerRemoteInterface remoteRef) throws RemoteException, NotBoundException {
         this.ipAddress = ipAddress;
         this.port = port;
-
-        String remoteRmi = TicketLineServerRemoteInterface.REGISTRY_BIND_NAME + "[" + port + "]";
-        //Localizar o servico de RMI com o ip da maquina e o porto de escuta UDP
-        Registry r = LocateRegistry.getRegistry(this.ipAddress , this.port);
-        //Obter o servico remoto do servidor
-        this.remoteRef = (TicketLineServerRemoteInterface) r.lookup(remoteRmi);
+        this.remoteRef = remoteRef;
     }
 
     @Override
@@ -67,7 +69,7 @@ public class ClientRMI extends UnicastRemoteObject implements TicketLineClientRe
     public void list(){
         try{
             remoteRef.listActiveServers(this);
-        }catch (RemoteException e){
+        }catch (RemoteException e) {
             System.out.println("Could not list servers");
             e.printStackTrace();
         }

@@ -35,7 +35,19 @@ public class Server extends UnicastRemoteObject implements TicketLineServerRemot
     public static void main(String[] args){
         ServerUI serverUI = null;
         try{
-            ModelManager modelManager = new ModelManager(Integer.parseInt(args[0]), args[1]);
+            ModelManager modelManager = new ModelManager(Integer.parseInt(args[0]), args[1] , Integer.parseInt(args[2]));
+
+            String service = REGISTRY_BIND_NAME + "[" + Integer.parseInt(args[2]) + "]" ;
+            //Criar o registo Rmi
+            Registry r = LocateRegistry.createRegistry(Integer.parseInt(args[2]));
+
+            try {
+                //Associar o Rmi a este Servidor
+                r.bind(service , modelManager.getServer());
+            } catch (AlreadyBoundException e) {
+                throw new RuntimeException(e);
+            }
+
             serverUI = new ServerUI(modelManager);
         }catch (SQLException | IOException | InterruptedException e){
             e.printStackTrace();
@@ -58,6 +70,8 @@ public class Server extends UnicastRemoteObject implements TicketLineServerRemot
     private HeartBeatReceiver hbh;
     private DataBaseHandler dbHandler;
     private DBHelper dbHelper = null;
+
+    //private final Integer rmiPort;
 
     private LinkedList<DBHelper> listDbHelper;
     private int serverPort;
@@ -88,7 +102,7 @@ public class Server extends UnicastRemoteObject implements TicketLineServerRemot
     private ArrayList<AtomicReference<Boolean>> listClientHandles;
     private ArrayList<ClientHandler> clients;
 
-    public Server(int port, String DBDirectory) throws SQLException, IOException, InterruptedException {
+    public Server(int port, String DBDirectory , Integer rmiPort) throws SQLException, IOException, InterruptedException {
         this.prepare = new AtomicReference<>(false);
         this.masterSV = new AtomicReference<>(false);
 
@@ -160,18 +174,6 @@ public class Server extends UnicastRemoteObject implements TicketLineServerRemot
         //lists for clients
         this.listClientHandles = new ArrayList<>();
         this.clients = new ArrayList<>();
-
-
-        String service = REGISTRY_BIND_NAME + "[" + this.serverPort + "]";
-        //Criar o registo Rmi
-        Registry r = LocateRegistry.createRegistry(59152);
-
-        try {
-            //Associar o Rmi a este Servidor
-            r.bind(service , this);
-        } catch (AlreadyBoundException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     public synchronized void transferDatabase(HeartBeat dbHeartbeat){
