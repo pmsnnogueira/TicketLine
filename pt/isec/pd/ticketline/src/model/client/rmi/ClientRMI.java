@@ -45,7 +45,6 @@ public class ClientRMI extends UnicastRemoteObject implements TicketLineClientRe
         assert clientRMIUi != null;
         clientRMIUi.start();
     }
-        //    remoteRef.listActiveServers(this);
 
     private final String ipAddress;
     private final Integer port;
