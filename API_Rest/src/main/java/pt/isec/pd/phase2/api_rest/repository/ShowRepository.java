@@ -10,5 +10,9 @@ import java.util.List;
 @Repository
 public interface ShowRepository extends JpaRepository<Show, Integer>
 {
+    @Query("SELECT c FROM Show c")
+    List<Show> listShows();
+
+    List<Show> findById(String id);
 
 }

@@ -4,6 +4,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.TypedQuery;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Service;
 import pt.isec.pd.phase2.api_rest.model.Show;
 import pt.isec.pd.phase2.api_rest.repository.ShowRepository;
@@ -21,6 +22,15 @@ public class ShowService
         this.showRepository = showRepository;
     }
 
+    public List<Show> getAllShows() {
+        return showRepository.listShows();
+    }
+
+    public List<Show> getShowsById(String id)
+    {
+        return showRepository.findById(id);
+    }
+
     public List<Show> getShowsByDate(String date)
     {
         EntityManager em = emf.createEntityManager();
@@ -30,4 +40,8 @@ public class ShowService
     }
 
 
+    public Show createShow(Show c) {
+        c.setId(null);
+        return showRepository.save(c);
+    }
 }
