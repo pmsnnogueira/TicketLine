@@ -2,6 +2,7 @@ package pt.isec.pd.phase2.api_rest.model;
 
 import jakarta.persistence.*;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 public class Show
@@ -31,7 +32,7 @@ public class Show
     private  int visible;
 
     @OneToMany(mappedBy = "show")
-    private List<Seat> seats;
+    private Set<Seat> seats;
 
 
     public Integer getId() {
@@ -122,11 +123,11 @@ public class Show
         this.visible = visible;
     }
 
-    public List<Seat> getSeats() {
+    public Set<Seat> getSeats() {
         return seats;
     }
 
-    public void setSeats(List<Seat> seats) {
+    public void setSeats(Set<Seat> seats) {
         this.seats = seats;
     }
 }
@@ -143,8 +144,8 @@ class Seat
     private String seat;
 
     private double price;
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "show_id")
+    @ManyToOne
+    @JoinColumn(name = "show_id", nullable = false)
     private Show show;
 
     public Integer getId() {
@@ -183,7 +184,5 @@ class Seat
         return show;
     }
 
-    public void setShow(Show show) {
-        this.show = show;
-    }
+    public void setShow(Show show) {this.show = show;}
 }
