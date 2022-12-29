@@ -52,6 +52,8 @@ public class Client {
     public int clientID;
     private AtomicReference<Boolean> isSocketNull;
 
+    private String username;
+
     public Client(String serverIP, int serverPort) throws IOException {
         this.serverIP = serverIP;
         this.serverPort = serverPort;
@@ -268,6 +270,10 @@ public class Client {
 
                             oos.writeObject(dbHelper);
 
+                            if(dbHelper.isLogout()){
+                                return;
+                            }
+
                             requestResult.set((String) ois.readObject());
                         }
                         if(msgReceived.equals("SERVER IS UPDATING - PLEASE TRY AGAIN")){
@@ -383,10 +389,19 @@ public class Client {
         dbHelper.setOperation(SELECT);
         dbHelper.setTable(USER);
         dbHelper.setVerifyUsername(parameters);
+        this.username = parameters.get(0);
         return "";
     }
 
     public void closeClient(){
+        dbHelper = new DBHelper();
+        dbHelper.setLogout(username);
+        hasNewRequest.set(true);
+/*        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException ignored) {
+
+        }*/
         srHandle.set(false);
     }
 
@@ -396,5 +411,9 @@ public class Client {
 
     public void setClientID(int clientID) {
         this.clientID = clientID;
+    }
+
+    public String getUsername() {
+        return username;
     }
 }

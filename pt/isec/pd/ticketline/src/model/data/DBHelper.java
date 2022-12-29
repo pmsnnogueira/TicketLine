@@ -22,6 +22,9 @@ public class DBHelper implements Serializable {
     private boolean alreadyProcessed;
     
     private AtomicReference<String> requestResult;
+    private boolean logout;
+    private String username;
+
 
     public DBHelper(){
         this.requestResult = new AtomicReference<>("");
@@ -112,6 +115,18 @@ public class DBHelper implements Serializable {
 
     public ArrayList<String> getverifyUsername() {
         return verifyUsername;
+    }
+    public boolean isLogout(){
+        return logout;
+    }
+
+    public void setLogout(String username){
+        logout = true;
+        this.username = username;
+    }
+
+    public String getUsername() {
+        return username;
     }
 
     public boolean isAlreadyProcessed() {

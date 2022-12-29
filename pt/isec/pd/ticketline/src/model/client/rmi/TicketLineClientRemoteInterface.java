@@ -9,5 +9,5 @@ public interface TicketLineClientRemoteInterface extends Remote {
     void loginListener(String username) throws RemoteException;
     void UDPListener(String ip, int port) throws RemoteException;
     void TCPListener(String ip, int port) throws RemoteException;
-
+    void logoutListener(String username) throws RemoteException;
 }

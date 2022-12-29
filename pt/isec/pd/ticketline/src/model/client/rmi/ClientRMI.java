@@ -70,7 +70,10 @@ public class ClientRMI extends UnicastRemoteObject implements TicketLineClientRe
             switch(whatToListen){
                 case "UDP" -> remoteRef.addUDPListener(this);
                 case "TCP" -> remoteRef.addTCPListener(this);
-                case "LOGIN" -> remoteRef.addLoginListener(this);
+                case "LOGIN" -> {
+                    remoteRef.addLoginListener(this);
+                    remoteRef.addLogoutListener(this);
+                }
                 case "LOST" -> remoteRef.addLostTCPListener(this);
                 default -> {
                     return false;
@@ -88,7 +91,10 @@ public class ClientRMI extends UnicastRemoteObject implements TicketLineClientRe
             switch (whatToRemove){
                 case "UDP" -> remoteRef.removeUDPListener(this);
                 case "TCP" -> remoteRef.removeTCPListener(this);
-                case "LOGIN" -> remoteRef.removeLoginListener(this);
+                case "LOGIN" -> {
+                    remoteRef.removeLoginListener(this);
+                    remoteRef.removeLogoutListener(this);
+                }
                 case "LOST" -> remoteRef.removeLostTCPListener(this);
                 default -> {
                     return true;
@@ -124,5 +130,10 @@ public class ClientRMI extends UnicastRemoteObject implements TicketLineClientRe
     @Override
     public void loginListener(String username) throws RemoteException {
         System.out.println("\nNew Login: \n\tUsername: " + username+ "\n\n");
+    }
+
+    @Override
+    public void logoutListener(String username) throws RemoteException {
+        System.out.println("\nNew Logout: \n\tUsername: " + username+ "\n\n");
     }
 }

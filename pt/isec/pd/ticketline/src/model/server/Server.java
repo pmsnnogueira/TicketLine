@@ -105,6 +105,7 @@ public class Server extends UnicastRemoteObject implements TicketLineServerRemot
     private ArrayList<TicketLineClientRemoteInterface> UDPListeners;
     private ArrayList<TicketLineClientRemoteInterface> TCPListeners;
     private ArrayList<TicketLineClientRemoteInterface> loginListeners;
+    private ArrayList<TicketLineClientRemoteInterface> logoutListener;
     private ArrayList<TicketLineClientRemoteInterface> lostTCPListeners;
 
 
@@ -185,6 +186,7 @@ public class Server extends UnicastRemoteObject implements TicketLineServerRemot
         this.TCPListeners = new ArrayList<>();
         this.lostTCPListeners = new ArrayList<>();
         this.loginListeners = new ArrayList<>();
+        this.logoutListener = new ArrayList<>();
     }
 
     public synchronized void transferDatabase(HeartBeat dbHeartbeat){
@@ -860,6 +862,16 @@ public class Server extends UnicastRemoteObject implements TicketLineServerRemot
                     this.dbHelper = null;
                     try{
                         this.dbHelper = (DBHelper) ois.readObject();
+                        if(dbHelper.isLogout()){
+                            for(TicketLineClientRemoteInterface ref : logoutListener){
+                                ref.logoutListener(dbHelper.getUsername());
+                            }
+                            clients.remove(this);
+                            listClientHandles.remove(this.handle);
+                            heartBeat.setNumberOfConnections(clients.size());
+                            return;
+                        }
+
                         listDbHelper.add(this.dbHelper);
                     }catch (ClassNotFoundException  e){
                         e.printStackTrace();
@@ -944,5 +956,15 @@ public class Server extends UnicastRemoteObject implements TicketLineServerRemot
     @Override
     public void removeLostTCPListener(TicketLineClientRemoteInterface listener) throws RemoteException {
         this.lostTCPListeners.remove(listener);
+    }
+
+    @Override
+    public void addLogoutListener(TicketLineClientRemoteInterface listener) throws RemoteException {
+        this.logoutListener.add(listener);
+    }
+
+    @Override
+    public void removeLogoutListener(TicketLineClientRemoteInterface listener) throws RemoteException {
+        this.logoutListener.remove(listener);
     }
 }

@@ -17,4 +17,6 @@ public interface TicketLineServerRemoteInterface extends Remote {
     void removeLostTCPListener(TicketLineClientRemoteInterface listener) throws RemoteException;
     void addLoginListener(TicketLineClientRemoteInterface listener) throws RemoteException;
     void removeLoginListener(TicketLineClientRemoteInterface listener) throws RemoteException;
+    void addLogoutListener(TicketLineClientRemoteInterface listener) throws RemoteException;
+    void removeLogoutListener(TicketLineClientRemoteInterface listener) throws RemoteException;
 }

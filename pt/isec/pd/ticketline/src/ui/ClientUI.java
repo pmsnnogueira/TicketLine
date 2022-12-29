@@ -204,43 +204,13 @@ public class ClientUI {
     private void deleteData() {
         int input = InputProtection.chooseOption(null, "Delete unpaid reservation","Back to main menu");
         //int input = InputProtection.chooseOption(null, "Delete show", "Delete seat", "Delete reservation", "Delete user");
-        switch (input){/*
-            case 1 -> {
-                int id = InputProtection.readInt("Show ID: ");
-                /*if (!this.data.deleteShow(id)){
-                    System.out.println("Could not delete show");
-                }*/
-            /*}
-            case 2 -> {
-                int id = InputProtection.readInt("Seat ID: ");
-               /* if (!this.data.deleteSeat(id)){
-                    System.out.println("Could not delete seat");
-                }*/
-            /*}
-            case 3 -> {
-                int id = InputProtection.readInt("Reservation ID: ");
-                /*if (!this.data.deleteReservations(id)){
-                    System.out.println("Could not delete reservation");
-                }*/
-            /*}
-            case 4 -> {
-                int id = InputProtection.readInt("User ID: ");
-                /*if (!this.data.deleteUsers(id)){
-                    System.out.println("Could not delete user");
-                }*/
-           // }
+        switch (input){
             case 1 -> {
                 this.client.createDBHelper(client.getClientID(), "SELECT", "reservation",3,"0");              //List unpaid reservartion     -> OPTION 3 parameter 0
                 System.out.println(client.waitToReceiveResultRequest());
 
                 int reservationId = InputProtection.readInt("Reservation ID: ");
                 this.client.createDBHelper(reservationId, "DELETE", "reservation",1, Integer.toString(client.getClientID()));              //List unpaid reservartion     -> OPTION 3 parameter 0
-                /*if (!this.data.deleteUsers(id)){
-                    System.out.println("Could not delete user");
-                }*/
-            }
-            case 2->{
-                return;
             }
             default -> {
                 System.out.println("Not a valid option");
