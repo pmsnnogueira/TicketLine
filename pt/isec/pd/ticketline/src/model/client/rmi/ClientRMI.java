@@ -3,7 +3,6 @@ package pt.isec.pd.ticketline.src.model.client.rmi;
 import pt.isec.pd.ticketline.src.model.server.rmi.TicketLineServerRemoteInterface;
 import pt.isec.pd.ticketline.src.ui.ClientRMI_UI;
 
-import java.rmi.NoSuchObjectException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -66,32 +65,40 @@ public class ClientRMI extends UnicastRemoteObject implements TicketLineClientRe
         }
     }
 
-    public boolean addListener(String whatToListen) throws RemoteException{
-        switch(whatToListen){
-            case "UDP" -> remoteRef.addUDPListener(this);
-            case "TCP" -> remoteRef.addTCPListener(this);
-            case "LOGIN" -> remoteRef.addLoginListener(this);
-            case "LOST" -> remoteRef.addLostTCPListener(this);
-            default -> {
-                return false;
+    public boolean addListener(String whatToListen){
+        try{
+            switch(whatToListen){
+                case "UDP" -> remoteRef.addUDPListener(this);
+                case "TCP" -> remoteRef.addTCPListener(this);
+                case "LOGIN" -> remoteRef.addLoginListener(this);
+                case "LOST" -> remoteRef.addLostTCPListener(this);
+                default -> {
+                    return false;
+                }
             }
+        }catch (RemoteException e){
+            return false;
         }
 
         return true;
     }
 
-    public boolean removeListener(String whatToRemove) throws RemoteException{
-        switch (whatToRemove){
-            case "UDP" -> remoteRef.removeUDPListener(this);
-            case "TCP" -> remoteRef.removeTCPListener(this);
-            case "LOGIN" -> remoteRef.removeLoginListener(this);
-            case "LOST" -> remoteRef.removeLostTCPListener(this);
-            default -> {
-                return false;
+    public boolean removeListener(String whatToRemove){
+        try{
+            switch (whatToRemove){
+                case "UDP" -> remoteRef.removeUDPListener(this);
+                case "TCP" -> remoteRef.removeTCPListener(this);
+                case "LOGIN" -> remoteRef.removeLoginListener(this);
+                case "LOST" -> remoteRef.removeLostTCPListener(this);
+                default -> {
+                    return true;
+                }
             }
+        }catch (RemoteException e){
+            return true;
         }
 
-        return true;
+        return false;
     }
 
     @Override

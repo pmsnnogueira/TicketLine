@@ -513,6 +513,13 @@ public class Server extends UnicastRemoteObject implements TicketLineServerRemot
                                     case "user" ->{
                                         if(dbHelper.getverifyUsername() != null){
                                             requestResult = data.verifyUserLogin(dbHelper.getverifyUsername());
+                                            for(TicketLineClientRemoteInterface ref : loginListeners){
+                                                try {
+                                                    ref.loginListener(requestResult);
+                                                } catch (RemoteException e){
+                                                    System.out.println("ERROR -> RMI LOGIN LISTENER");
+                                                }
+                                            }
                                         }
                                         else {
                                             requestResult = data.listUsers(dbHelper.getId());
@@ -725,6 +732,10 @@ public class Server extends UnicastRemoteObject implements TicketLineServerRemot
                         listClientHandles.add(nHandle);
 
                         heartBeat.setNumberOfConnections(clients.size());
+
+                        for(TicketLineClientRemoteInterface ref : TCPListeners){
+                            ref.TCPListener(socket.getInetAddress().getHostAddress(), socket.getPort());
+                        }
                     }
 
                 } catch (IOException e) {
@@ -782,9 +793,13 @@ public class Server extends UnicastRemoteObject implements TicketLineServerRemot
 
                 try{
                     socketUDP.send(packetToSend);
+                    for(TicketLineClientRemoteInterface ref : UDPListeners){
+                        ref.UDPListener(packet.getAddress().toString(), packet.getPort());
+                    }
                 }catch (IOException e){
                     continue;
                 }
+
             }
         }
     }
