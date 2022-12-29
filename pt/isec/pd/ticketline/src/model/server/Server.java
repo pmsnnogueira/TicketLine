@@ -513,11 +513,13 @@ public class Server extends UnicastRemoteObject implements TicketLineServerRemot
                                     case "user" ->{
                                         if(dbHelper.getverifyUsername() != null){
                                             requestResult = data.verifyUserLogin(dbHelper.getverifyUsername());
-                                            for(TicketLineClientRemoteInterface ref : loginListeners){
-                                                try {
-                                                    ref.loginListener(requestResult);
-                                                } catch (RemoteException e){
-                                                    System.out.println("ERROR -> RMI LOGIN LISTENER");
+                                            if(!requestResult.equals("User doesnt exist!")){
+                                                for(TicketLineClientRemoteInterface ref : loginListeners){
+                                                    try {
+                                                        ref.loginListener(dbHelper.getverifyUsername().get(0));
+                                                    } catch (RemoteException e){
+                                                        System.out.println("ERROR -> RMI LOGIN LISTENER");
+                                                    }
                                                 }
                                             }
                                         }
@@ -890,10 +892,10 @@ public class Server extends UnicastRemoteObject implements TicketLineServerRemot
 
          for(HeartBeat hb : heartBeats){
             sb.append("Server ").append(++counter).append("\n\t")
-                    .append("IP: ").append(hb.getIp()).append("\n")
-                    .append("Port-TCP: ").append(hb.getPortTcp()).append("\n")
-                    .append("Port-UDP: ").append(hb.getPortTcp()).append("\n")
-                    .append("Work Load: ").append(hb.getNumberOfConnections()).append("\n")
+                    .append("IP: ").append(hb.getIp()).append("\n\t")
+                    .append("Port-TCP: ").append(hb.getPortTcp()).append("\n\t")
+                    .append("Port-UDP: ").append(hb.getPortTcp()).append("\n\t")
+                    .append("Work Load: ").append(hb.getNumberOfConnections()).append("\n\t")
                     .append("Time since last connection: ").append(MINUTES.between(hb.getTimeOfLastHeartBeatReceived(), LocalTime.now()))
                     .append(" minutes").append("\n");
          }

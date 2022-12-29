@@ -6,6 +6,16 @@ import pt.isec.pd.ticketline.src.ui.util.InputProtection;
 public class ClientRMI_UI {
     private final ClientRMI client;
 
+    public String art(){
+        return ("\n" +
+                "  _____ ___ ____ _  _______ _____ _     ___ _   _ _____    ____ _     ___ _____ _   _ _____     ____  __  __ ___ \n" +
+                " |_   _|_ _/ ___| |/ / ____|_   _| |   |_ _| \\ | | ____|  / ___| |   |_ _| ____| \\ | |_   _|   |  _ \\|  \\/  |_ _|\n" +
+                "   | |  | | |   | ' /|  _|   | | | |    | ||  \\| |  _|   | |   | |    | ||  _| |  \\| | | |_____| |_) | |\\/| || | \n" +
+                "   | |  | | |___| . \\| |___  | | | |___ | || |\\  | |___  | |___| |___ | || |___| |\\  | | |_____|  _ <| |  | || | \n" +
+                "   |_| |___\\____|_|\\_\\_____| |_| |_____|___|_| \\_|_____|  \\____|_____|___|_____|_| \\_| |_|     |_| \\_\\_|  |_|___|\n" +
+                "                                                                                                                 \n");
+    }
+
     public ClientRMI_UI(ClientRMI client){
         this.client = client;
     }
@@ -87,7 +97,7 @@ public class ClientRMI_UI {
     }
 
     public void start(){
-        System.out.println("ClientRMI");
+        System.out.println(art());
         while(true){
             int input = InputProtection.chooseOption("Choose an action:",
                     "List active servers", "Register callback for UDP connections",

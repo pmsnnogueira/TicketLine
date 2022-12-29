@@ -108,21 +108,21 @@ public class ClientRMI extends UnicastRemoteObject implements TicketLineClientRe
 
     @Override
     public void UDPListener(String ip, int port) throws RemoteException {
-        System.out.println("New UDP Connection: \n\tIP: " + ip + "\nPort: " + port);
+        System.out.println("\nNew UDP Connection: \n\tIP: " + ip + "\n\tPort: " + port + "\n\n");
     }
 
     @Override
     public void TCPListener(String ip, int port) throws RemoteException {
-        System.out.println("New TCP Connection: \n\tIP: " + ip + "\nPort: " + port);
+        System.out.println("\nNew TCP Connection: \n\tIP: " + ip + "\n\tPort: " + port+ "\n\n");
     }
 
     @Override
     public void lostTCPListener(String ip, int port, String username) throws RemoteException {
-        System.out.println("Lost a TCP Connection: \n\tIP: " + ip + "\nPort: " + port + "\nUser: " + username);
+        System.out.println("\nLost a TCP Connection: \n\tIP: " + ip + "\n\tPort: " + port + "\n\tUser: " + username+ "\n\n");
     }
 
     @Override
     public void loginListener(String username) throws RemoteException {
-        System.out.println("New Login: \n\tUsername: " + username);
+        System.out.println("\nNew Login: \n\tUsername: " + username+ "\n\n");
     }
 }
