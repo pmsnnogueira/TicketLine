@@ -102,6 +102,12 @@ public class Server extends UnicastRemoteObject implements TicketLineServerRemot
     private ArrayList<AtomicReference<Boolean>> listClientHandles;
     private ArrayList<ClientHandler> clients;
 
+    private ArrayList<TicketLineClientRemoteInterface> UDPListeners;
+    private ArrayList<TicketLineClientRemoteInterface> TCPListeners;
+    private ArrayList<TicketLineClientRemoteInterface> loginListeners;
+    private ArrayList<TicketLineClientRemoteInterface> lostTCPListeners;
+
+
     public Server(int port, String DBDirectory , Integer rmiPort) throws SQLException, IOException, InterruptedException {
         this.prepare = new AtomicReference<>(false);
         this.masterSV = new AtomicReference<>(false);
@@ -174,6 +180,11 @@ public class Server extends UnicastRemoteObject implements TicketLineServerRemot
         //lists for clients
         this.listClientHandles = new ArrayList<>();
         this.clients = new ArrayList<>();
+
+        this.UDPListeners = new ArrayList<>();
+        this.TCPListeners = new ArrayList<>();
+        this.lostTCPListeners = new ArrayList<>();
+        this.loginListeners = new ArrayList<>();
     }
 
     public synchronized void transferDatabase(HeartBeat dbHeartbeat){
@@ -876,5 +887,45 @@ public class Server extends UnicastRemoteObject implements TicketLineServerRemot
             clientRef.listActiveServers(sb.toString());
         }catch (RemoteException ignored){
         }
+    }
+
+    @Override
+    public void addLoginListener(TicketLineClientRemoteInterface listener) throws RemoteException {
+        this.loginListeners.add(listener);
+    }
+
+    @Override
+    public void removeLoginListener(TicketLineClientRemoteInterface listener) throws RemoteException {
+        this.loginListeners.remove(listener);
+    }
+
+    @Override
+    public void addTCPListener(TicketLineClientRemoteInterface listener) throws RemoteException {
+        this.TCPListeners.add(listener);
+    }
+
+    @Override
+    public void removeTCPListener(TicketLineClientRemoteInterface listener) throws RemoteException {
+        this.TCPListeners.remove(listener);
+    }
+
+    @Override
+    public void addUDPListener(TicketLineClientRemoteInterface listener) throws RemoteException {
+        this.UDPListeners.add(listener);
+    }
+
+    @Override
+    public void removeUDPListener(TicketLineClientRemoteInterface listener) throws RemoteException {
+        this.UDPListeners.remove(listener);
+    }
+
+    @Override
+    public void addLostTCPListener(TicketLineClientRemoteInterface listener) throws RemoteException {
+        this.lostTCPListeners.add(listener);
+    }
+
+    @Override
+    public void removeLostTCPListener(TicketLineClientRemoteInterface listener) throws RemoteException {
+        this.lostTCPListeners.remove(listener);
     }
 }

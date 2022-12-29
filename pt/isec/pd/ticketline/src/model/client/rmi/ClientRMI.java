@@ -57,14 +57,6 @@ public class ClientRMI extends UnicastRemoteObject implements TicketLineClientRe
         this.remoteRef = remoteRef;
     }
 
-    @Override
-    public void listActiveServers(String list) {
-        System.out.println(list);
-        try{
-            UnicastRemoteObject.unexportObject(this, true);
-        }catch (NoSuchObjectException  ignored){}
-    }
-
     public void list(){
         try{
             remoteRef.listActiveServers(this);
@@ -72,5 +64,58 @@ public class ClientRMI extends UnicastRemoteObject implements TicketLineClientRe
             System.out.println("Could not list servers");
             e.printStackTrace();
         }
+    }
+
+    public boolean addListener(String whatToListen) throws RemoteException{
+        switch(whatToListen){
+            case "UDP" -> remoteRef.addUDPListener(this);
+            case "TCP" -> remoteRef.addTCPListener(this);
+            case "LOGIN" -> remoteRef.addLoginListener(this);
+            case "LOST" -> remoteRef.addLostTCPListener(this);
+            default -> {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public boolean removeListener(String whatToRemove) throws RemoteException{
+        switch (whatToRemove){
+            case "UDP" -> remoteRef.removeUDPListener(this);
+            case "TCP" -> remoteRef.removeTCPListener(this);
+            case "LOGIN" -> remoteRef.removeLoginListener(this);
+            case "LOST" -> remoteRef.removeLostTCPListener(this);
+            default -> {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    @Override
+    public void listActiveServers(String list) {
+        System.out.println(list);
+    }
+
+    @Override
+    public void UDPListener(String ip, int port) throws RemoteException {
+        System.out.println("New UDP Connection: \n\tIP: " + ip + "\nPort: " + port);
+    }
+
+    @Override
+    public void TCPListener(String ip, int port) throws RemoteException {
+        System.out.println("New TCP Connection: \n\tIP: " + ip + "\nPort: " + port);
+    }
+
+    @Override
+    public void lostTCPListener(String ip, int port, String username) throws RemoteException {
+        System.out.println("Lost a TCP Connection: \n\tIP: " + ip + "\nPort: " + port + "\nUser: " + username);
+    }
+
+    @Override
+    public void loginListener(String username) throws RemoteException {
+        System.out.println("New Login: \n\tUsername: " + username);
     }
 }
