@@ -1,39 +1,48 @@
 package pt.isec.pd.phase2.api_rest.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import java.util.List;
 import java.util.Set;
 
 @Entity
+@Table(name = "espetaculo")
 public class Show
 {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    //@GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
 
+    @Column(name = "descricao")
     private String designation;
 
+    @Column(name = "tipo")
     private String type;
 
+    @Column(name = "data_hora")
     private String date;
 
-    private String hour;
-
+    @Column(name = "duracao")
     private int duration;
 
+    @Column(name = "local")
     private String place;
 
+    @Column(name = "localidade")
     private String city;
 
+    @Column(name = "pais")
     private String country;
 
+    @Column(name = "classificacao_etaria")
     private String age;
 
+    @Column(name = "visivel")
     private  int visible;
 
-    @OneToMany(mappedBy = "show")
-    private Set<Seat> seats;
 
+    @OneToMany(mappedBy = "espetaculo")
+    private Set<Seat> seats;
 
     public Integer getId() {
         return id;
@@ -65,14 +74,6 @@ public class Show
 
     public void setDate(String date) {
         this.date = date;
-    }
-
-    public String getHour() {
-        return hour;
-    }
-
-    public void setHour(String hour) {
-        this.hour = hour;
     }
 
     public int getDuration() {
@@ -123,6 +124,7 @@ public class Show
         this.visible = visible;
     }
 
+    @JsonManagedReference
     public Set<Seat> getSeats() {
         return seats;
     }

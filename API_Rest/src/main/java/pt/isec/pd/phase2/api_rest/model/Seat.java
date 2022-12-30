@@ -1,22 +1,28 @@
 package pt.isec.pd.phase2.api_rest.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
+@Table(name = "lugar")
 class Seat
 {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    //@GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
 
+    @Column(name = "fila")
     private String row;
 
+    @Column(name = "assento")
     private String seat;
 
+    @Column(name = "preco")
     private double price;
     @ManyToOne
-    @JoinColumn(name = "show_id", nullable = false)
-    private Show show;
+    @JoinColumn(name = "espetaculo_id")
+    private Show espetaculo;
 
     public Integer getId() {
         return id;
@@ -50,10 +56,11 @@ class Seat
         this.price = price;
     }
 
+    @JsonBackReference
     public Show getShow() {
-        return show;
+        return espetaculo;
     }
 
-    public void setShow(Show show) {this.show = show;}
+    public void setShow(Show show) {this.espetaculo = show;}
 }
 

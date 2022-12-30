@@ -1,25 +1,28 @@
 package pt.isec.pd.phase2.api_rest.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 @Entity
+@Table(name = "utilizador")
 public class User
 {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    //@GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
 
+    @Column(name = "username")
     private String username;
 
+    @Column(name = "nome")
     private String name;
 
+    @Column(name = "password")
     private String password;
 
+    @Column(name = "administrador")
     private int admin;
 
+    @Column(name = "autenticado")
     private int authenticated;
 
     public Integer getId() {

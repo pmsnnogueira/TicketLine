@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import pt.isec.pd.phase2.api_rest.model.Show;
 import pt.isec.pd.phase2.api_rest.service.ShowService;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -24,60 +25,34 @@ public class ShowController
         this.showService = showService;
     }
 
-    /**
-     * get all Shows
-     * Postman : localhost:8080/show/all
-     * @return List of shows
-     */
     @GetMapping("/all")
     public ResponseEntity<List<Show>> getAllShows()
     {
         return ResponseEntity.ok().body(showService.getAllShows());
     }
 
-    /**
-     * localhost:8080/show
-     * and send it a json file
-     *{
-     "id": 1,
-     "designation": "teste1",
-     "type": "testetype",
-     "date": "testeDate",
-     "hour": "testeHour",
-     "duration": 45,
-     "place": null,
-     "city": "testeCity",
-     "country": "testeCountry",
-     "age": "testeAge",
-     "visible": 0
-     }
-     * @param c
-     * @return
-     */
-    @PostMapping
-    public ResponseEntity<Show> createShow(@RequestBody Show c)
+    @GetMapping("/filter")
+    public ResponseEntity<List<Show>> getFilteredShows(@RequestParam(required = false) String dateBeggining, @RequestParam(required = false) String dateEnd)
     {
-        return ResponseEntity.status(HttpStatus.CREATED).body(showService.createShow(c));
-    }
-
-
-    /**
-     * get filtered shows
-     * Postman ex: localhost:8080/show/id?value=1
-     * @param filter
-     * @param value
-     * @return
-     */
-    @GetMapping("{filter}")
-    public ResponseEntity<List<Show>> getFilteredShows(@PathVariable("filter") String filter,
-                                                       @RequestParam(value = "value", required = true) String value)
-    {
-        switch (filter.toLowerCase()){
-            case "id": return ResponseEntity.ok().body(showService.getShowsById(value));
-            case "date" : return ResponseEntity.ok().body(showService.getShowsByDate(value));
-            default: return ResponseEntity.badRequest().build();
+        if(dateBeggining != null && dateEnd != null)
+        {
+            dateBeggining = dateBeggining.replace(" ", "-");
+            dateEnd = dateEnd.replace(" ", "-");
+            return ResponseEntity.ok().body(showService.getShowsBetweenDates(dateBeggining, dateEnd));
+        }
+        if(dateBeggining != null)
+        {
+            dateBeggining = dateBeggining.replace(" ", "-");
+            return ResponseEntity.ok().body(showService.getShowsStartingIn(dateBeggining));
+        }
+        if(dateEnd != null)
+        {
+            dateEnd = dateEnd.replace(" ", "-");
+            return ResponseEntity.ok().body(showService.getShowsBegginingBefore(dateEnd));
+        }
+        else
+        {
+            return ResponseEntity.badRequest().body(new ArrayList<>());
         }
     }
-
-
 }
