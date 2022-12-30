@@ -16,8 +16,7 @@ import java.util.List;
 @Service
 public class ShowService
 {
-    private ShowRepository showRepository;
-    private EntityManagerFactory emf;
+    private final ShowRepository showRepository;
     @Autowired
     public ShowService(ShowRepository showRepository)
     {
