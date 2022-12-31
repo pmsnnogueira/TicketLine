@@ -14,7 +14,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, Intege
     @Query("SELECT r FROM Reservation r WHERE r.user.id = :id AND r.payed = 1")
     List<Reservation> findPayedReservations(@Param("id") Integer id);
 
-    @Override
-    @Query("SELECT r FROM Reservation r")
-    List<Reservation> findAll();
+    @Query("SELECT r FROM Reservation r WHERE r.user.id = :id AND r.payed = 0")
+    List<Reservation> findNonPayedReservations(@Param("id") Integer id);
 }

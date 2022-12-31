@@ -20,6 +20,11 @@ public class ReservationService
         return reservationRepository.findPayedReservations(Integer.parseInt(id));
     }
 
+    public List<Reservation> getNonPayedReservations(String id)
+    {
+        return reservationRepository.findNonPayedReservations(Integer.parseInt(id));
+    }
+
     public List<Reservation> getAllReservations()
     {
         return reservationRepository.findAll();

@@ -16,11 +16,11 @@ public class Reservation
     private int payed;
 
     @OneToOne
-    @JoinColumn(name = "id_utilizador")
+    @JoinColumn(name = "id_espetaculo")
     private Show show;
 
     @OneToOne
-    @JoinColumn(name = "id_espetaculo")
+    @JoinColumn(name = "id_utilizador")
     private User user;
 
     public Integer getId() {

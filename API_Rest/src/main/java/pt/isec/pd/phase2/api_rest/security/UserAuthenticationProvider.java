@@ -10,6 +10,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 import pt.isec.pd.phase2.api_rest.model.User;
 import pt.isec.pd.phase2.api_rest.repository.UserRepository;
+import pt.isec.pd.phase2.api_rest.service.UserService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,12 +18,12 @@ import java.util.List;
 @Component
 public class UserAuthenticationProvider implements AuthenticationProvider
 {
-    private final UserRepository userRepository;
+    private final UserService userService;
 
     @Autowired
-    public UserAuthenticationProvider(UserRepository userRepository)
+    public UserAuthenticationProvider(UserService userService)
     {
-        this.userRepository = userRepository;
+        this.userService = userService;
     }
 
     @Override
@@ -31,7 +32,7 @@ public class UserAuthenticationProvider implements AuthenticationProvider
 
         String username = authentication.getName();
         String password = authentication.getCredentials().toString();
-        List<User> user = userRepository.findUser(username, password);
+        List<User> user = userService.getUser(username, password);
 
         if(user.isEmpty())
             return null;
