@@ -4,10 +4,8 @@ package pt.isec.pd.phase2.api_rest.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
 import pt.isec.pd.phase2.api_rest.model.User;
 import pt.isec.pd.phase2.api_rest.security.TokenService;
 import pt.isec.pd.phase2.api_rest.service.UserService;
@@ -41,5 +39,28 @@ public class UserController {
                                                 .body(new ArrayList<>());
         else
             return ResponseEntity.ok().body(users);
+    }
+
+    @PostMapping("/admin/register")
+    public ResponseEntity<User> registerUser(@RequestBody User user)
+    {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = userService.getUserByName(auth.getName());
+
+        if(currentUser.getAdmin() == 0)
+            return ResponseEntity.badRequest().header("RegisterUser", "You need to be an admin to perform that operation")
+                    .body(new User());
+
+        if(user == null)
+            return ResponseEntity.badRequest().header("RegisterUser", "You need to insert all user information.").
+                    body(new User());
+
+        User userCheck = userService.registerUser(user);
+
+        if(userCheck == null)
+            return ResponseEntity.badRequest().header("RegisterUser", "User with that username/name already exists").
+                                                body(new User());
+        else
+            return ResponseEntity.ok().body(userCheck);
     }
 }
