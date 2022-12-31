@@ -63,4 +63,30 @@ public class UserController {
         else
             return ResponseEntity.ok().body(userCheck);
     }
+
+    @DeleteMapping("/admin/delete")
+    public ResponseEntity<User> deleteUser(@RequestParam String id)
+    {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = userService.getUserByName(auth.getName());
+
+        if(currentUser.getAdmin() == 0)
+            return ResponseEntity.badRequest().header("DeleteUser", "You need to be an admin to perform that operation")
+                    .body(new User());
+
+        User user = new User();
+        try {
+            user = userService.deleteUser(Integer.parseInt(id));
+            if(user == null){
+                return ResponseEntity.badRequest().header("DeleteUser", "User with that Id doesnt exist.")
+                        .body(new User());
+            }
+            else {
+                return ResponseEntity.ok().body(user);
+            }
+        }
+        catch (NumberFormatException nfe){
+            return ResponseEntity.badRequest().header("DeleteUser", "Thats not a valid id for the user.").body(new User());
+        }
+    }
 }

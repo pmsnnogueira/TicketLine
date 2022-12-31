@@ -63,4 +63,18 @@ public class UserService
         user.setId(null);
         return userRepository.save(user);
     }
+
+    public User deleteUser(Integer id)
+    {
+        if(userRepository.findById(id).isPresent())
+        {
+            User currUser = userRepository.findById(id).get();
+            userRepository.deleteById(id);
+            return currUser;
+        }
+        else
+        {
+            return null;
+        }
+    }
 }
