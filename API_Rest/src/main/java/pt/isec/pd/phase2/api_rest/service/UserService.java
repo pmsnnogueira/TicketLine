@@ -1,6 +1,8 @@
 package pt.isec.pd.phase2.api_rest.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import pt.isec.pd.phase2.api_rest.model.User;
 import pt.isec.pd.phase2.api_rest.repository.UserRepository;
@@ -21,13 +23,23 @@ public class UserService
         this.userRepository = userRepository;
     }
 
-    public List<User> getUser(String username, String password)
+    public User getUser(String username, String password)
     {
-        return userRepository.findUser(username, password);
+        return userRepository.authenticateUser(username, password);
     }
 
     public User getUserByName(String username)
     {
         return userRepository.findByName(username);
+    }
+
+    public List<User> getAllUsers()
+    {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User user = getUserByName(auth.getName());
+        if(user.getAdmin() == 1)
+            return userRepository.findAll();
+        else
+            return null;
     }
 }
