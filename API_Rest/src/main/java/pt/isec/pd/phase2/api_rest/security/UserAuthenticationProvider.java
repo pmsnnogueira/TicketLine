@@ -33,15 +33,15 @@ public class UserAuthenticationProvider implements AuthenticationProvider
         String password = authentication.getCredentials().toString();
         List<User> user = userRepository.findUser(username, password);
 
-        if (username.equals(user.get(0).getUsername()) && password.equals(user.get(0).getPassword()))
+        if(user.isEmpty())
+            return null;
+        else
         {
             List<GrantedAuthority> authorities = new ArrayList<>();
             authorities.add(new SimpleGrantedAuthority("USER"));
 
             return new UsernamePasswordAuthenticationToken(username, password, authorities);
         }
-
-        return null;
     }
 
     @Override

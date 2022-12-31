@@ -27,6 +27,8 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.stereotype.Component;
+import pt.isec.pd.phase2.api_rest.controller.ReservationController;
 import pt.isec.pd.phase2.api_rest.security.RsaKeyProperties;
 import pt.isec.pd.phase2.api_rest.security.UserAuthenticationProvider;
 
