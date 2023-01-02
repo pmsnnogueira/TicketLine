@@ -44,7 +44,7 @@ public class ShowController
         }
         else
         {
-            return ResponseEntity.badRequest().body(showService.getAllShows());
+            return ResponseEntity.ok().body(showService.getAllShows());
         }
     }
 
