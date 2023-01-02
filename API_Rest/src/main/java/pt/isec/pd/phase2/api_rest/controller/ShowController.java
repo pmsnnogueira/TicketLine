@@ -23,12 +23,6 @@ public class ShowController
         this.showService = showService;
     }
 
-    @GetMapping("/all")
-    public ResponseEntity<List<Show>> getAllShows()
-    {
-        return ResponseEntity.ok().body(showService.getAllShows());
-    }
-
     @GetMapping("/filter")
     public ResponseEntity<List<Show>> getFilteredShows(@RequestParam(required = false) String dateBeggining, @RequestParam(required = false) String dateEnd)
     {
@@ -50,7 +44,7 @@ public class ShowController
         }
         else
         {
-            return ResponseEntity.badRequest().body(new ArrayList<>());
+            return ResponseEntity.badRequest().body(showService.getAllShows());
         }
     }
 
