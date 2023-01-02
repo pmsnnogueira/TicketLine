@@ -18,9 +18,6 @@ public class UserService
     public final TokenService tokenService;
     private final UserRepository userRepository;
 
-    @PersistenceContext
-    private EntityManager entityManager;
-
     @Autowired
     public UserService(TokenService tokenService, UserRepository userRepository)
     {
@@ -42,12 +39,7 @@ public class UserService
 
     public List<User> getAllUsers()
     {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        User user = getUserByUsername(auth.getName());
-        if(user.getAdmin() == 1)
-            return userRepository.findAll();
-        else
-            return null;
+        return userRepository.findAll();
     }
 
     public User registerUser(User user)

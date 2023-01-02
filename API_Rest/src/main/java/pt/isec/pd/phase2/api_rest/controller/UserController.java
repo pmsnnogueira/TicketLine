@@ -33,21 +33,24 @@ public class UserController {
     @GetMapping("/admin/users")
     public ResponseEntity<List<User>> getAllUsers()
     {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdmin = auth.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals("SCOPE_Admin"));
+
+        if(!isAdmin)
+            return ResponseEntity.badRequest().header("AdminAuthentication", "You need to be an admin to perform that operation")
+                    .body(new ArrayList<>());
+
         List<User> users = userService.getAllUsers();
-        if(users == null)
-            return ResponseEntity.badRequest().header("AdminAuthentication", "Please Authenticate as admin")
-                                                .body(new ArrayList<>());
-        else
-            return ResponseEntity.ok().body(users);
+        return ResponseEntity.ok().body(users);
     }
 
     @PostMapping("/admin/register")
     public ResponseEntity<User> registerUser(@RequestBody User user)
     {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        User currentUser = userService.getUserByName(auth.getName());
+        boolean isAdmin = auth.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals("SCOPE_Admin"));
 
-        if(currentUser.getAdmin() == 0)
+        if(!isAdmin)
             return ResponseEntity.badRequest().header("RegisterUser", "You need to be an admin to perform that operation")
                     .body(new User());
 
@@ -68,13 +71,13 @@ public class UserController {
     public ResponseEntity<User> deleteUser(@RequestParam String id)
     {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        User currentUser = userService.getUserByName(auth.getName());
+        boolean isAdmin = auth.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals("SCOPE_Admin"));
 
-        if(currentUser.getAdmin() == 0)
-            return ResponseEntity.badRequest().header("DeleteUser", "You need to be an admin to perform that operation")
+        if(!isAdmin)
+            return ResponseEntity.badRequest().header("AdminAuthentication", "You need to be an admin to perform that operation")
                     .body(new User());
 
-        User user = new User();
+        User user;
         try {
             user = userService.deleteUser(Integer.parseInt(id));
             if(user == null){
