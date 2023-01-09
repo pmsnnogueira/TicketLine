@@ -46,7 +46,7 @@ public class DBManager {
             return true;
         }
 
-        File file = new File("pt/isec/pd/ticketline/src/resources/db/PD-2022-23-TP.db");
+        File file = new File("TicketLine/pt/isec/pd/ticketline/src/resources/db/PD-2022-23-TP.db");
 
         FileInputStream fis;
         try{

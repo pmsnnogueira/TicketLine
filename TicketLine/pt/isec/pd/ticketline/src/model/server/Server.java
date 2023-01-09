@@ -435,6 +435,7 @@ public class Server extends UnicastRemoteObject implements TicketLineServerRemot
         public void run() {
             //Connect to DB
             if(!data.connectToDB(serverPort, DBDirectory)){
+                System.out.println("Ola");
                 return;
             }
 
